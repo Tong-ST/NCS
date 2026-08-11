@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://d1joja6hsdxrh"]
+
+[ext_resource type="PackedScene" uid="uid://drd0o3om1q3na" path="res://scenes/player.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://cvael67uegn6h" path="res://scenes/enemy.tscn" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://bjse0r78t1isb" path="res://ncs_system/enemy_ai_system.gd" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://cdjdifkshhe0h" path="res://addons/ncs/core/ncs_world.gd" id="3_lquwl"]
+[ext_resource type="Script" uid="uid://ckc1tfcgccqis" path="res://ncs_system/movement_system.gd" id="5_7mycd"]
+
+[node name="Main" type="Node2D" unique_id=945331847]
+
+[node name="NCSWorld" type="Node" parent="." unique_id=935555110]
+script = ExtResource("3_lquwl")
+active_systems = Array[Script]([ExtResource("3_h2yge"), ExtResource("5_7mycd")])
+metadata/_custom_type_script = "uid://cdjdifkshhe0h"
+
+[node name="Player" parent="." unique_id=1562561095 instance=ExtResource("1_ig7tw")]
+position = Vector2(538, 334)
+
+[node name="Enemy" parent="." unique_id=1176284870 instance=ExtResource("2_0xm2m")]
+position = Vector2(54, 28)
+
+[node name="Enemy2" parent="." unique_id=1204988500 instance=ExtResource("2_0xm2m")]
+position = Vector2(951, 48)
+
+[node name="Enemy3" parent="." unique_id=1568534245 instance=ExtResource("2_0xm2m")]
+position = Vector2(977, 433)
+
+[node name="Enemy4" parent="." unique_id=1678244593 instance=ExtResource("2_0xm2m")]
+position = Vector2(143, 518)

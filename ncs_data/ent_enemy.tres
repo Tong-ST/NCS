@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="NCSEntityConfig" format=3 uid="uid://d83lrrklk786"]
+
+[ext_resource type="Script" uid="uid://cc42ojsffnknx" path="res://addons/ncs/templates/data_base.gd" id="1_2m1c6"]
+[ext_resource type="Script" uid="uid://bdl22fmu0u6e5" path="res://ncs_data/movement_data.gd" id="3_8xxkb"]
+[ext_resource type="Script" uid="uid://cahdo7ajcu48f" path="res://addons/ncs/templates/entity_config.gd" id="4_7gh7p"]
+[ext_resource type="Script" uid="uid://cv42ydpp65ire" path="res://ncs_data/enemy_ai_data.gd" id="4_kv6mi"]
+[ext_resource type="Script" uid="uid://bcrp0alk1qht4" path="res://ncs_data/input_data.gd" id="5_7gh7p"]
+
+[sub_resource type="Resource" id="Resource_ctvm8"]
+script = ExtResource("3_8xxkb")
+max_speed = 200.0
+metadata/_custom_type_script = "uid://bdl22fmu0u6e5"
+
+[sub_resource type="Resource" id="Resource_iifgy"]
+script = ExtResource("5_7gh7p")
+metadata/_custom_type_script = "uid://bcrp0alk1qht4"
+
+[sub_resource type="Resource" id="Resource_tbgi4"]
+script = ExtResource("4_kv6mi")
+metadata/_custom_type_script = "uid://cv42ydpp65ire"
+
+[resource]
+script = ExtResource("4_7gh7p")
+data_sets = Array[ExtResource("1_2m1c6")]([SubResource("Resource_ctvm8"), SubResource("Resource_iifgy"), SubResource("Resource_tbgi4")])
+metadata/_custom_type_script = "uid://cahdo7ajcu48f"
