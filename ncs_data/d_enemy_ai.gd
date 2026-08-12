@@ -1,4 +1,4 @@
-class_name EnemyAIData
+class_name D_EnemyAI
 extends NCSDataBase
 
 

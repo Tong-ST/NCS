@@ -1,3 +1,4 @@
+@tool
 class_name NCSComponentsHub
 extends NCSBase
 
@@ -9,6 +10,7 @@ extends NCSBase
 var config_node: EntityConfig
 
 func _ready() -> void:
+	if Engine.is_editor_hint(): return
 	if not owner_node:
 		owner_node = owner
 		
@@ -19,9 +21,16 @@ func _ready() -> void:
 	for child in get_children():
 		if child is NCSComponentBase:
 			child.owner_node = owner_node
-			child.config_node = config_node
-			# Manually trigger their setup now that they have their references
-			child.initialize_component()
+			child.entity_config = config_node
+
+	if config_node:
+		NCS.register_entity(config_node)
+
+
+func _exit_tree() -> void:
+	if config_node:
+		NCS.unregister_entity(config_node)
+
 
 func _find_config_node(start_node: Node) -> EntityConfig:
 	if start_node == null: return null

@@ -1,4 +1,4 @@
-class_name InputData
+class_name D_Input
 extends NCSDataBase
 
 

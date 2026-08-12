@@ -1,3 +1,4 @@
+@tool
 class_name EntityConfig
 extends NCSBase
 
@@ -9,6 +10,7 @@ var runtime_config: NCSEntityConfig
 
 
 func _enter_tree() -> void:
+	if Engine.is_editor_hint(): return
 	if base_config:
 		# Deep duplicate (true) ensures nested resources inside the array 
 		# are uniquely duplicated for every single spawned creature instance.
@@ -18,6 +20,7 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
+	if Engine.is_editor_hint(): return
 	NCS.unregister_entity(self)
 
 ## A safe getter function used by child components or entity scripts to grab raw data

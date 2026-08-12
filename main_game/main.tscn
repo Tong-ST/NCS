@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://d1joja6hsdxrh"]
 
-[ext_resource type="PackedScene" uid="uid://drd0o3om1q3na" path="res://scenes/player.tscn" id="1_ig7tw"]
-[ext_resource type="PackedScene" uid="uid://cvael67uegn6h" path="res://scenes/enemy.tscn" id="2_0xm2m"]
-[ext_resource type="Script" uid="uid://bjse0r78t1isb" path="res://ncs_system/enemy_ai_system.gd" id="3_h2yge"]
+[ext_resource type="PackedScene" uid="uid://drd0o3om1q3na" path="res://main_game/player.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://cvael67uegn6h" path="res://main_game/enemy.tscn" id="2_0xm2m"]
+[ext_resource type="Script" uid="uid://bjse0r78t1isb" path="res://ncs_system/s_enemy_ai.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://cdjdifkshhe0h" path="res://addons/ncs/core/ncs_world.gd" id="3_lquwl"]
-[ext_resource type="Script" uid="uid://ckc1tfcgccqis" path="res://ncs_system/movement_system.gd" id="5_7mycd"]
+[ext_resource type="Script" uid="uid://ckc1tfcgccqis" path="res://ncs_system/s_movement.gd" id="5_7mycd"]
 
 [node name="Main" type="Node2D" unique_id=945331847]
 

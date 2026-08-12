@@ -1,4 +1,4 @@
-class_name MovementData
+class_name D_Movement
 extends NCSDataBase
 
 @export var max_speed: float = 300.0

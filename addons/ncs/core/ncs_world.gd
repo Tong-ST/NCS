@@ -1,3 +1,4 @@
+@tool
 class_name NCSWorld
 extends NCSBase
 
@@ -7,6 +8,7 @@ extends NCSBase
 
 
 func _enter_tree() -> void:
+	if Engine.is_editor_hint(): return
 	# Loop through the user-defined array and spawn each system explicitly
 	for system_script in active_systems:
 		if not system_script: 
@@ -30,6 +32,7 @@ func _enter_tree() -> void:
 
 
 func _exit_tree() -> void:
+	if Engine.is_editor_hint(): return
 	# Clean up registration when the level changes or closes
 	for system_script in active_systems:
 		if not system_script: 
