@@ -28,6 +28,9 @@ func unregister_system(system_name: String) -> void:
 func get_system_by_name(system_name: String) -> Node:
 	return _systems.get(system_name, null)
 
+func force_update_system_queries() -> void:
+	_remap_all_system_queries()
+
 func _remap_all_system_queries() -> void:
 	for system_name in _systems:
 		var system = _systems[system_name]

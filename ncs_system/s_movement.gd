@@ -18,7 +18,7 @@ func _physics_process(delta: float) -> void:
 		# Always safety check for those fetched data
 		if not is_instance_valid(body) or not move_data or not input_data: 
 			continue
-			
+
 		# Handle multi-component logic relationships e.g. Movement and Input
 		var current_input = input_data.movement_vector
 		

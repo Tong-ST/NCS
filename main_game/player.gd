@@ -6,9 +6,10 @@ extends CharacterBody2D
 
 
 func _ready() -> void:
-	# Get data by using get ref. by entity_config.get_data("DataClassName")
-	var input_data = entity_config.get_data("D_Input") as D_Input
-	var movement_data = entity_config.get_data("D_Movement") as D_Movement
+	pass
+	# Get data by using entity_config.get_data("D_DataName")
+	#var input_data = entity_config.get_data("D_Input") as D_Input
+	#var movement_data = entity_config.get_data("D_Movement") as D_Movement
 
-	print("Player input_vector: ", input_data.movement_vector)
-	print("Player speed: ", movement_data.max_speed)
+	#print("Player input_vector: ", input_data.movement_vector)
+	#print("Player speed: ", movement_data.max_speed)
