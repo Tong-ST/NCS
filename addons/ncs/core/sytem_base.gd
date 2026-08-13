@@ -4,102 +4,103 @@ extends NCSBase
 # ACCESS: filtered entity collection array
 var entities: Array[EntityConfig] = []
 
+# 🎯 THE FLATTENED MEMORY MATRIX:
+# An array of clean, pre-sorted flat arrays matching your iterate targets.
+# _flat_data_pools[0] = Array of ALL D_Movement resources (ordered perfectly)
+# _flat_data_pools[1] = Array of ALL D_Input resources (ordered perfectly)
+var _flat_data_pools: Array[Array] = []
+
 # Internal query arrays tracking what this system cares about
-var _all_filters: Array[String] = []
-var _not_filters: Array[String] = []
+var _all_filters: Array[Script] = []
+var _not_filters: Array[Script] = []
+var _data_targets: Array[Script] = []
 
 func _ready() -> void:
-	# Virtual setup hook where the user overrides and defines their query
 	setup_query()
 	_update_query_filter()
 
-## VIRTUAL HOOK: Overridden by the user to establish filters on startup
 func setup_query() -> void:
 	pass
 
-## Define components that MUST be present on the entity node tree
-func with_all(comp_names: Array[String]) -> NCSSystemBase:
+func with_all(comp_names: Array[Script]) -> NCSSystemBase:
 	_all_filters = comp_names
 	return self
 
-## Define components that MUST NOT be present
-func with_not(comp_names: Array[String]) -> NCSSystemBase:
+func with_not(comp_names: Array[Script]) -> NCSSystemBase:
 	_not_filters = comp_names
 	return self
 
-## Returns true if the action was successfully triggered, false if it's a scriptless tag.
-func send_signal(entity: EntityConfig, component_name: String, method_name: String, args: Array = []) -> bool:
+func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
+	_data_targets = data_classes
+	return self
+
+# 🎯 HIGH-SPEED FLAT GETTER:
+# Pulls a pre-sorted flat array pool directly. No internal index parsing or offsets!
+func get_data_pool(pool_index: int) -> Array:
+	return _flat_data_pools[pool_index]
+
+func send_signal(entity: EntityConfig, component_name: Script, method_name: String, args: Array = []) -> bool:
 	var comp = entity.get_comp(component_name)
-	
-	# If the component doesn't exist, or is just a scriptless lazy tag.
 	if not is_instance_valid(comp) or not comp.get_script():
 		return false
-		
-	# Verify the component actually has the custom visual function written down
 	if comp.has_method(method_name):
 		comp.callv(method_name, args)
 		return true
-		
 	return false
 
-## Internal evaluation method called automatically whenever entities spawn or leave
+## Internal evaluation method - ONLY runs when entities spawn or change state!
 func _update_query_filter() -> void:
 	var matching_entities: Array[EntityConfig] = []
 	
+	# Initialize our flat pools to match the size of your iterate_data targets
+	var new_flat_pools: Array[Array] = []
+	for t in _data_targets.size():
+		new_flat_pools.append([])
+	
 	for ent in NCS.active_entities:
-		if not is_instance_valid(ent): 
-			continue
-			
+		if not is_instance_valid(ent): continue
 		var parent_body = ent.get_parent()
-		if not is_instance_valid(parent_body): 
-			continue
-			
-		var is_match = true
+		if not is_instance_valid(parent_body): continue
 		
-		# 1. Verify all required component constraints exist
-		for required_comp in _all_filters:
-			if not _check_entity_has_component(parent_body, required_comp):
+		# Cache component scripts to bypass nested lookups
+		var alive_components: Array[Script] = []
+		for child in parent_body.get_children():
+			if child.get_script():
+				alive_components.append(child.get_script())
+			if child is NCSComponentsHub or child.name == "Components":
+				for sub_child in child.get_children():
+					if sub_child.get_script():
+						alive_components.append(sub_child.get_script())
+		
+		var is_match = true
+		for required_script in _all_filters:
+			if not alive_components.has(required_script):
 				is_match = false
 				break
-				
-		if not is_match: 
-			continue
-			
-		# 2. Verify no forbidden component constraints exist
-		for forbidden_comp in _not_filters:
-			if _check_entity_has_component(parent_body, forbidden_comp):
+		if not is_match: continue
+		
+		for forbidden_script in _not_filters:
+			if alive_components.has(forbidden_script):
 				is_match = false
 				break
 				
 		if is_match:
 			matching_entities.append(ent)
 			
-	# Assign the verified filters to your working array
+			# 🎯 PRE-SORT AND SEPARATE INTO FLAT POOLS ON SPAWN:
+			for pool_idx in _data_targets.size():
+				var target_script = _data_targets[pool_idx]
+				var data_block = _find_data_by_script(ent, target_script)
+				new_flat_pools[pool_idx].append(data_block)
+			
 	entities = matching_entities
+	_flat_data_pools = new_flat_pools
 
-
-## Comprehensive inspector that handles string names, class names, and folder hierarchies
-func _check_entity_has_component(parent: Node, target_identifier: String) -> bool:
-	# Check the immediate root level of the character body scene
-	if parent.has_node(target_identifier):
-		return true
-		
-	# Crawl through all direct children and sub-folders (like the Components Hub)
-	for child in parent.get_children():
-		# Direct structural name check
-		if child.name == target_identifier:
-			return true
-			
-		# Script Custom Class Name Check (e.g. checks if script is class_name C_Input)
-		if child.get_script() and child.get_script().get_global_name() == target_identifier:
-			return true
-			
-		# Deep search optimization for child elements nested inside your NCSComponentsHub node
-		if child is NCSComponentsHub or child.name == "Components":
-			for sub_child in child.get_children():
-				if sub_child.name == target_identifier:
-					return true
-				if sub_child.get_script() and sub_child.get_script().get_global_name() == target_identifier:
-					return true
-					
-	return false
+func _find_data_by_script(ent: EntityConfig, target_script: Script) -> NCSDataBase:
+	if not ent.runtime_config or not target_script: return null
+	var data_array = ent.runtime_config.get("data_sets")
+	if data_array is Array:
+		for res in data_array:
+			if is_instance_valid(res) and res.get_script() == target_script:
+				return res as NCSDataBase
+	return null

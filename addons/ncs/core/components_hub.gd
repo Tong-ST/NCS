@@ -79,34 +79,39 @@ func _get_configuration_warnings() -> PackedStringArray:
 	if not editor_config:
 		return warnings
 
-	var active_resource_classes: Array[String] = []
+	# Build a fast lookup map of active resource classes currently in the array
+	var available_data_classes: Array[String] = []
 	if editor_config.base_config:
 		var raw_data_sets = editor_config.base_config.get("data_sets")
 		if raw_data_sets is Array:
-			# Fetch Godot's global script registry list to translate file paths to clean Class Names
 			var global_classes = ProjectSettings.get_global_class_list()
-			
 			for res in raw_data_sets:
 				if is_instance_valid(res) and res.get_script():
 					var res_script_path = res.get_script().resource_path
-					
-					# Look up this file path inside Godot's global script database
 					for class_info in global_classes:
 						if class_info.path == res_script_path:
-							active_resource_classes.append(class_info.class)
+							available_data_classes.append(class_info.class)
 							break
 
-	# Loop through all immediate children to evaluate checks
+	# Loop through children and validate component scripts
 	for child in get_children():
-		# Direct Inspector property checking
+		# Direct Inspector property verification
 		if "require_data" in child and child.get("require_data") == true:
+			var script = child.get_script()
 			
-			# If a node is named C_EnemyAI, it explicitly demands a class_name named D_EnemyAI
-			var expected_class_target = child.name.replace("C_", "D_")
-			
-			# Verify if targeted class_name string is currently present inside our loaded data list tracker
-			if not active_resource_classes.has(expected_class_target):
-				warnings.append("NCS : Component [" + child.name + "] requires a Data Resource with class_name [" + expected_class_target + "] but it's missing from EntityConfig data resource array")
+			if not script:
+				warnings.append("NCS Layout Error: Node [" + child.name + "] has 'Require Data' enabled but does not have a script attached! All components require a type class script.")
+				continue
+				
+			# Converts component "C_Movement" -> expects resource "D_Movement" or "MovementData"
+			var script_class_name = script.get_global_name()
+			if not script_class_name.is_empty():
+				var base_identity = script_class_name.replace("Component", "")
+				var expected_data_class_1 = base_identity.replace("C_", "D_")
+				var expected_data_class_2 = base_identity.replace("C_", "") + "Data"
+
+				if not available_data_classes.has(expected_data_class_1) and not available_data_classes.has(expected_data_class_2):
+					warnings.append("NCS Configuration Error: Component class [" + script_class_name + "] explicitly requires a Data Resource named [" + expected_data_class_1 + "] or [" + expected_data_class_2 + "], but it's missing from your EntityConfig array!")
 
 	return warnings
 

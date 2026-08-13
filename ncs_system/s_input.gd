@@ -4,32 +4,31 @@ extends NCSSystemBase
 ## Step 1: Explicitly configure entity query template on initialization
 func setup_query() -> void:
 	# Name of Components Matter!, Make sure they are the same in your scene node
-	with_all(["C_Input"]).with_not(["C_Dead"])
+	with_all([C_Input]).with_not([C_Dead])
+	iterate_data([D_Input])
 
 ## Step 2: Run your logic loop.
 func _process(_delta: float) -> void:
 	# Check hardware input ONCE per frame, instead of inside the loop for optimization
 	var deal_damage = Input.is_action_just_pressed("ui_accept")
+	var input_pool = get_data_pool(0)
 
 	# Iterate through all filtered entities.
-	for ent in entities:
+	for i in entities.size():
 		# Pull essential body/data for this system
+		var ent = entities[i]
 		var body = ent.get_parent() as CharacterBody2D
-		var input_data = ent.get_data("D_Input") as D_Input
-		
+
+		# Get data required data according with iterate_data() abrove.
+		var input_data = input_pool[i] as D_Input
+
 		# Always safety check for those fetched data
 		if not is_instance_valid(body) or not input_data: 
 			continue
 
-		# Logic input logic for all ent.
-		# Example on how to get component from system and call some unique logic.
-#		var health_comp = ent.get_comp("C_Health") as C_Health
-#		if deal_damage and health_comp and health_comp.get_script() and health_comp is C_Health:
-#			health_comp.take_damage(20)
-
-		# Or just use send_signal to call function inside comp which only have script attached
+		#  Send_signal to call function inside comp which only have script attached
 		if deal_damage:
-			send_signal(ent, "C_Health", "take_damage", [20])
+			send_signal(ent, C_Health, "take_damage", [20])
 		
 		# Logic below only for player. Basic movement control logic
 		if not body is Player:

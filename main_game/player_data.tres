@@ -14,11 +14,13 @@ metadata/_custom_type_script = "uid://bdl22fmu0u6e5"
 script = ExtResource("3_7rfxy")
 metadata/_custom_type_script = "uid://bcrp0alk1qht4"
 
-[sub_resource type="Resource" id="Resource_43suf"]
+[sub_resource type="Resource" id="Resource_b3gj3"]
 script = ExtResource("4_qgdva")
+max_health = 140.0
+current_health = 140.0
 metadata/_custom_type_script = "uid://x18cyu72de8c"
 
 [resource]
 script = ExtResource("4_gluu3")
-data_sets = Array[ExtResource("1_msibu")]([SubResource("Resource_ctvm8"), SubResource("Resource_gg2rq"), SubResource("Resource_43suf")])
+data_sets = Array[ExtResource("1_msibu")]([SubResource("Resource_ctvm8"), SubResource("Resource_gg2rq"), SubResource("Resource_b3gj3")])
 metadata/_custom_type_script = "uid://cahdo7ajcu48f"

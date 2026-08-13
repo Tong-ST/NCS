@@ -1,7 +1,6 @@
 class_name NCSEntityDataSet
 extends Resource
 
-# A completely generic array container
 @export var data_sets: Array[NCSDataBase] = []
 
 ## Finds a specific data sub-block matching the given class name automatically

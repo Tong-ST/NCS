@@ -3,8 +3,9 @@ extends NCSSystemBase
 
 ## Step 1: Explicitly configure entity query template on initialization
 func setup_query() -> void:
-	# Name of Components Matter!, Make sure they are the same in your scene node
-	with_all(["C_EnemyAI"]).with_not(["C_Dead", "C_Player"])
+	# Keep query constraints beautifully strict and type-safe
+	with_all([C_EnemyAI]).with_not([C_Dead])
+	iterate_data([D_EnemyAI, D_Input])
 
 ## Step 2: Run your logic loop.
 func _physics_process(_delta: float) -> void:
@@ -13,24 +14,30 @@ func _physics_process(_delta: float) -> void:
 	if not is_instance_valid(player_body): 
 		return
 
-	# Iterate through all filtered entities.
-	for ent in entities:
-		# Pull essential body/data for this system
-		var body = ent.get_parent() as CharacterBody2D
-		var enemy_ai = ent.get_data("D_EnemyAI") as D_EnemyAI
-		var input_stats = ent.get_data("D_Input") as D_Input
+	# Extract our flat memory pools once at the top of the frame pass
+	var enemy_ai_pool = get_data_pool(0)
+	var input_pool = get_data_pool(1)
 
-		# Always safety check for those fetched data
-		if not is_instance_valid(body) or not enemy_ai or not input_stats:
-			# Use continue to skip ent that don't have those
-			# If use return, It might break whole loop and have some weird behavior.
+	for i in entities.size():
+		var ent = entities[i]
+		var body = ent.get_parent() as CharacterBody2D
+
+		# 🎯 THE INDEX POINTER FIX: 
+		# Both pools now correctly use 'i' to match their memory tracking rows!
+		var enemy_ai = enemy_ai_pool[i] as D_EnemyAI
+		var input_data = input_pool[i] as D_Input
+
+		# Safety check for fetched data blocks
+		if not is_instance_valid(body) or not enemy_ai or not input_data:
 			continue
 
 		# Skip chasing if not aggressive
-		if enemy_ai.is_aggressive == false:
-			input_stats.movement_vector = Vector2.ZERO
+		if not enemy_ai.is_aggressive:
+			input_data.movement_vector = Vector2.ZERO
 			continue
 
-		# Apply data to D_Input so it can be use in S_Movement
+		# Calculate the clean direction vector towards our player target
 		var direction = (player_body.global_position - body.global_position).normalized()
-		input_stats.movement_vector = direction
+		
+		# Write it straight into their matching data slot row safely
+		input_data.movement_vector = direction

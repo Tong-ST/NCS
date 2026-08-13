@@ -7,7 +7,7 @@ const CONFIG_NODE_ICON = null
 
 func _enter_tree() -> void:
 	# Register our custom Node configuration hub type to the editor
-	add_custom_type(CONFIG_NODE_NAME, "Node",
+	add_custom_type(CONFIG_NODE_NAME, "EntityConfig",
 		CONFIG_NODE_SCRIPT, CONFIG_NODE_ICON
 	)
 	
