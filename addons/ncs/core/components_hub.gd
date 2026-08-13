@@ -5,7 +5,6 @@ extends NCSBase
 ## The physical body this entire folder of components controls.
 ## Defaults to the scene owner (e.g. CharacterBody2D) if left blank.
 @export var owner_node: Node
-
 ## Reference to the local configuration data resource node.
 var config_node: EntityConfig
 

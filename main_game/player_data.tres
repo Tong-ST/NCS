@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="NCSEntityConfig" format=3 uid="uid://d4mnm3blci3ky"]
+[gd_resource type="Resource" script_class="NCSEntityDataSet" format=3 uid="uid://d4mnm3blci3ky"]
 
 [ext_resource type="Script" uid="uid://cc42ojsffnknx" path="res://addons/ncs/templates/data_base.gd" id="1_msibu"]
 [ext_resource type="Script" uid="uid://bdl22fmu0u6e5" path="res://ncs_data/d_movement.gd" id="2_pkmsy"]
@@ -10,17 +10,15 @@
 script = ExtResource("2_pkmsy")
 metadata/_custom_type_script = "uid://bdl22fmu0u6e5"
 
-[sub_resource type="Resource" id="Resource_qgdva"]
-script = ExtResource("4_qgdva")
-max_health = 140.0
-current_health = 140.0
-metadata/_custom_type_script = "uid://x18cyu72de8c"
-
 [sub_resource type="Resource" id="Resource_gg2rq"]
 script = ExtResource("3_7rfxy")
 metadata/_custom_type_script = "uid://bcrp0alk1qht4"
 
+[sub_resource type="Resource" id="Resource_43suf"]
+script = ExtResource("4_qgdva")
+metadata/_custom_type_script = "uid://x18cyu72de8c"
+
 [resource]
 script = ExtResource("4_gluu3")
-data_sets = Array[ExtResource("1_msibu")]([SubResource("Resource_ctvm8"), SubResource("Resource_qgdva"), SubResource("Resource_gg2rq")])
+data_sets = Array[ExtResource("1_msibu")]([SubResource("Resource_ctvm8"), SubResource("Resource_gg2rq"), SubResource("Resource_43suf")])
 metadata/_custom_type_script = "uid://cahdo7ajcu48f"

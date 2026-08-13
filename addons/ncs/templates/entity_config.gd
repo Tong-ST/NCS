@@ -1,4 +1,4 @@
-class_name NCSEntityConfig
+class_name NCSEntityDataSet
 extends Resource
 
 # A completely generic array container

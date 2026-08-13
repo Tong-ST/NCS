@@ -1,7 +1,7 @@
 @tool
 extends EditorPlugin
 
-const CONFIG_NODE_NAME = "EntityConfig"
+const CONFIG_NODE_NAME = "NCSEntityConfig"
 const CONFIG_NODE_SCRIPT = preload("res://addons/ncs/core/entity_root.gd")
 const CONFIG_NODE_ICON = null
 

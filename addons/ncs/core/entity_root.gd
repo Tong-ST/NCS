@@ -1,10 +1,10 @@
 @tool
 class_name EntityConfig
 extends NCSBase
-# Drag your e.g. 'player_data.tres' (NCSEntityConfig Resource) here in the Inspector
-@export var base_config: NCSEntityConfig 
+# Drag your e.g. 'player_data.tres' (NCSEntityDataSet Resource) here in the Inspector
+@export var base_config: NCSEntityDataSet 
 # The unique runtime instance of the data configuration
-var runtime_config: NCSEntityConfig
+var runtime_config: NCSEntityDataSet
 # Internal memory pointer to track down the sibling folder without string paths
 var _components_hub_cache: NCSComponentsHub
 
@@ -14,7 +14,7 @@ func _enter_tree() -> void:
 	if base_config:
 		# Deep duplicate (true) ensures nested resources inside the array 
 		# are uniquely duplicated for every single spawned creature instance.
-		runtime_config = base_config.duplicate(true) as NCSEntityConfig
+		runtime_config = base_config.duplicate(true) as NCSEntityDataSet
 
 	NCS.register_entity(self)
 

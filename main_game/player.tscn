@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://wc4knsp52liy" path="res://main_game/player.gd" id="1_slu23"]
 [ext_resource type="Script" uid="uid://fn1jf75ey4vw" path="res://addons/ncs/core/entity_root.gd" id="2_xiktl"]
 [ext_resource type="Resource" uid="uid://d4mnm3blci3ky" path="res://main_game/player_data.tres" id="3_b5qb4"]
-[ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://icon.svg" id="4_n1lqc"]
+[ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="4_n1lqc"]
 [ext_resource type="Script" uid="uid://bd5qdwgeah7so" path="res://addons/ncs/core/components_hub.gd" id="5_daot8"]
 [ext_resource type="Script" uid="uid://cv2da7ssbx8dg" path="res://addons/ncs/core/component_base.gd" id="6_dhgom"]
 [ext_resource type="Script" uid="uid://chjaq4g4jwye5" path="res://ncs_components/c_health.gd" id="7_gg2rq"]
@@ -14,7 +14,7 @@ radius = 54.451813
 [node name="Player" type="CharacterBody2D" unique_id=1562561095 groups=["player"]]
 script = ExtResource("1_slu23")
 
-[node name="EntityConfig" type="Node" parent="." unique_id=428631012]
+[node name="NCSEntityConfig" type="Node" parent="." unique_id=428631012]
 script = ExtResource("2_xiktl")
 base_config = ExtResource("3_b5qb4")
 metadata/_custom_type_script = "uid://fn1jf75ey4vw"
