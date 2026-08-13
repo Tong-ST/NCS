@@ -4,7 +4,7 @@ extends NCSSystemBase
 ## Step 1: Explicitly configure entity query template on initialization
 func setup_query() -> void:
 	# Name of Components Matter!, Make sure they are the same in your scene node
-	with_all(["C_Input", "C_Health"]).with_not(["C_Dead"])
+	with_all(["C_Input"]).with_not(["C_Dead"])
 
 ## Step 2: Run your logic loop.
 func _process(_delta: float) -> void:
@@ -26,8 +26,8 @@ func _process(_delta: float) -> void:
 #		var health_comp = ent.get_comp("C_Health") as C_Health
 #		if deal_damage and health_comp and health_comp.get_script() and health_comp is C_Health:
 #			health_comp.take_damage(20)
-#
-		# Just use send_signal to call function inside comp which only have script attached
+
+		# Or just use send_signal to call function inside comp which only have script attached
 		if deal_damage:
 			send_signal(ent, "C_Health", "take_damage", [20])
 		

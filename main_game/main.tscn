@@ -12,7 +12,7 @@
 
 [node name="NCSWorld" type="Node" parent="." unique_id=935555110]
 script = ExtResource("3_lquwl")
-active_systems = Array[Script]([ExtResource("2_os3gg"), ExtResource("2_qofrp"), ExtResource("5_7mycd"), ExtResource("3_h2yge")])
+active_systems = Array[Script]([ExtResource("2_qofrp"), ExtResource("2_os3gg"), ExtResource("5_7mycd"), ExtResource("3_h2yge")])
 metadata/_custom_type_script = "uid://cdjdifkshhe0h"
 
 [node name="Player" parent="." unique_id=1562561095 instance=ExtResource("1_ig7tw")]

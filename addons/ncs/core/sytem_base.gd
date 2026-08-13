@@ -31,7 +31,7 @@ func with_not(comp_names: Array[String]) -> NCSSystemBase:
 func send_signal(entity: EntityConfig, component_name: String, method_name: String, args: Array = []) -> bool:
 	var comp = entity.get_comp(component_name)
 	
-	# If the component doesn't exist, or is just a scriptless lazy tag, skip quietly
+	# If the component doesn't exist, or is just a scriptless lazy tag.
 	if not is_instance_valid(comp) or not comp.get_script():
 		return false
 		

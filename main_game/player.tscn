@@ -30,22 +30,21 @@ script = ExtResource("5_daot8")
 owner_node = NodePath("..")
 metadata/_custom_type_script = "uid://bd5qdwgeah7so"
 
-[node name="C_Movement" type="Node" parent="NCSComponentsHub" unique_id=839477585]
-script = ExtResource("6_dhgom")
-metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
-
 [node name="C_Player" type="Node" parent="NCSComponentsHub" unique_id=1564120248]
 script = ExtResource("6_dhgom")
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
-[node name="C_EnemyAI" type="Node" parent="NCSComponentsHub" unique_id=732941963]
+[node name="C_Movement" type="Node" parent="NCSComponentsHub" unique_id=839477585]
 script = ExtResource("6_dhgom")
+require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
 [node name="C_Input" type="Node" parent="NCSComponentsHub" unique_id=510378875]
 script = ExtResource("6_dhgom")
+require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
 [node name="C_Health" type="Node" parent="NCSComponentsHub" unique_id=148448412]
 script = ExtResource("7_gg2rq")
+require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"

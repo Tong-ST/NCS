@@ -1,15 +1,13 @@
 @tool
 class_name EntityConfig
 extends NCSBase
-
 # Drag your e.g. 'player_data.tres' (NCSEntityConfig Resource) here in the Inspector
 @export var base_config: NCSEntityConfig 
-
 # The unique runtime instance of the data configuration
 var runtime_config: NCSEntityConfig
-
 # Internal memory pointer to track down the sibling folder without string paths
 var _components_hub_cache: NCSComponentsHub
+
 
 func _enter_tree() -> void:
 	if Engine.is_editor_hint(): return
@@ -29,7 +27,18 @@ func get_data(data_class: String) -> NCSDataBase:
 	if not runtime_config:
 		push_warning("EntityConfig on '" + get_parent().name + "' has no base_config assigned!")
 		return null
-	return runtime_config.find_data_by_class(data_class)
+
+	var data_block = runtime_config.find_data_by_class(data_class)
+	
+	if not is_instance_valid(data_block):
+		var entity_name = get_parent().name
+		var scene_path = get_parent().scene_file_path if get_parent().scene_file_path else "Runtime Spawned Entity"
+		
+		push_error("NCS Error: Entity '" + entity_name + "' is missing the data block -> [" + data_class + "]. " +
+			"Open the scene [" + scene_path + "] and add [" + data_class + "] to its EntityConfig resource data array")
+		return null
+		
+	return data_block
 
 ## GETTER: Safe dynamic lookup for specific component nodes
 func get_comp(comp_identifier: String) -> Node:
@@ -52,7 +61,13 @@ func get_comp(comp_identifier: String) -> Node:
 			
 		if child.get_script() and child.get_script().get_global_name() == comp_identifier:
 			return child
-			
+
+	var entity_name = get_parent().name
+	var scene_path = get_parent().scene_file_path if get_parent().scene_file_path else "Runtime Spawned Entity"
+	
+	push_warning("NCS Warning: Entity '" + entity_name + "' requested a component node named -> [" + comp_identifier + "], but it was not found in the Components hub " +
+		"Check your scene layout inside [" + scene_path + "].")
+
 	return null
 
 ## Adds a new component tag or juicy script node at runtime safely
@@ -62,7 +77,7 @@ func add_comp(comp_identifier: String, with_script: bool = true) -> void:
 	# Fetch via our safe type matching getter
 	var hub = _get_components_hub()
 	if not hub:
-		push_error("NCS Error: Cannot add component '" + comp_identifier + "'. No NCSComponentsHub node class found on entity root '" + get_parent().name + "'!")
+		push_error("NCS Error: Cannot add component '" + comp_identifier + "'. No NCSComponentsHub node class found on entity root '" + get_parent().name)
 		return
 		
 	# Safe check: loop through children by script class or node name to prevent duplication duplicates

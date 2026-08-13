@@ -7,7 +7,7 @@ extends NCSComponentBase
 
 # Example on create custom logic bind to this components
 func take_damage(amount: float) -> void:
-	var body = owner_node as CharacterBody2D
+	var body = owner_node as Node2D
 	if not body: return
 
 	var sprite = body.get_node_or_null("Sprite2D") as Sprite2D
