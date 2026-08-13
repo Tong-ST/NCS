@@ -21,7 +21,7 @@ func _ready() -> void:
 	for child in get_children():
 		if child is NCSComponentBase:
 			child.owner_node = owner_node
-			child.entity_config = config_node
+			child.ent = config_node
 
 	if config_node:
 		NCS.register_entity(config_node)

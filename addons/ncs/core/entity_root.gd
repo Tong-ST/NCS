@@ -55,26 +55,8 @@ func get_comp(comp_identifier: String) -> Node:
 			
 	return null
 
-## GETTER: Explicit type matching that completely ignores string names
-func _get_components_hub() -> NCSComponentsHub:
-	# If we already found it before, return it instantly
-	if is_instance_valid(_components_hub_cache):
-		return _components_hub_cache
-		
-	var parent_root = get_parent()
-	if not parent_root:
-		return null
-		
-	# Loop through all immediate siblings on the root entity tree
-	for child in parent_root.get_children():
-		if child is NCSComponentsHub:
-			_components_hub_cache = child
-			return _components_hub_cache
-			
-	return null
-
 ## Adds a new component tag or juicy script node at runtime safely
-func add_comp(comp_identifier: String) -> void:
+func add_comp(comp_identifier: String, with_script: bool = true) -> void:
 	if Engine.is_editor_hint(): return
 	
 	# Fetch via our safe type matching getter
@@ -91,27 +73,28 @@ func add_comp(comp_identifier: String) -> void:
 	var new_node: Node = null
 	
 	# Check if this identifier is a registered script class_name (e.g. C_Dead)
-	for script_info in ProjectSettings.get_global_class_list():
-		if script_info.class == comp_identifier:
-			var loaded_script = load(script_info.path) as Script
-			if loaded_script:
-				new_node = loaded_script.new()
-				break
+	if with_script:
+		for script_info in ProjectSettings.get_global_class_list():
+			if script_info.class == comp_identifier:
+				var loaded_script = load(script_info.path) as Script
+				if loaded_script:
+					new_node = loaded_script.new()
+					break
 				
 	# If no script class matches, treat it as a pure text-based Tag Component node
 	if not new_node:
-		new_node = Node.new()
+		new_node = NCSComponentBase.new()
 		new_node.name = comp_identifier
 
 	# Add it to the hub folder branch natively
 	hub.add_child(new_node)
 	
-	# If it's an architectural NCS script, inject references and boot it up
+	# If it's an NCS script, inject references and initialized
 	if new_node is NCSComponentBase:
-		new_node.target_node = hub.target_node
-		new_node.config_node = self
-		if new_node.has_method("initialize_component"):
-			new_node.initialize_component()
+		new_node.owner_node = hub.owner_node
+		new_node.ent = self
+		if new_node.has_method("_init_comp"):
+			new_node._init_comp()
 
 	# Instantly notify all active world systems to refresh their query arrays
 	NCS.force_update_system_queries()
@@ -171,4 +154,22 @@ func remove_data(data_class_name: String) -> void:
 	var target_data = runtime_config.find_data_by_class(data_class_name)
 	if target_data:
 		runtime_config.data_sets.erase(target_data)
-		print("NCS: Safely detached data tracking: ", data_class_name)
+		print("NCS: Detached data tracking: ", data_class_name)
+
+# Helper to get components_hub
+func _get_components_hub() -> NCSComponentsHub:
+	# If we already found it before, return it instantly
+	if is_instance_valid(_components_hub_cache):
+		return _components_hub_cache
+		
+	var parent_root = get_parent()
+	if not parent_root:
+		return null
+		
+	# Loop through all immediate siblings on the root entity tree
+	for child in parent_root.get_children():
+		if child is NCSComponentsHub:
+			_components_hub_cache = child
+			return _components_hub_cache
+			
+	return null

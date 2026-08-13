@@ -27,6 +27,21 @@ func with_not(comp_names: Array[String]) -> NCSSystemBase:
 	_not_filters = comp_names
 	return self
 
+## Returns true if the action was successfully triggered, false if it's a scriptless tag.
+func send_signal(entity: EntityConfig, component_name: String, method_name: String, args: Array = []) -> bool:
+	var comp = entity.get_comp(component_name)
+	
+	# If the component doesn't exist, or is just a scriptless lazy tag, skip quietly
+	if not is_instance_valid(comp) or not comp.get_script():
+		return false
+		
+	# Verify the component actually has the custom visual function written down
+	if comp.has_method(method_name):
+		comp.callv(method_name, args)
+		return true
+		
+	return false
+
 ## Internal evaluation method called automatically whenever entities spawn or leave
 func _update_query_filter() -> void:
 	var matching_entities: Array[EntityConfig] = []

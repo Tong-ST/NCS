@@ -23,9 +23,13 @@ func _process(_delta: float) -> void:
 
 		# Logic input logic for all ent.
 		# Example on how to get component from system and call some unique logic.
-		var health_comp = ent.get_comp("C_Health") as C_Health
-		if deal_damage and health_comp:
-			health_comp.take_damage()
+#		var health_comp = ent.get_comp("C_Health") as C_Health
+#		if deal_damage and health_comp and health_comp.get_script() and health_comp is C_Health:
+#			health_comp.take_damage(20)
+#
+		# Just use send_signal to call function inside comp which only have script attached
+		if deal_damage:
+			send_signal(ent, "C_Health", "take_damage", [20])
 		
 		# Logic below only for player. Basic movement control logic
 		if not body is Player:
