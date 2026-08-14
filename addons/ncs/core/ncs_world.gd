@@ -5,8 +5,10 @@ extends NCSBase
 func _enter_tree() -> void:
 	_register_systems_in_hierarchy(self)
 
+
 func _exit_tree() -> void:
 	_unregister_systems_in_hierarchy(self)
+
 
 ## Helper function to recursively find and register systems, ignoring folder spacers
 func _register_systems_in_hierarchy(current_node: Node) -> void:

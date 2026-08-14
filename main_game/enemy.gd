@@ -9,6 +9,7 @@ extends CharacterBody2D
 
 func _ready() -> void:
 	c_health.on_damaged.connect(_on_damaged)
+	
 
 func _on_damaged() -> void:
 	if not is_instance_valid(sprite_2d): 

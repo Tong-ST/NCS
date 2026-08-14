@@ -6,6 +6,7 @@ func setup_query() -> void:
 	with_all([C_Input]).with_not([C_Dead]) # filter entities by components
 	iterate_data([D_Input]) # caching data
 
+
 func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> void:
 	var input_pool = data_pools[0] # allocate data
 

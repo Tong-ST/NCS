@@ -5,6 +5,7 @@ extends NCSSystemBase
 func setup_query() -> void:
 	with_all([C_Dead]) # filter entites with components
 
+
 func ncs_process(entites: Array[Node], _data_pools: Array, _delta: float) -> void:
 	# Iterate through all filtered entities.
 	for i in entites.size():

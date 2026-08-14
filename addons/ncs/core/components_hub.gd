@@ -5,6 +5,7 @@ extends NCSBase
 ## The physical body this entire folder of components controls.
 ## Defaults to the scene owner (e.g. CharacterBody2D) if left blank.
 @export var owner_node: Node
+
 ## Reference to the local configuration data resource node.
 var config_node: EntityConfig
 
@@ -62,12 +63,14 @@ func _on_property_edited(what: String) -> void:
 func _on_editor_context_changed() -> void:
 	update_configuration_warnings()
 
+
 ## Instantly catch structural node changes like drag-and-drops
 func _notification(what: int) -> void:
 	if not Engine.is_editor_hint():
 		return
 	if what == NOTIFICATION_CHILD_ORDER_CHANGED:
 		update_configuration_warnings()
+
 
 ## Native editor validation loop that runs on our slow 0.5-second clock pulse
 func _get_configuration_warnings() -> PackedStringArray:
@@ -108,10 +111,9 @@ func _get_configuration_warnings() -> PackedStringArray:
 			if not script_class_name.is_empty():
 				var base_identity = script_class_name.replace("Component", "")
 				var expected_data_class_1 = base_identity.replace("C_", "D_")
-				var expected_data_class_2 = base_identity.replace("C_", "") + "Data"
 
-				if not available_data_classes.has(expected_data_class_1) and not available_data_classes.has(expected_data_class_2):
-					warnings.append("NCS Configuration Error: Component class [" + script_class_name + "] explicitly requires a Data Resource named [" + expected_data_class_1 + "] or [" + expected_data_class_2 + "], but it's missing from your EntityConfig array!")
+				if not available_data_classes.has(expected_data_class_1):
+					warnings.append("NCS Configuration Error: Component class [" + script_class_name + "] explicitly requires a Data Resource named [" + expected_data_class_1 + "], but it's missing from your EntityConfig array!")
 
 	return warnings
 

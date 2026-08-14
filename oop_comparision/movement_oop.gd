@@ -4,6 +4,7 @@ extends Node
 @export var actor: Node
 @export var input_comp: InputOOP
 
+
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(actor) or not is_instance_valid(input_comp): 
 		return

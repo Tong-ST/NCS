@@ -14,31 +14,32 @@ var _all_filters: Array[Script] = []
 var _not_filters: Array[Script] = []
 var _data_targets: Array[Script] = []
 
+
 func _ready() -> void:
 	# Setup virtual query template constraints on initialization
 	setup_query()
 	_update_query_filter()
 
-## VIRTUAL HOOK: Overridden by the user to establish filters on startup
+
+## Overridden by the user to establish filters on startup
 func setup_query() -> void:
 	pass
+
 
 func with_all(comp_names: Array[Script]) -> NCSSystemBase:
 	_all_filters = comp_names
 	return self
 
+
 func with_not(comp_names: Array[Script]) -> NCSSystemBase:
 	_not_filters = comp_names
 	return self
+
 
 func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
 	_data_targets = data_classes
 	return self
 
-
-# ==============================================================================
-# 🗲 CRASH-PROOF DEFERRED BATCH LOOPS
-# ==============================================================================
 
 ## Automated engine processing frame loop
 func _process(delta: float) -> void:
@@ -51,6 +52,7 @@ func _process(delta: float) -> void:
 		# Invoke the game system execution path with direct references!
 		call("ncs_process", entities, _flat_data_pools, delta)
 
+
 ## Automated engine physics processing frame loop
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint(): return
@@ -59,15 +61,14 @@ func _physics_process(delta: float) -> void:
 		var entities = _entities.duplicate()
 		call("ncs_physics_process", entities, _flat_data_pools, delta)
 
+
 func ncs_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
 	pass
+
 
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
 	pass
 
-# ==============================================================================
-# 🎯 HIGH-SPEED INCREMENTAL WORKFLOW (O(1) SPAWNING PROTECTION)
-# ==============================================================================
 
 ## Evaluates exactly ONE newly spawned EntityConfig node
 func _handle_incremental_arrival(config_node: EntityConfig) -> void:
@@ -93,9 +94,7 @@ func _handle_incremental_arrival(config_node: EntityConfig) -> void:
 		if alive_components.has(forbidden_script): is_match = false; break
 	if not is_match: return
 	
-	# 🗲 Append elements to the end of the flat pools in parallel alignment
 	if not _entities.has(parent_body):
-		# Setup an editor convenience shortcut handle directly onto the game object node!
 		parent_body.set(&"config", config_node)
 		
 		_entities.append(parent_body)
@@ -116,10 +115,6 @@ func _handle_incremental_departure(config_node: EntityConfig) -> void:
 		for pool_idx in _flat_data_pools.size():
 			_flat_data_pools[pool_idx].remove_at(idx)
 
-
-# ==============================================================================
-# 🛠️ FULL FACTOR OVERHAUL FLUSH
-# ==============================================================================
 
 func _update_query_filter() -> void:
 	var matching_bodies: Array[Node] = []

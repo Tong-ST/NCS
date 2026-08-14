@@ -9,9 +9,11 @@ signal ent_changed
 var total_ncs_count: int = 0
 var total_oop_count: int = 0
 
+
 func _ready() -> void:
 	ent_changed.connect(_on_ent_changed)
 	ent_changed.emit()
+
 
 func _process(_delta: float) -> void:
 	var fps = Performance.get_monitor(Performance.TIME_FPS)
@@ -20,13 +22,16 @@ func _process(_delta: float) -> void:
 
 	perf_counter.text = "FPS: %d\nProcess: %.2f ms\nObjects: %d" % [fps, process_time, object_count]
 
+
 func _on_ent_changed() -> void:
 	ncs_ent_count.text = str("NCS Enemies: ", total_ncs_count)
 	oop_ent_count.text = str("OOP Enemies: ", total_oop_count)
 
+
 func _on_ncs_btn_pressed() -> void:
 	# spawn NCS enemy
 	%NCSBtn.disabled = true
+
 	for i in range(100):
 		await get_tree().process_frame
 		for j in range(5):
@@ -34,14 +39,18 @@ func _on_ncs_btn_pressed() -> void:
 			var player = get_tree().get_first_node_in_group(&"player") as Player
 			if player:
 				enemy.global_position = player.global_position
+
 			add_child(enemy)
 			total_ncs_count += 1
 			ent_changed.emit()
+
 	%NCSBtn.disabled = false
+
 
 func _on_oop_btn_pressed() -> void:
 	# spawn OOP enemy
 	%OOPBtn.disabled = true
+
 	for i in range(100):
 		await get_tree().process_frame
 		for j in range(5):
@@ -49,7 +58,9 @@ func _on_oop_btn_pressed() -> void:
 			var player = get_tree().get_first_node_in_group(&"player") as Player
 			if player:
 				enemy.global_position = player.global_position
+
 			add_child(enemy)
 			total_oop_count += 1
 			ent_changed.emit()
+
 	%OOPBtn.disabled = false

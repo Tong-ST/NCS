@@ -56,7 +56,7 @@ func get_data(data_script: Script) -> NCSDataBase:
 
 
 ## Locates an active component node organized inside the local tree hub folder via its class script.
-## Example: var health_juice = config.get_comp(C_HealthComponent) as C_HealthComponent
+## Example: var health = config.get_comp(C_Health) as C_Health
 func get_comp(comp_script: Script) -> NCSComponentBase:
 	if not comp_script: 
 		return null

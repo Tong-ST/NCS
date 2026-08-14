@@ -6,6 +6,7 @@ func setup_query() -> void:
 	with_all([C_EnemyAI]).with_not([C_Dead]) # ftiler entities by components
 	iterate_data([D_EnemyAI, D_Input]) # caching data
 
+
 func ncs_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
 	var enemy_ai_pool = data_pools[0] # allocate data pool
 	var input_pool = data_pools[1] # same index as iterate_data appbrove

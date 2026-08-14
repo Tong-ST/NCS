@@ -16,6 +16,7 @@ func _ready() -> void:
 #	print("Player input_vector: ", input_data.movement_vector)
 #	print("Player speed: ", movement_data.max_speed)
 
+
 func _on_damaged() -> void:
 	if not is_instance_valid(sprite_2d):
 		return

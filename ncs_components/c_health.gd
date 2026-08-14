@@ -6,6 +6,7 @@ extends NCSComponentBase
 # For core logic that should share across all component write at S_System instead.
 signal on_damaged
 
+
 # Example on create custom logic bind to this components
 func take_damage(amount: float) -> void:
 	# Example how to access data and manipulated via component itself.
@@ -19,7 +20,3 @@ func take_damage(amount: float) -> void:
 			config.add_comp(C_Dead) # By add comp it auto attached script.
 			# with class_name C_Dead.
 			# And it simply add now comp to this ent. get filter by other system
-
-	var movement_data = config.get_data(D_Movement) as D_Movement
-	if movement_data:
-		movement_data.max_speed -= 40

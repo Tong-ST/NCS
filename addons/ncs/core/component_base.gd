@@ -12,5 +12,6 @@ extends NCSBase
 var owner_node: Node
 var config: EntityConfig
 
+
 func _init_comp() -> void:
 	pass

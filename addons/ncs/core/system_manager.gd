@@ -9,6 +9,7 @@ var active_entities: Array[EntityConfig] = []
 # High-speed tracking flag used to collapse multiple refresh signals into a single frame pass
 var _query_dirty: bool = false
 
+
 ## Registration hook triggered automatically when an entity mounts into the world tree
 func register_entity(entity: EntityConfig) -> void:
 	if not active_entities.has(entity):

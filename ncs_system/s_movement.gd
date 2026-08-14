@@ -6,6 +6,7 @@ func setup_query() -> void:
 	with_all([C_Movement, C_Input]).with_not([C_Dead]) # filter entitie
 	iterate_data([D_Movement, D_Input]) # caching data
 
+
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
 	var move_pool = data_pools[0] # allocate data pool
 	var input_pool = data_pools[1] # same index as iterate_data appbrove
