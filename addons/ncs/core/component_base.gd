@@ -10,7 +10,7 @@ extends NCSBase
 @export var require_data: bool = false
 
 var owner_node: Node
-var ent: EntityConfig
+var config: EntityConfig
 
 func _init_comp() -> void:
 	pass

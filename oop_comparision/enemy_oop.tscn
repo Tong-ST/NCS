@@ -1,7 +1,11 @@
 [gd_scene format=3 uid="uid://lvup6a5nx615"]
 
 [ext_resource type="Script" uid="uid://b7a7esaosnc8r" path="res://oop_comparision/enemy_oop.gd" id="1_3txpn"]
+[ext_resource type="Script" uid="uid://dlcla17vwred6" path="res://oop_comparision/input_oop.gd" id="3_ed0q7"]
 [ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="4_euxac"]
+[ext_resource type="Script" uid="uid://cofmik0omxmq1" path="res://oop_comparision/enemy_ai_oop.gd" id="4_yjegb"]
+[ext_resource type="Script" uid="uid://bo5dimpulo4vc" path="res://oop_comparision/movement_oop.gd" id="5_7g2n3"]
+[ext_resource type="Script" uid="uid://dh1jd0j6jpmmj" path="res://oop_comparision/health_oop.gd" id="6_xp3d8"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1yc37"]
 radius = 20.0
@@ -17,3 +21,22 @@ texture = ExtResource("4_euxac")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1469912647]
 shape = SubResource("CircleShape2D_1yc37")
+
+[node name="Components" type="Node" parent="." unique_id=314059360]
+
+[node name="InputOOP" type="Node" parent="Components" unique_id=411934081]
+script = ExtResource("3_ed0q7")
+
+[node name="EnemyAI_OOP" type="Node" parent="Components" unique_id=27219289 node_paths=PackedStringArray("actor", "input_comp")]
+script = ExtResource("4_yjegb")
+actor = NodePath("../..")
+input_comp = NodePath("../InputOOP")
+
+[node name="MovementOOP" type="Node" parent="Components" unique_id=1872130734 node_paths=PackedStringArray("actor", "input_comp")]
+script = ExtResource("5_7g2n3")
+actor = NodePath("../..")
+input_comp = NodePath("../InputOOP")
+
+[node name="HealthOOP" type="Node" parent="Components" unique_id=1357518366 node_paths=PackedStringArray("actor")]
+script = ExtResource("6_xp3d8")
+actor = NodePath("../..")

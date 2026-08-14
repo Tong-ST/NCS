@@ -24,18 +24,20 @@ func _unhandled_input(event: InputEvent) -> void:
 	# spawn NCS enemy
 	if event.is_action_pressed("ui_cancel"):
 		for i in range(500):
+			await get_tree().process_frame
 			var enemy = preload("uid://cvael67uegn6h").instantiate() as Enemy
 			total_ncs_count += 1
 			add_child(enemy)
-		ent_changed.emit()
+			ent_changed.emit()
 
 	# spawn OOP enemy
 	if event.is_action_pressed("ui_end"):
 		for i in range(500):
+			await get_tree().process_frame
 			var enemy = preload("uid://lvup6a5nx615").instantiate() as EnemyOOP
 			total_oop_count += 1
 			add_child(enemy)
-		ent_changed.emit()
+			ent_changed.emit()
 
 
 func _on_ent_changed() -> void:

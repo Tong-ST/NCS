@@ -1,23 +1,30 @@
 class_name S_EnemyAI
 extends NCSSystemBase
 
+
 func setup_query() -> void:
-	with_all([C_EnemyAI]).with_not([C_Dead])
-	iterate_data([D_EnemyAI, D_Input])
+	with_all([C_EnemyAI]).with_not([C_Dead]) # ftiler entities by components
+	iterate_data([D_EnemyAI, D_Input]) # caching data
 
-func _physics_process(_delta: float) -> void:
-	var enemy_ai_pool = get_data_pool(0)
-	var input_pool = get_data_pool(1)
+func ncs_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
+	var enemy_ai_pool = data_pools[0] # allocate data pool
+	var input_pool = data_pools[1] # same index as iterate_data appbrove
 
+	# Iterate and fetching data process.
 	for i in entities.size():
 		var enemy_ai = enemy_ai_pool[i] as D_EnemyAI
 		var input_data = input_pool[i] as D_Input
 
+		# Always safely check for data that you query, use "continue" to skip loop.
+		if not enemy_ai or not input_data:
+			continue
+		
+		# Run regular logic:
 		if not enemy_ai.is_aggressive:
 			input_data.movement_vector = Vector2.ZERO
 			continue
 
-		enemy_ai.state_timer += _delta
+		enemy_ai.state_timer += delta
 
 		if enemy_ai.state_timer >= enemy_ai.choose_time_target:
 			enemy_ai.state_timer = 0.0

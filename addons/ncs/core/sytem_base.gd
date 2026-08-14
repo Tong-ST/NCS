@@ -1,25 +1,25 @@
 class_name NCSSystemBase
 extends NCSBase
 
-# ACCESS: filtered entity collection array
-var entities: Array[EntityConfig] = []
+var _entities: Array[Node] = []
 
-# 🎯 THE FLATTENED MEMORY MATRIX:
-# An array of clean, pre-sorted flat arrays matching your iterate targets.
-# _flat_data_pools[0] = Array of ALL D_Movement resources (ordered perfectly)
-# _flat_data_pools[1] = Array of ALL D_Input resources (ordered perfectly)
+# Mirror matrix tracking configuration pointers side-by-side
+var config_pool: Array[EntityConfig] = []
+
+# A clean, pre-sorted multi-channel data pool container
 var _flat_data_pools: Array[Array] = []
-var _body_pool: Array[Node] = []
 
-# Internal query arrays tracking what this system cares about
+# Internal query structures tracking what this system cares about
 var _all_filters: Array[Script] = []
 var _not_filters: Array[Script] = []
 var _data_targets: Array[Script] = []
 
 func _ready() -> void:
+	# Setup virtual query template constraints on initialization
 	setup_query()
 	_update_query_filter()
 
+## VIRTUAL HOOK: Overridden by the user to establish filters on startup
 func setup_query() -> void:
 	pass
 
@@ -35,71 +35,135 @@ func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
 	_data_targets = data_classes
 	return self
 
-# 🎯 HIGH-SPEED FLAT GETTER:
-# Pulls a pre-sorted flat array pool directly. No internal index parsing or offsets!
-func get_data_pool(pool_index: int) -> Array:
-	return _flat_data_pools[pool_index]
 
-func get_body_pool() -> Array[Node]:
-	return _body_pool
+# ==============================================================================
+# 🗲 CRASH-PROOF DEFERRED BATCH LOOPS
+# ==============================================================================
 
-func send_signal(entity: EntityConfig, component_name: Script, method_name: String, args: Array = []) -> bool:
-	var comp = entity.get_comp(component_name)
-	if not is_instance_valid(comp) or not comp.get_script():
-		return false
-	if comp.has_method(method_name):
-		comp.callv(method_name, args)
-		return true
-	return false
+## Automated engine processing frame loop
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint(): return
+	
+	# Duck-typing check: only run if the user implemented this specific function
+	if has_method("ncs_process") and not _entities.is_empty():
+		# Take a safe, current-frame snapshot copy to prevent mid-frame mutation crashes
+		var entities = _entities.duplicate()
+		# Invoke the game system execution path with direct references!
+		call("ncs_process", entities, _flat_data_pools, delta)
 
-## Internal evaluation method - ONLY runs when entities spawn or change state!
+## Automated engine physics processing frame loop
+func _physics_process(delta: float) -> void:
+	if Engine.is_editor_hint(): return
+	
+	if has_method("ncs_physics_process") and not _entities.is_empty():
+		var entities = _entities.duplicate()
+		call("ncs_physics_process", entities, _flat_data_pools, delta)
+
+func ncs_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
+	pass
+
+func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
+	pass
+
+# ==============================================================================
+# 🎯 HIGH-SPEED INCREMENTAL WORKFLOW (O(1) SPAWNING PROTECTION)
+# ==============================================================================
+
+## Evaluates exactly ONE newly spawned EntityConfig node
+func _handle_incremental_arrival(config_node: EntityConfig) -> void:
+	if not is_instance_valid(config_node): return
+	var parent_body = config_node.get_parent()
+	if not is_instance_valid(parent_body): return
+	
+	# Fast-extract component scripts list for just this single node branch
+	var alive_components: Array[Script] = []
+	for child in parent_body.get_children():
+		if child.get_script(): alive_components.append(child.get_script())
+		if child is NCSComponentsHub or child.name == "Components":
+			for sub_child in child.get_children():
+				if sub_child.get_script(): alive_components.append(sub_child.get_script())
+					
+	# Run query match checks
+	var is_match = true
+	for required_script in _all_filters:
+		if not alive_components.has(required_script): is_match = false; break
+	if not is_match: return
+	
+	for forbidden_script in _not_filters:
+		if alive_components.has(forbidden_script): is_match = false; break
+	if not is_match: return
+	
+	# 🗲 Append elements to the end of the flat pools in parallel alignment
+	if not _entities.has(parent_body):
+		# Setup an editor convenience shortcut handle directly onto the game object node!
+		parent_body.set(&"config", config_node)
+		
+		_entities.append(parent_body)
+		config_pool.append(config_node)
+		
+		for pool_idx in _data_targets.size():
+			var target_script = _data_targets[pool_idx]
+			var data_block = _find_data_by_script(config_node, target_script)
+			_flat_data_pools[pool_idx].append(data_block)
+
+
+## Drops exactly ONE despawning entity instantly out of alignment rows
+func _handle_incremental_departure(config_node: EntityConfig) -> void:
+	var idx = config_pool.find(config_node)
+	if idx != -1:
+		_entities.remove_at(idx)
+		config_pool.remove_at(idx)
+		for pool_idx in _flat_data_pools.size():
+			_flat_data_pools[pool_idx].remove_at(idx)
+
+
+# ==============================================================================
+# 🛠️ FULL FACTOR OVERHAUL FLUSH
+# ==============================================================================
+
 func _update_query_filter() -> void:
-	var matching_entities: Array[EntityConfig] = []
-	var new_body_pool: Array[Node] = []
+	var matching_bodies: Array[Node] = []
+	var matching_configs: Array[EntityConfig] = []
 	
 	var new_flat_pools: Array[Array] = []
 	for t in _data_targets.size():
 		new_flat_pools.append([])
 	
-	for ent in NCS.active_entities:
-		if not is_instance_valid(ent): continue
-		var parent_body = ent.get_parent() as Node
+	for config_node in NCS.active_entities:
+		if not is_instance_valid(config_node): continue
+		var parent_body = config_node.get_parent()
 		if not is_instance_valid(parent_body): continue
 		
-		# Cache component scripts to bypass nested lookups
 		var alive_components: Array[Script] = []
 		for child in parent_body.get_children():
-			if child.get_script():
-				alive_components.append(child.get_script())
+			if child.get_script(): alive_components.append(child.get_script())
 			if child is NCSComponentsHub or child.name == "Components":
 				for sub_child in child.get_children():
-					if sub_child.get_script():
-						alive_components.append(sub_child.get_script())
+					if sub_child.get_script(): alive_components.append(sub_child.get_script())
 		
 		var is_match = true
 		for required_script in _all_filters:
-			if not alive_components.has(required_script):
-				is_match = false
-				break
+			if not alive_components.has(required_script): is_match = false; break
 		if not is_match: continue
 		
 		for forbidden_script in _not_filters:
-			if alive_components.has(forbidden_script):
-				is_match = false
-				break
+			if alive_components.has(forbidden_script): is_match = false; break
+		if not is_match: continue
 				
 		if is_match:
-			matching_entities.append(ent)
-			new_body_pool.append(parent_body) # 🎯 GLUE THE BODY POINTER HERE
+			# Bind the custom configuration variable property shortcut right on the node target!
+			parent_body.set(&"config", config_node)
 			
-			# Pre-sort into flat data channels on spawn
+			matching_bodies.append(parent_body)
+			matching_configs.append(config_node)
+			
 			for pool_idx in _data_targets.size():
 				var target_script = _data_targets[pool_idx]
-				var data_block = _find_data_by_script(ent, target_script)
+				var data_block = _find_data_by_script(config_node, target_script)
 				new_flat_pools[pool_idx].append(data_block)
 			
-	entities = matching_entities
-	_body_pool = new_body_pool
+	_entities = matching_bodies
+	config_pool = matching_configs
 	_flat_data_pools = new_flat_pools
 
 
