@@ -9,6 +9,7 @@ var entities: Array[EntityConfig] = []
 # _flat_data_pools[0] = Array of ALL D_Movement resources (ordered perfectly)
 # _flat_data_pools[1] = Array of ALL D_Input resources (ordered perfectly)
 var _flat_data_pools: Array[Array] = []
+var _body_pool: Array[Node] = []
 
 # Internal query arrays tracking what this system cares about
 var _all_filters: Array[Script] = []
@@ -39,6 +40,9 @@ func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
 func get_data_pool(pool_index: int) -> Array:
 	return _flat_data_pools[pool_index]
 
+func get_body_pool() -> Array[Node]:
+	return _body_pool
+
 func send_signal(entity: EntityConfig, component_name: Script, method_name: String, args: Array = []) -> bool:
 	var comp = entity.get_comp(component_name)
 	if not is_instance_valid(comp) or not comp.get_script():
@@ -51,15 +55,15 @@ func send_signal(entity: EntityConfig, component_name: Script, method_name: Stri
 ## Internal evaluation method - ONLY runs when entities spawn or change state!
 func _update_query_filter() -> void:
 	var matching_entities: Array[EntityConfig] = []
+	var new_body_pool: Array[Node] = []
 	
-	# Initialize our flat pools to match the size of your iterate_data targets
 	var new_flat_pools: Array[Array] = []
 	for t in _data_targets.size():
 		new_flat_pools.append([])
 	
 	for ent in NCS.active_entities:
 		if not is_instance_valid(ent): continue
-		var parent_body = ent.get_parent()
+		var parent_body = ent.get_parent() as Node
 		if not is_instance_valid(parent_body): continue
 		
 		# Cache component scripts to bypass nested lookups
@@ -86,15 +90,18 @@ func _update_query_filter() -> void:
 				
 		if is_match:
 			matching_entities.append(ent)
+			new_body_pool.append(parent_body) # 🎯 GLUE THE BODY POINTER HERE
 			
-			# 🎯 PRE-SORT AND SEPARATE INTO FLAT POOLS ON SPAWN:
+			# Pre-sort into flat data channels on spawn
 			for pool_idx in _data_targets.size():
 				var target_script = _data_targets[pool_idx]
 				var data_block = _find_data_by_script(ent, target_script)
 				new_flat_pools[pool_idx].append(data_block)
 			
 	entities = matching_entities
+	_body_pool = new_body_pool
 	_flat_data_pools = new_flat_pools
+
 
 func _find_data_by_script(ent: EntityConfig, target_script: Script) -> NCSDataBase:
 	if not ent.runtime_config or not target_script: return null

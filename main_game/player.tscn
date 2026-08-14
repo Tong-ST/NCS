@@ -11,7 +11,7 @@
 [ext_resource type="Script" uid="uid://c17fu44cgwhlq" path="res://ncs_components/c_input.gd" id="8_ewijn"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1yc37"]
-radius = 54.451813
+radius = 30.0
 
 [node name="Player" type="CharacterBody2D" unique_id=1562561095 groups=["player"]]
 script = ExtResource("1_slu23")
@@ -22,6 +22,7 @@ base_config = ExtResource("3_b5qb4")
 metadata/_custom_type_script = "uid://fn1jf75ey4vw"
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=54292582]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("4_n1lqc")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1469912647]
@@ -50,3 +51,5 @@ metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 script = ExtResource("7_gg2rq")
 require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=145551066]

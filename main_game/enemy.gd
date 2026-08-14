@@ -4,11 +4,12 @@ extends CharacterBody2D
 # Example on how to get all of your entities data to use outside of CustomSystem
 @onready var entity_config: EntityConfig = $EntityConfig
 @onready var sprite_2d: Sprite2D = $Sprite2D
-@onready var c_health: C_Health = $NCSComponentsHub/C_Health
+#@onready var c_health: C_Health = $NCSComponentsHub/C_Health
 
 
 func _ready() -> void:
-	c_health.on_damaged.connect(_on_damaged)
+	pass
+	#c_health.on_damaged.connect(_on_damaged)
 
 func _on_damaged() -> void:
 	if not is_instance_valid(sprite_2d): 

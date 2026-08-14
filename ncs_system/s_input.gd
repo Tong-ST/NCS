@@ -11,15 +11,14 @@ func setup_query() -> void:
 func _process(_delta: float) -> void:
 	# Check hardware input ONCE per frame, instead of inside the loop for optimization
 	var deal_damage = Input.is_action_just_pressed("ui_accept")
+	var bodies = get_body_pool()
 	var input_pool = get_data_pool(0)
 
 	# Iterate through all filtered entities.
 	for i in entities.size():
 		# Pull essential body/data for this system
 		var ent = entities[i]
-		var body = ent.get_parent() as CharacterBody2D
-
-		# Get data required data according with iterate_data() abrove.
+		var body = bodies[i]
 		var input_data = input_pool[i] as D_Input
 
 		# Always safety check for those fetched data

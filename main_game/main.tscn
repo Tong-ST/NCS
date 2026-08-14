@@ -51,7 +51,9 @@ position = Vector2(977, 433)
 [node name="Enemy4" parent="." unique_id=1678244593 instance=ExtResource("2_0xm2m")]
 position = Vector2(143, 518)
 
-[node name="Control" type="Control" parent="." unique_id=1829833830]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1618945116]
+
+[node name="Control" type="Control" parent="CanvasLayer" unique_id=1829833830]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -59,14 +61,50 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="Control" unique_id=821245185]
+[node name="Label" type="Label" parent="CanvasLayer/Control" unique_id=821245185]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -119.5
+offset_top = -23.0
+offset_right = 119.5
+grow_horizontal = 2
+grow_vertical = 0
+text = "Press \"ENTER\" To Deal Damage"
+
+[node name="PerfCounter" type="Label" parent="CanvasLayer/Control" unique_id=194156490]
+unique_name_in_owner = true
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = 414.0
-offset_top = 23.0
-offset_right = 671.0
-offset_bottom = 46.0
+offset_left = -119.5
+offset_right = 119.5
+offset_bottom = 23.0
 grow_horizontal = 2
-text = "Press \"ENTER\" To Deal Damage"
+text = "FPS:
+PROCESS:
+OBJ:"
+horizontal_alignment = 1
+
+[node name="NCSEntCount" type="Label" parent="CanvasLayer/Control" unique_id=169029808]
+unique_name_in_owner = true
+layout_mode = 1
+offset_right = 239.0
+offset_bottom = 23.0
+text = "NCS Enemies: xxx"
+
+[node name="OOPEntCount" type="Label" parent="CanvasLayer/Control" unique_id=1963367658]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -239.0
+offset_bottom = 23.0
+grow_horizontal = 0
+text = "OOP Enemies: XXX"
+horizontal_alignment = 2
