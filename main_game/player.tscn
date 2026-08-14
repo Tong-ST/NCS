@@ -22,6 +22,7 @@ base_config = ExtResource("3_b5qb4")
 metadata/_custom_type_script = "uid://fn1jf75ey4vw"
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=54292582]
+z_index = 1
 scale = Vector2(0.5, 0.5)
 texture = ExtResource("4_n1lqc")
 

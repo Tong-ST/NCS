@@ -3,7 +3,7 @@
 
 A Bridge for Data-Oriented design for Godot. This plugin Is NOT try to be Pure ECS framework, But aim to make ECS workflow in godot less friction and encourage user build with hybrid approach.
 
-## Core Pillar
+## Core Pillars
 - Data: Pure variable container untilize godot Resource, without any logic.
 - Entity: Visual node/Your normal godot reuseable scene e.g. Player, Enemy.
 - Components: A Tag and reuseable logics focus on local scene.
@@ -75,9 +75,9 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 	var input_pool = data_pools[1] # with index accordingly to iterate_data() above
 	
 	# Iterate through all entities
-	for i in frame_entities.size():
+	for i in entities.size():
 		# allocate data for each entities
-		var ent = frame_entities[i] as CharacterBody2D
+		var ent = entities[i] as CharacterBody2D
 		var move_data = move_pool[i] as D_Movement
 		var input_data = input_pool[i] as D_Input
 		var config = config_pool[i] as EntityConfig
@@ -112,7 +112,7 @@ if target_enemy_health <= 0:
 
 ### The layout on your game world
 To activate your systems and allow your entities to be tracked automatically, you use an NCSWorld node inside your main level scene.
-```gdscript
+```text
 Level_Main
 ├── TileMap
 ├── Player

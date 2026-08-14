@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://bjse0r78t1isb" path="res://ncs_system/s_enemy_ai.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://cdjdifkshhe0h" path="res://addons/ncs/core/ncs_world.gd" id="3_lquwl"]
 [ext_resource type="Script" uid="uid://ckc1tfcgccqis" path="res://ncs_system/s_movement.gd" id="5_7mycd"]
+[ext_resource type="PackedScene" uid="uid://lvup6a5nx615" path="res://oop_comparision/enemy_oop.tscn" id="9_7km35"]
 
 [node name="Main" type="Node2D" unique_id=945331847]
 script = ExtResource("1_xvufe")
@@ -45,11 +46,11 @@ position = Vector2(54, 28)
 [node name="Enemy2" parent="." unique_id=1204988500 instance=ExtResource("2_0xm2m")]
 position = Vector2(951, 48)
 
-[node name="Enemy3" parent="." unique_id=1568534245 instance=ExtResource("2_0xm2m")]
-position = Vector2(977, 433)
+[node name="EnemyOOP" parent="." unique_id=1960654353 instance=ExtResource("9_7km35")]
+position = Vector2(130, 540)
 
-[node name="Enemy4" parent="." unique_id=1678244593 instance=ExtResource("2_0xm2m")]
-position = Vector2(143, 518)
+[node name="EnemyOOP2" parent="." unique_id=372067784 instance=ExtResource("9_7km35")]
+position = Vector2(1000, 528)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1618945116]
 
@@ -61,6 +62,15 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control" unique_id=1992913153]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 90.0
+grow_horizontal = 2
+color = Color(0, 0, 0, 0.15686275)
+
 [node name="Label" type="Label" parent="CanvasLayer/Control" unique_id=821245185]
 layout_mode = 1
 anchors_preset = 7
@@ -69,8 +79,9 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -119.5
-offset_top = -23.0
+offset_top = -33.0
 offset_right = 119.5
+offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 0
 text = "Press \"ENTER\" To Deal Damage"
@@ -82,8 +93,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -119.5
+offset_top = 5.0
 offset_right = 119.5
-offset_bottom = 23.0
+offset_bottom = 80.0
 grow_horizontal = 2
 text = "FPS:
 PROCESS:
@@ -93,8 +105,10 @@ horizontal_alignment = 1
 [node name="NCSEntCount" type="Label" parent="CanvasLayer/Control" unique_id=169029808]
 unique_name_in_owner = true
 layout_mode = 1
-offset_right = 239.0
-offset_bottom = 23.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 249.0
+offset_bottom = 33.0
 text = "NCS Enemies: xxx"
 
 [node name="OOPEntCount" type="Label" parent="CanvasLayer/Control" unique_id=1963367658]
@@ -103,8 +117,37 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -239.0
-offset_bottom = 23.0
+offset_left = -249.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 33.0
 grow_horizontal = 0
 text = "OOP Enemies: XXX"
 horizontal_alignment = 2
+
+[node name="NCSBtn" type="Button" parent="CanvasLayer/Control" unique_id=2142314393]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 10.0
+offset_top = 40.0
+offset_right = 111.0
+offset_bottom = 71.0
+focus_mode = 0
+text = "SPAWN NCS"
+
+[node name="OOPBtn" type="Button" parent="CanvasLayer/Control" unique_id=501665499]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -115.0
+offset_top = 40.0
+offset_right = -10.0
+offset_bottom = 71.0
+grow_horizontal = 0
+focus_mode = 0
+text = "SPAWN OOP"
+
+[connection signal="pressed" from="CanvasLayer/Control/NCSBtn" to="." method="_on_ncs_btn_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/OOPBtn" to="." method="_on_oop_btn_pressed"]

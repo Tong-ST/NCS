@@ -20,26 +20,36 @@ func _process(_delta: float) -> void:
 
 	perf_counter.text = "FPS: %d\nProcess: %.2f ms\nObjects: %d" % [fps, process_time, object_count]
 
-func _unhandled_input(event: InputEvent) -> void:
-	# spawn NCS enemy
-	if event.is_action_pressed("ui_cancel"):
-		for i in range(500):
-			await get_tree().process_frame
-			var enemy = preload("uid://cvael67uegn6h").instantiate() as Enemy
-			total_ncs_count += 1
-			add_child(enemy)
-			ent_changed.emit()
-
-	# spawn OOP enemy
-	if event.is_action_pressed("ui_end"):
-		for i in range(500):
-			await get_tree().process_frame
-			var enemy = preload("uid://lvup6a5nx615").instantiate() as EnemyOOP
-			total_oop_count += 1
-			add_child(enemy)
-			ent_changed.emit()
-
-
 func _on_ent_changed() -> void:
 	ncs_ent_count.text = str("NCS Enemies: ", total_ncs_count)
 	oop_ent_count.text = str("OOP Enemies: ", total_oop_count)
+
+func _on_ncs_btn_pressed() -> void:
+	# spawn NCS enemy
+	%NCSBtn.disabled = true
+	for i in range(100):
+		await get_tree().process_frame
+		for j in range(5):
+			var enemy = preload("uid://cvael67uegn6h").instantiate() as Enemy
+			var player = get_tree().get_first_node_in_group(&"player") as Player
+			if player:
+				enemy.global_position = player.global_position
+			add_child(enemy)
+			total_ncs_count += 1
+			ent_changed.emit()
+	%NCSBtn.disabled = false
+
+func _on_oop_btn_pressed() -> void:
+	# spawn OOP enemy
+	%OOPBtn.disabled = true
+	for i in range(100):
+		await get_tree().process_frame
+		for j in range(5):
+			var enemy = preload("uid://lvup6a5nx615").instantiate() as EnemyOOP
+			var player = get_tree().get_first_node_in_group(&"player") as Player
+			if player:
+				enemy.global_position = player.global_position
+			add_child(enemy)
+			total_oop_count += 1
+			ent_changed.emit()
+	%OOPBtn.disabled = false

@@ -10,12 +10,13 @@
 [sub_resource type="CircleShape2D" id="CircleShape2D_1yc37"]
 radius = 20.0
 
-[node name="Enemy" type="CharacterBody2D" unique_id=1562561095]
+[node name="EnemyOOP" type="CharacterBody2D" unique_id=1562561095]
 collision_layer = 2
 platform_floor_layers = 4294901760
 script = ExtResource("1_3txpn")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=54292582]
+modulate = Color(0.47441357, 0.83288443, 0.24098289, 1)
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("4_euxac")
 
