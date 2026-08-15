@@ -31,15 +31,16 @@ func _on_ent_changed() -> void:
 func _on_ncs_btn_pressed() -> void:
 	# spawn NCS enemy
 	%NCSBtn.disabled = true
+	var enemy_scene = preload("uid://cvael67uegn6h")
+	var player = get_tree().get_first_node_in_group(&"player") as Player
 
 	for i in range(100):
 		await get_tree().process_frame
+		
 		for j in range(5):
-			var enemy = preload("uid://cvael67uegn6h").instantiate() as Enemy
-			var player = get_tree().get_first_node_in_group(&"player") as Player
+			var enemy = enemy_scene.instantiate() as Enemy
 			if player:
 				enemy.global_position = player.global_position
-
 			add_child(enemy)
 			total_ncs_count += 1
 			ent_changed.emit()
@@ -50,15 +51,16 @@ func _on_ncs_btn_pressed() -> void:
 func _on_oop_btn_pressed() -> void:
 	# spawn OOP enemy
 	%OOPBtn.disabled = true
+	var enemy_scene = preload("uid://lvup6a5nx615")
+	var player = get_tree().get_first_node_in_group(&"player") as Player
 
 	for i in range(100):
 		await get_tree().process_frame
+		
 		for j in range(5):
-			var enemy = preload("uid://lvup6a5nx615").instantiate() as EnemyOOP
-			var player = get_tree().get_first_node_in_group(&"player") as Player
+			var enemy = enemy_scene.instantiate() as EnemyOOP
 			if player:
 				enemy.global_position = player.global_position
-
 			add_child(enemy)
 			total_oop_count += 1
 			ent_changed.emit()

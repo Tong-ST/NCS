@@ -8,7 +8,7 @@ func setup_query() -> void:
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
-	var enemy_ai_pool = data_pools[0] # allocate data pool
+	var enemy_ai_pool = data_pools[0] # allocate data for current frame use
 	var input_pool = data_pools[1] # same index as iterate_data appbrove
 
 	# Iterate and fetching data process.

@@ -8,7 +8,7 @@ func setup_query() -> void:
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> void:
-	var input_pool = data_pools[0] # allocate data
+	var input_pool = data_pools[0] # allocate data for current frame use
 
 	var deal_damage = Input.is_action_just_pressed("ui_accept")
 

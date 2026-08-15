@@ -1,19 +1,19 @@
 # NCS
 ### Node-based Component System for Godot
 
-Bridge for Data-Oriented design for Godot. This plugin Is NOT try to be Pure ECS framework, But aim to make ECS workflow in godot less friction and encourage user to build good architect with hybrid approach.
+Data-Oriented design bridge for Godot. This plugin are NOT try to be Pure ECS framework, But aim to make ECS workflow in godot with less friction and encourage user to build good architect with hybrid approach.
 
 ## Core
 - Entity: Normal godot reuseable scene e.g. Player, Enemy, etc.
 - Data: Pure variable container untilize godot Resource, without any logic.
 - Components: A Tag for query by system and reuseable logics focus on local scene.
-- System: Isolate node that process system-wide logic which need to share across the your game.
+- System: Isolate node that process system-wide logic which need to share across the your game world.
 
 
 ## How this work
 ### The Ideal scene tree layout
 ```text
-Enemy (Entity)
+Enemy (Entity can be Char2d, Node, etc.)
 |-- EntityConfig (Data container)
 |-- Sprite2D, etc.
 |-- NCSComponentsHub (Hub for all comp.)
@@ -35,7 +35,7 @@ var velocity: Vector2 = Vector2.ZERO
 - Naming convention for ease of use and remember `D_Data` for class_name, d_data.gd for template.
 
 ### 2. Component (Node)
-Components live in the scene tree under the `NCSComponentsHub` folder. They inherit from `NCSComponentBase` and handle strictly localized, visual tasks (like playing a sound, triggering particles, or running a hit-flash color tween).
+Components live in the scene tree under the `NCSComponentsHub` folder. They inherit from `NCSComponentBase` and handle localized, visual tasks (like playing a sound, triggering particles, or running a hit-flash color tween).
 
 ```gdscript
 class_name C_Health
@@ -82,7 +82,6 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 		var ent = entities[i] as CharacterBody2D
 		var move_data = move_pool[i] as D_Movement
 		var input_data = input_pool[i] as D_Input
-		var config = config_pool[i] as EntityConfig
 
 		# Always use safety check for data
 		if not is_instance_valid(ent) or not move_data or not input_data:
@@ -103,11 +102,13 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 #### Runtime Component mutations via system.
 ```gdscript
 # Example your custom s_combat.gd system loop...
+var config = config_pool[i] as EntityConfig # Get a config of each entity.
+
 if target_enemy_health <= 0:
 	config.add_comp(C_Dead)
 	config.remove_comp(C_Movement)
 	
-	# Triggers a visual method into components.
+	# Triggers a visual method in your local components.
 	config.send_signal(C_Health, "flash_red")
 ```
 - Naming convention for ease of use and remember `S_System` for class_name, s_system.gd for scripts.
@@ -128,12 +129,13 @@ Level_Main
 ```
 
 ## Installation
-- Clone this git or download.
+- Clone this git or download zip.
 - In addons folder copy `ncs` to your godot project addons.
 - Enable plugin via Project>Plugin>NCS
 
 ## Recommendation
 - After you clone this project open Godot and import this project and to see full demo on how this plugin work.
+- You may not expect to gain huge performance boost from this plugin, Just unified architecture it is.
 
 
 ### Credit
