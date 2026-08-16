@@ -15,8 +15,8 @@ func _ready() -> void:
 	ent_changed.emit()
 
 	# preload entity to pool (Optional)
-	#var enemy_scene = preload("uid://cvael67uegn6h")
-	#NCSEntityPool.prewarm(enemy_scene, 1000, self)
+	var enemy_scene = preload("uid://cvael67uegn6h")
+	NCSEntityPool.prewarm(enemy_scene, 1000, self)
 
 
 func _process(_delta: float) -> void:
@@ -38,7 +38,7 @@ func _on_ncs_btn_pressed() -> void:
 	var enemy_scene = preload("uid://cvael67uegn6h")
 	var player = get_tree().get_first_node_in_group(&"player") as Player
 
-	for i in range(50):
+	for i in range(50 * 4):
 		await get_tree().process_frame
 		
 		for j in range(10):
@@ -59,7 +59,7 @@ func _on_oop_btn_pressed() -> void:
 	var enemy_scene = preload("uid://lvup6a5nx615")
 	var player = get_tree().get_first_node_in_group(&"player") as Player
 
-	for i in range(50):
+	for i in range(50 * 4):
 		await get_tree().process_frame
 		
 		for j in range(10):
