@@ -11,14 +11,16 @@ func _enter_tree() -> void:
 		CONFIG_NODE_SCRIPT, CONFIG_NODE_ICON
 	)
 	
-	# Add the global SystemManager as an Autoload Singleton automatically
+	# Add the global SystemManager and EntityPool as Autoload Singletons automatically
 	add_autoload_singleton("NCS", "res://addons/ncs/core/system_manager.gd")
-	print("NCS Framework Initialized Successfully.")
+	add_autoload_singleton("NCSEntityPool", "res://addons/ncs/core/entity_pool.gd")
+	print("NCS Framework & Entity Pool Initialized Successfully.")
 
 func _exit_tree() -> void:
 	# Clean up types when disabling the plugin
 	remove_custom_type(CONFIG_NODE_NAME)
 	
-	# Clean up the autoload singleton
+	# Clean up the autoload singletons
 	remove_autoload_singleton("NCS")
+	remove_autoload_singleton("NCSEntityPool")
 	print("NCS Framework Cleaned Up.")

@@ -14,6 +14,10 @@ func _ready() -> void:
 	ent_changed.connect(_on_ent_changed)
 	ent_changed.emit()
 
+	# preload entity to pool (Optional)
+	#var enemy_scene = preload("uid://cvael67uegn6h")
+	#NCSEntityPool.prewarm(enemy_scene, 1000, self)
+
 
 func _process(_delta: float) -> void:
 	var fps = Performance.get_monitor(Performance.TIME_FPS)
@@ -29,19 +33,20 @@ func _on_ent_changed() -> void:
 
 
 func _on_ncs_btn_pressed() -> void:
-	# spawn NCS enemy
+	# spawn NCS enemy using NCSEntityPool
 	%NCSBtn.disabled = true
 	var enemy_scene = preload("uid://cvael67uegn6h")
 	var player = get_tree().get_first_node_in_group(&"player") as Player
 
-	for i in range(100):
+	for i in range(50):
 		await get_tree().process_frame
 		
-		for j in range(5):
-			var enemy = enemy_scene.instantiate() as Enemy
-			if player:
-				enemy.global_position = player.global_position
-			add_child(enemy)
+		for j in range(10):
+			var spawn_pos = player.global_position if player else Vector2.ZERO
+			# (Optional) using EntityPool for spawn entity.
+			# Recommend Normal godot add_child if object don't neeed pooling.
+			var enemy = NCSEntityPool.spawn(enemy_scene, spawn_pos, self) as Enemy
+			enemy.c_health.take_damage(0) # You can then do something when those ent spawn
 			total_ncs_count += 1
 			ent_changed.emit()
 
@@ -54,14 +59,15 @@ func _on_oop_btn_pressed() -> void:
 	var enemy_scene = preload("uid://lvup6a5nx615")
 	var player = get_tree().get_first_node_in_group(&"player") as Player
 
-	for i in range(100):
+	for i in range(50):
 		await get_tree().process_frame
 		
-		for j in range(5):
+		for j in range(10):
+			var spawn_pos = player.global_position if player else Vector2.ZERO
 			var enemy = enemy_scene.instantiate() as EnemyOOP
-			if player:
-				enemy.global_position = player.global_position
+			enemy.global_position = spawn_pos
 			add_child(enemy)
+			enemy.health_oop.take_damage(0)
 			total_oop_count += 1
 			ent_changed.emit()
 

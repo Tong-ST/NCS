@@ -18,6 +18,7 @@ config/icon="res://main_game/icon.svg"
 [autoload]
 
 NCS="*uid://dg7euxqxro0e7"
+NCSEntityPool="*uid://5k1cugiawspi"
 
 [display]
 

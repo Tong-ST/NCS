@@ -7,6 +7,8 @@
 [ext_resource type="Script" uid="uid://bjse0r78t1isb" path="res://ncs_system/s_enemy_ai.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://cdjdifkshhe0h" path="res://addons/ncs/core/ncs_world.gd" id="3_lquwl"]
 [ext_resource type="Script" uid="uid://ckc1tfcgccqis" path="res://ncs_system/s_movement.gd" id="5_7mycd"]
+[ext_resource type="PackedScene" uid="uid://cvael67uegn6h" path="res://main_game/enemy.tscn" id="8_xvufe"]
+[ext_resource type="PackedScene" uid="uid://lvup6a5nx615" path="res://oop_comparision/enemy_oop.tscn" id="9_7km35"]
 
 [node name="Main" type="Node2D" unique_id=945331847]
 script = ExtResource("1_xvufe")
@@ -130,6 +132,18 @@ offset_bottom = 71.0
 grow_horizontal = 0
 focus_mode = 0
 text = "SPAWN OOP"
+
+[node name="Enemy" parent="." unique_id=275625331 instance=ExtResource("8_xvufe")]
+position = Vector2(209, 177)
+
+[node name="Enemy2" parent="." unique_id=814834934 instance=ExtResource("8_xvufe")]
+position = Vector2(861, 182)
+
+[node name="EnemyOOP" parent="." unique_id=303922004 instance=ExtResource("9_7km35")]
+position = Vector2(193, 475)
+
+[node name="EnemyOOP2" parent="." unique_id=702293820 instance=ExtResource("9_7km35")]
+position = Vector2(902, 480)
 
 [connection signal="pressed" from="CanvasLayer/Control/NCSBtn" to="." method="_on_ncs_btn_pressed"]
 [connection signal="pressed" from="CanvasLayer/Control/OOPBtn" to="." method="_on_oop_btn_pressed"]

@@ -44,15 +44,13 @@ func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
 ## Automated engine processing frame loop (zero allocations per frame)
 func _process(delta: float) -> void:
 	if not _entities.is_empty():
-		var entities = _entities.duplicate()
-		ncs_process(entities, _flat_data_pools, delta)
+		ncs_process(_entities, _flat_data_pools, delta)
 
 
 ## Automated engine physics processing frame loop (zero allocations per frame)
 func _physics_process(delta: float) -> void:
 	if not _entities.is_empty():
-		var entities = _entities.duplicate()
-		ncs_physics_process(entities, _flat_data_pools, delta)
+		ncs_physics_process(_entities, _flat_data_pools, delta)
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
@@ -68,12 +66,20 @@ func _matches_query(config_node: Object) -> bool:
 	if not is_instance_valid(config_node) or not (config_node is EntityConfig):
 		return false
 		
+	var cfg = config_node as EntityConfig
+	if not cfg.is_active or not cfg.is_inside_tree():
+		return false
+
+	var parent_body = cfg.get_parent()
+	if not is_instance_valid(parent_body) or parent_body.process_mode == Node.PROCESS_MODE_DISABLED:
+		return false
+		
 	for req_script in _all_filters:
-		if not config_node.has_comp(req_script):
+		if not cfg.has_comp(req_script):
 			return false
 
 	for not_script in _not_filters:
-		if config_node.has_comp(not_script):
+		if cfg.has_comp(not_script):
 			return false
 
 	return true
@@ -115,9 +121,25 @@ func _evaluate_single_entity(config_node: Object) -> void:
 				_flat_data_pools[pool_idx].remove_at(idx)
 
 
-## Evaluates exactly ONE newly spawned EntityConfig node
+## Evaluates exactly ONE newly spawned EntityConfig node in O(1) direct append time
 func _handle_incremental_arrival(config_node: Object) -> void:
-	_evaluate_single_entity(config_node)
+	if not is_instance_valid(config_node) or not (config_node is EntityConfig):
+		return
+	var parent_body = config_node.get_parent()
+	if not is_instance_valid(parent_body):
+		return
+
+	if _matches_query(config_node):
+		var idx = config_pool.find(config_node as EntityConfig)
+		if idx == -1:
+			parent_body.set(&"config", config_node)
+			_entities.append(parent_body)
+			config_pool.append(config_node as EntityConfig)
+			for pool_idx in _data_targets.size():
+				var target_script = _data_targets[pool_idx]
+				var data_block = (config_node as EntityConfig).get_data(target_script)
+				_flat_data_pools[pool_idx].append(data_block)
+
 
 
 ## Drops exactly ONE despawning entity instantly out of alignment rows

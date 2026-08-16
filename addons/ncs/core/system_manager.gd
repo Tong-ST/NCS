@@ -5,6 +5,7 @@ var _systems: Dictionary = {}
 
 # THE CENTRAL ENTITY REGISTRY: Tracks every entity alive in the game world
 var active_entities: Array[EntityConfig] = []
+var _active_entities_map: Dictionary = {}
 
 # High-speed tracking flags and queues for deferred frame-end processing
 var _query_dirty: bool = false
@@ -13,7 +14,8 @@ var _pending_single_updates: Array[EntityConfig] = []
 
 ## Registration hook triggered automatically when an entity mounts into the world tree
 func register_entity(entity: EntityConfig) -> void:
-	if not active_entities.has(entity):
+	if not _active_entities_map.has(entity):
+		_active_entities_map[entity] = true
 		active_entities.append(entity)
 		
 		for system_name in _systems:
@@ -24,6 +26,7 @@ func register_entity(entity: EntityConfig) -> void:
 
 ## Unregistration hook triggered automatically when an entity leaves play or is deleted
 func unregister_entity(entity: EntityConfig) -> void:
+	_active_entities_map.erase(entity)
 	active_entities.erase(entity)
 	
 	# High-speed subtraction: notify systems immediately while entity Object is valid
