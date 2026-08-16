@@ -217,7 +217,7 @@ func has_comp(comp_script: Script) -> bool:
 ## Dynamically compiles and attaches a fresh component node onto the folder hub branch.
 ## Example: config.add_comp(C_Dead)
 func add_comp(comp_script: Script) -> void:
-	if Engine.is_editor_hint() or not comp_script: 
+	if not comp_script: 
 		return
 	
 	if _component_map.has(comp_script):

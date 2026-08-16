@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://cdjdifkshhe0h" path="res://addons/ncs/core/ncs_world.gd" id="3_lquwl"]
 [ext_resource type="Script" uid="uid://ckc1tfcgccqis" path="res://ncs_system/s_movement.gd" id="5_7mycd"]
 [ext_resource type="Script" uid="uid://c881o8prnc4sy" path="res://ncs_system/s_visual.gd" id="6_vis01"]
+[ext_resource type="Script" uid="uid://dujjf8rblw47w" path="res://ncs_system/s_health.gd" id="8_d214i"]
 [ext_resource type="PackedScene" uid="uid://cvael67uegn6h" path="res://main_game/enemy.tscn" id="8_xvufe"]
 [ext_resource type="PackedScene" uid="uid://lvup6a5nx615" path="res://oop_comparision/enemy_oop.tscn" id="9_7km35"]
 
@@ -33,6 +34,9 @@ script = ExtResource("6_vis01")
 
 [node name="S_EnemyAI" type="Node" parent="NCSWorld/GameplaySystems" unique_id=540796171]
 script = ExtResource("3_h2yge")
+
+[node name="S_Health" type="Node" parent="NCSWorld/GameplaySystems" unique_id=1035740470]
+script = ExtResource("8_d214i")
 
 [node name="S_Dead" type="Node" parent="NCSWorld/GameplaySystems" unique_id=636750035]
 script = ExtResource("2_os3gg")

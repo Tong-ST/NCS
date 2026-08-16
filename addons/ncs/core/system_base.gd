@@ -5,7 +5,6 @@ var _entities: Array[Node] = []
 
 # Mirror matrix tracking configuration pointers side-by-side
 var config_pool: Array[EntityConfig] = []
-
 # A clean, pre-sorted multi-channel data pool container
 var _flat_data_pools: Array[Array] = []
 
@@ -152,7 +151,6 @@ func _handle_incremental_departure(config_node: Object) -> void:
 			_flat_data_pools[pool_idx].remove_at(idx)
 
 
-
 func _update_query_filter() -> void:
 	var matching_bodies: Array[Node] = []
 	var matching_configs: Array[EntityConfig] = []
@@ -181,6 +179,14 @@ func _update_query_filter() -> void:
 	_entities = matching_bodies
 	config_pool = matching_configs
 	_flat_data_pools = new_flat_pools
+
+
+## Helper for advanced users to signal when a system's query changed
+## To re-query for single entities.
+func signal_query_changed() -> void:
+	NCS.update_single_entity(
+		NCS.active_entities[0] if not NCS.active_entities.is_empty() else null
+	)
 
 
 func _find_data_by_script(ent: EntityConfig, target_script: Script) -> NCSDataBase:

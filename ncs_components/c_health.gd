@@ -14,9 +14,3 @@ func take_damage(amount: float) -> void:
 	if health_data:
 		health_data.current_health -= amount
 		on_damaged.emit()
-		if health_data.current_health <= 0:
-			health_data.current_health = 0
-
-			config.add_comp(C_Dead) # By add comp it auto attached script.
-			# with class_name C_Dead.
-			# And it simply add now comp to this ent. get filter by other system
