@@ -6,6 +6,9 @@ extends CharacterBody2D
 @export var is_aggressive: bool = true
 
 var current_velocity: Vector2 = Vector2.ZERO
+var is_on_screen: bool = true
+var next_global_pos := Vector2.ZERO
+var is_pos_initialized: bool = false
 
 @onready var sprite_2d: Sprite2D = $Sprite2D
 @onready var health_oop: HealthOOP = $Components/HealthOOP

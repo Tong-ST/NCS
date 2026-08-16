@@ -1,7 +1,7 @@
 class_name MovementOOP
 extends Node
 
-@export var actor: Node
+@export var actor: EnemyOOP
 @export var input_comp: InputOOP
 
 
@@ -25,5 +25,11 @@ func _physics_process(delta: float) -> void:
 			Vector2.ZERO, 
 			actor.acceleration * delta
 		)
-		
-	actor.global_position += actor.current_velocity * delta
+
+	# Seed position on first frame using bool flag, not zero check
+	if not actor.is_pos_initialized:
+		actor.next_global_pos = actor.global_position
+		actor.is_pos_initialized = true
+
+	# Simulate movement purely in data (VisualOOP handles scene-tree sync)
+	actor.next_global_pos += actor.current_velocity * delta

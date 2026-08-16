@@ -27,10 +27,3 @@ func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> voi
 			config.send_signal(C_Health, "take_damage", [20])
 			# More command e.g. add_comp, remove_comp, add_data, remove_data, etc.
 			# using via config.xxx()
-		
-		# Logic below only for player. Basic movement control logic
-		if not ent is Player:
-			continue
-
-		var raw_dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-		input_data.movement_vector = raw_dir

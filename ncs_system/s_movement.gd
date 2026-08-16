@@ -24,7 +24,17 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 		# Run regular logic:
 		var current_input = input_data.movement_vector
 		if current_input != Vector2.ZERO:
-			move_data.velocity = move_data.velocity.move_toward(current_input * move_data.max_speed, move_data.acceleration * delta)
+			move_data.velocity = move_data.velocity.move_toward(
+				current_input * move_data.max_speed, 
+				move_data.acceleration * delta
+			)
 		else:
-			move_data.velocity = move_data.velocity.move_toward(Vector2.ZERO, move_data.acceleration * delta)
-		ent.global_position += move_data.velocity * delta
+			move_data.velocity = move_data.velocity.move_toward(
+				Vector2.ZERO, move_data.acceleration * delta
+			)
+
+		# Simulate movement purely in data - seed from entity position on first frame
+		if not move_data.is_pos_initialized:
+			move_data.next_global_pos = ent.global_position
+			move_data.is_pos_initialized = true
+		move_data.next_global_pos += move_data.velocity * delta
