@@ -6,3 +6,5 @@ extends NCSDataBase
 
 var input_vector := Vector2.ZERO
 var velocity := Vector2.ZERO
+
+var next_global_pos := Vector2.ZERO

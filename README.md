@@ -132,6 +132,7 @@ Level_Main
 - Clone this git or download zip.
 - In addons folder copy `ncs` to your godot project addons.
 - Enable plugin via Project>Plugin>NCS
+- Make sure `NCS` autoload enable via Project>Globals
 
 ## Recommendation
 - After you clone this project open Godot and import this project and to see full demo on how this plugin work.

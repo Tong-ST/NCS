@@ -103,7 +103,7 @@ func add_comp(comp_script: Script) -> void:
 		return
 	
 	var class_str = comp_script.get_global_name()
-	new_node.name = class_str if not class_str.is_empty() else "NCSComponent"
+	new_node.name = class_str if not class_str.is_empty() else "C_Newcomp"
 
 	hub.add_child(new_node)
 	
@@ -144,7 +144,7 @@ func remove_comp(comp_script: Script) -> void:
 ## Invokes a custom method block on a component script safely if it exists.
 ## Example: config.send_signal(C_Health, "take_damage", [20.0])
 func send_signal(comp_script: Script, method_name: String, args: Array = []) -> bool:
-	if Engine.is_editor_hint() or not comp_script: 
+	if not comp_script: 
 		return false
 	
 	var comp = get_comp(comp_script)

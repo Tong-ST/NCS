@@ -43,21 +43,14 @@ func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
 
 ## Automated engine processing frame loop
 func _process(delta: float) -> void:
-	if Engine.is_editor_hint(): return
-	
-	# Duck-typing check: only run if the user implemented this specific function
-	if has_method("ncs_process") and not _entities.is_empty():
-		# Take a safe, current-frame snapshot copy to prevent mid-frame mutation crashes
+	if not _entities.is_empty():
 		var entities = _entities.duplicate()
-		# Invoke the game system execution path with direct references!
 		call("ncs_process", entities, _flat_data_pools, delta)
 
 
 ## Automated engine physics processing frame loop
 func _physics_process(delta: float) -> void:
-	if Engine.is_editor_hint(): return
-	
-	if has_method("ncs_physics_process") and not _entities.is_empty():
+	if not _entities.is_empty():
 		var entities = _entities.duplicate()
 		call("ncs_physics_process", entities, _flat_data_pools, delta)
 
@@ -80,7 +73,7 @@ func _handle_incremental_arrival(config_node: EntityConfig) -> void:
 	var alive_components: Array[Script] = []
 	for child in parent_body.get_children():
 		if child.get_script(): alive_components.append(child.get_script())
-		if child is NCSComponentsHub or child.name == "Components":
+		if child is NCSComponentsHub or child.name == "NCSComponentsHub":
 			for sub_child in child.get_children():
 				if sub_child.get_script(): alive_components.append(sub_child.get_script())
 					
@@ -132,7 +125,7 @@ func _update_query_filter() -> void:
 		var alive_components: Array[Script] = []
 		for child in parent_body.get_children():
 			if child.get_script(): alive_components.append(child.get_script())
-			if child is NCSComponentsHub or child.name == "Components":
+			if child is NCSComponentsHub or child.name == "NCSComponentsHub":
 				for sub_child in child.get_children():
 					if sub_child.get_script(): alive_components.append(sub_child.get_script())
 		
