@@ -26,6 +26,7 @@ func _ready() -> void:
 			child.config = config_node
 
 	if config_node:
+		config_node._rebuild_component_cache()
 		NCS.register_entity(config_node)
 
 

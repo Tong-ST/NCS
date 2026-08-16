@@ -19,21 +19,17 @@ metadata/_custom_type_script = "uid://cdjdifkshhe0h"
 
 [node name="S_Input" type="Node" parent="NCSWorld/CoreLoops" unique_id=1787844853]
 script = ExtResource("2_qofrp")
-metadata/_custom_type_script = "uid://nixtciocb2hm"
 
 [node name="S_Movement" type="Node" parent="NCSWorld/CoreLoops" unique_id=331608418]
 script = ExtResource("5_7mycd")
-metadata/_custom_type_script = "uid://nixtciocb2hm"
 
 [node name="GameplaySystems" type="Node" parent="NCSWorld" unique_id=1640213077]
 
 [node name="S_EnemyAI" type="Node" parent="NCSWorld/GameplaySystems" unique_id=540796171]
 script = ExtResource("3_h2yge")
-metadata/_custom_type_script = "uid://nixtciocb2hm"
 
 [node name="S_Dead" type="Node" parent="NCSWorld/GameplaySystems" unique_id=636750035]
 script = ExtResource("2_os3gg")
-metadata/_custom_type_script = "uid://nixtciocb2hm"
 
 [node name="Player" parent="." unique_id=1562561095 instance=ExtResource("1_ig7tw")]
 position = Vector2(538, 334)
