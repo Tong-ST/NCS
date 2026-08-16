@@ -7,11 +7,13 @@ func setup_query() -> void:
 
 
 func ncs_process(entites: Array[Node], _data_pools: Array, _delta: float) -> void:
-	# Iterate through all filtered entities.
-	for i in entites.size():
+	# Iterate in reverse when despawning/destroying entities
+	for i in range(entites.size() - 1, -1, -1):
 		var ent = entites[i] as CharacterBody2D
 		if not is_instance_valid(ent): continue
 
-		# In fact this queue_free() should deal on e.g. player.gd or C_Dead instead of here
-		# for better control on animation, timer, etc., So this just for example.
-		ent.queue_free()
+		var config = config_pool[i] as EntityConfig
+		if is_instance_valid(config):
+			config.despawn()
+		else:
+			ent.queue_free()

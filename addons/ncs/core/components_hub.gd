@@ -26,7 +26,7 @@ func _ready() -> void:
 			child.config = config_node
 
 	if config_node:
-		NCS.register_entity(config_node)
+		config_node._rebuild_component_cache()
 
 
 func _enter_tree() -> void:
@@ -49,11 +49,6 @@ func _exit_tree() -> void:
 			
 		if inspector.edited_object_changed.is_connected(_on_editor_context_changed):
 			inspector.edited_object_changed.disconnect(_on_editor_context_changed)
-			
-	# Your normal game runtime logic continues safely down here
-	if not Engine.is_editor_hint():
-		if config_node:
-			NCS.unregister_entity(config_node)
 
 
 func _on_property_edited(what: String) -> void:
@@ -119,8 +114,11 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 
 func _find_config_node(start_node: Node) -> EntityConfig:
-	if start_node == null: return null
-	if start_node is EntityConfig: return start_node
+	if start_node == null: 
+		return null
+	if start_node is EntityConfig: 
+		return start_node as EntityConfig
 	for child in start_node.get_children():
-		if child is EntityConfig: return child
-	return _find_config_node(start_node.get_parent())
+		if child is EntityConfig: 
+			return child as EntityConfig
+	return null

@@ -16,7 +16,7 @@ func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> voi
 	for i in entities.size():
 		var ent = entities[i] as CharacterBody2D
 		var input_data = input_pool[i] as D_Input
-		var config = config_pool[i] as EntityConfig # get EntityConfig
+		var config = config_pool[i] as EntityConfig
 
 		# Always safely check for data that you query, use "continue" to skip loop.
 		if not is_instance_valid(ent) or not input_data or not config:
