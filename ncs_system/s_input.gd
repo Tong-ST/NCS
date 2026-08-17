@@ -27,4 +27,3 @@ func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> voi
 			config.send_signal(C_Health, "take_damage", [20])
 			# More command e.g. add_comp, remove_comp, add_data, remove_data, etc.
 			# using via config.xxx()
-	

@@ -16,7 +16,7 @@ func _ready() -> void:
 
 	# preload entity to pool (Optional)
 	var enemy_scene = preload("uid://cvael67uegn6h")
-	NCSEntityPool.prewarm(enemy_scene, 1000, self)
+	NCSEntityPool.prewarm(enemy_scene, 2000, self)
 
 
 func _process(_delta: float) -> void:
