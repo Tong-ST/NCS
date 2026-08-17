@@ -38,7 +38,7 @@ var velocity: Vector2 = Vector2.ZERO
 Components live in the scene tree under the `NCSComponentsHub` folder. They inherit from `NCSComponentBase` and handle localized, visual tasks (like playing a sound, triggering particles, or running a hit-flash color tween).
 
 ```gdscript
-# You can put some logic in component with Native godot style.
+# You can put logics in component with Native godot style.
 # Make sure there focus on local scene.
 # Avoid run process loop inside each comp.
 # Avoid Write to D_Data that may use in system,
@@ -58,7 +58,7 @@ func flash_red() -> void:
 		sprite_2d.modulate = Color.RED
 		tween.tween_property(sprite_2d, "modulate", Color.WHITE, 0.05).set_delay(0.1)
 
-# Freely to write logic that should easily share with local scene.
+# Recommend to read-only from D_Data to update in scene-tree.
 func update_health() -> void:
 	var health_data = config.get_data(D_Health) as D_Health
 	health_updated.emit(health_data.current_health)
