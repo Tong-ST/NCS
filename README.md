@@ -38,6 +38,11 @@ var velocity: Vector2 = Vector2.ZERO
 Components live in the scene tree under the `NCSComponentsHub` folder. They inherit from `NCSComponentBase` and handle localized, visual tasks (like playing a sound, triggering particles, or running a hit-flash color tween).
 
 ```gdscript
+# You can put some logic in component with Native godot style.
+# Make sure there focus on local scene.
+# Avoid run process loop inside each comp.
+# Avoid write to D_Data that may use in system, Make habit of Read-only to avoid conflict with S_System. 
+
 class_name C_Health
 extends NCSComponentBase
 
