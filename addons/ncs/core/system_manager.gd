@@ -28,7 +28,7 @@ func register_entity(entity: EntityConfig) -> void:
 
 		for system_name in _systems:
 			var system = _systems[system_name]
-			if system.has_method("_handle_incremental_arrival"):
+			if system.has_method(&"_handle_incremental_arrival"):
 				system._handle_incremental_arrival(entity)
 
 
@@ -53,7 +53,7 @@ func unregister_entity(entity: EntityConfig) -> void:
 
 	for system_name in _systems:
 		var system = _systems[system_name]
-		if system.has_method("_handle_incremental_departure"):
+		if system.has_method(&"_handle_incremental_departure"):
 			system._handle_incremental_departure(entity)
 
 
@@ -89,7 +89,7 @@ func batch_mutate(action: Callable) -> void:
 ## Connects a system node layout cleanly into our central management hub
 func register_system(system_name: String, system_instance: Node) -> void:
 	_systems[system_name] = system_instance
-	if system_instance.has_method("_update_query_filter"):
+	if system_instance.has_method(&"_update_query_filter"):
 		system_instance._update_query_filter()
 
 
@@ -129,7 +129,7 @@ func _deferred_query_remap() -> void:
 		if is_instance_valid(entity):
 			for system_name in _systems:
 				var system = _systems[system_name]
-				if system.has_method("_evaluate_single_entity"):
+				if system.has_method(&"_evaluate_single_entity"):
 					system._evaluate_single_entity(entity)
 
 
@@ -137,5 +137,5 @@ func _deferred_query_remap() -> void:
 func _remap_all_system_queries() -> void:
 	for system_name in _systems:
 		var system = _systems[system_name]
-		if system.has_method("_update_query_filter"):
+		if system.has_method(&"_update_query_filter"):
 			system._update_query_filter()

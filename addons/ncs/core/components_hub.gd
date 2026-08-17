@@ -80,7 +80,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 	# Build a fast lookup map of active resource classes currently in the array
 	var available_data_classes: Array[String] = []
 	if editor_config.base_config:
-		var raw_data_sets = editor_config.base_config.get("data_sets")
+		var raw_data_sets = editor_config.base_config.get(&"data_sets")
 		if raw_data_sets is Array:
 			var global_classes = ProjectSettings.get_global_class_list()
 			for res in raw_data_sets:
@@ -94,7 +94,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 	# Loop through children and validate component scripts
 	for child in get_children():
 		# Direct Inspector property verification
-		if "require_data" in child and child.get("require_data") == true:
+		if "require_data" in child and child.get(&"require_data") == true:
 			var script = child.get_script()
 			
 			if not script:

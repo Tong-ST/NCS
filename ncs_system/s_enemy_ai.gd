@@ -8,13 +8,13 @@ func setup_query() -> void:
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
-	var enemy_ai_pool = data_pools[0] # allocate data for current frame use
-	var input_pool = data_pools[1] # same index as iterate_data appbrove
+	var enemy_ai_pool = data_pools[0] as Array[D_EnemyAI] # allocate data for current frame use
+	var input_pool = data_pools[1] as Array[D_Input] # same index as iterate_data abrove
 
 	# Iterate and fetching data process.
 	for i in entities.size():
-		var enemy_ai = enemy_ai_pool[i] as D_EnemyAI
-		var input_data = input_pool[i] as D_Input
+		var enemy_ai = enemy_ai_pool[i]
+		var input_data = input_pool[i]
 
 		# Always safely check for data that you query, use "continue" to skip loop.
 		if not enemy_ai or not input_data:
