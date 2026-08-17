@@ -4,6 +4,7 @@ extends CharacterBody2D
 # Example on how to get all of your entities data to use outside of CustomSystem
 @onready var entity_config: EntityConfig = $EntityConfig
 @onready var sprite_2d: Sprite2D = $Sprite2D
+@onready var c_player: C_Player = $NCSComponentsHub/C_Player
 @onready var c_health: C_Health = $NCSComponentsHub/C_Health
 
 
@@ -15,6 +16,10 @@ func _ready() -> void:
 #
 #	print("Player input_vector: ", input_data.movement_vector)
 #	print("Player speed: ", movement_data.max_speed)
+
+
+func _physics_process(_delta: float) -> void:
+	c_player.get_player_input()
 
 
 func _on_damaged() -> void:
