@@ -1,14 +1,16 @@
+# Copyright (c) 2026 GoodyWolf / Tong-ST.
+# Distributed under the terms of the MIT License.
+# See LICENSE for more information.
+
+# NCS global singleton (autoload as "NCS"). Owns the master entity list and all system refs.
+# Most calls come through EntityConfig (add_comp, remove_comp) or NCSEntityPool (spawn, despawn).
 extends Node
 
-# Dictionary tracking all active systems. Key: System Class Name, Value: System Instance
+
 var _systems: Dictionary = {}
-
-# THE CENTRAL ENTITY REGISTRY
 var active_entities: Array[EntityConfig] = []
-# Map tracks EntityConfig -> Array Index (int) for O(1) Swap-and-Pop lookups
-var _active_entities_map: Dictionary = {} 
+var _active_entities_map: Dictionary = {}
 
-# High-speed tracking flags and queues for deferred frame-end processing
 var _query_dirty: bool = false
 var _pending_single_updates: Array[EntityConfig] = []
 
@@ -16,10 +18,9 @@ const MASS_UPDATE_THRESHOLD: int = 200
 var is_batching: bool = false
 
 
-## Registration hook triggered automatically when an entity mounts into the world tree
+## Called by EntityConfig._enter_tree(). Do not call manually.
 func register_entity(entity: EntityConfig) -> void:
 	if not _active_entities_map.has(entity):
-		# Store array index in map for O(1) unregistering
 		_active_entities_map[entity] = active_entities.size()
 		active_entities.append(entity)
 
@@ -32,19 +33,14 @@ func register_entity(entity: EntityConfig) -> void:
 				system._handle_incremental_arrival(entity)
 
 
-## Unregistration hook triggered automatically when an entity leaves play or is deleted
+## Called by EntityConfig._exit_tree() or despawn(). Do not call manually.
 func unregister_entity(entity: EntityConfig) -> void:
 	if _active_entities_map.has(entity):
-		# O(1) SWAP-AND-POP REMOVAL
 		var idx: int = _active_entities_map[entity]
 		var last_idx: int = active_entities.size() - 1
 		var last_entity: EntityConfig = active_entities[last_idx]
-
-		# Move last element to the deleted slot
 		active_entities[idx] = last_entity
 		_active_entities_map[last_entity] = idx
-
-		# Fast remove last element
 		active_entities.pop_back()
 		_active_entities_map.erase(entity)
 
@@ -57,7 +53,9 @@ func unregister_entity(entity: EntityConfig) -> void:
 			system._handle_incremental_departure(entity)
 
 
-## Direct targeted entity update when components or data are mutated at runtime.
+## Call after mutating an entity's components or data at runtime.
+## Multiple calls per frame are coalesced — only one re-query runs at frame end.
+## Usage: NCS.update_single_entity(config)
 func update_single_entity(entity: EntityConfig) -> void:
 	if is_batching:
 		return
@@ -67,57 +65,61 @@ func update_single_entity(entity: EntityConfig) -> void:
 		force_update_system_queries()
 
 
-## Starts a manual batch scope to suppress per-entity updates during loops
+## Opens a batch window — suppresses incremental system updates until end_batch().
+## Use before bulk spawns or multi-entity mutations. Always pair with end_batch().
 func begin_batch() -> void:
 	is_batching = true
 
 
-## Ends the manual batch scope and executes a single global query rescan
+## Closes the batch window and triggers a single full-world re-query sweep.
 func end_batch() -> void:
 	is_batching = false
 	_pending_single_updates.clear()
 	_remap_all_system_queries()
 
 
-## Optional wrapper to automatically execute logic inside a batch scope
+## Runs a callable inside an automatic begin/end_batch scope.
+## Usage: NCS.batch_mutate(func(): config.add_comp(C_Dead))
 func batch_mutate(action: Callable) -> void:
 	begin_batch()
 	action.call()
 	end_batch()
 
 
-## Connects a system node layout cleanly into our central management hub
+## Registers a system into the world. Called automatically by NCSWorld.
+## Call manually only if not using an NCSWorld node.
 func register_system(system_name: String, system_instance: Node) -> void:
 	_systems[system_name] = system_instance
 	if system_instance.has_method(&"_update_query_filter"):
 		system_instance._update_query_filter()
 
 
-## Safely disconnects a system node from active registry loops
+## Removes a system from the registry.
 func unregister_system(system_name: String) -> void:
 	_systems.erase(system_name)
 
 
-## Explicit look up retrieval tool
+## Returns a live system instance by class name, or null.
+## Usage: var sys = NCS.get_system_by_name("S_EnemyAI") as S_EnemyAI
 func get_system_by_name(system_name: String) -> Node:
 	return _systems.get(system_name, null)
 
 
-## Collapses multiple requests into EXACTLY ONE update loop pass at frame end
+## Schedules a deferred frame-end re-query. Multiple calls collapse into one.
 func force_update_system_queries() -> void:
 	if not _query_dirty:
 		_query_dirty = true
 		_deferred_query_remap.call_deferred()
 
 
-## Triggered safely by Godot's execution thread at the very end of the frame cycle
+## Flushes pending entity updates at frame end. Falls back to a full sweep
+## when pending count exceeds MASS_UPDATE_THRESHOLD (cheaper than N dispatches).
 func _deferred_query_remap() -> void:
 	_query_dirty = false
 
 	if _pending_single_updates.is_empty():
 		return
 
-	# Fallback: If single update queue spikes past threshold, do 1 linear pass instead
 	if _pending_single_updates.size() >= MASS_UPDATE_THRESHOLD:
 		_pending_single_updates.clear()
 		_remap_all_system_queries()
@@ -125,6 +127,7 @@ func _deferred_query_remap() -> void:
 
 	var updates = _pending_single_updates.duplicate()
 	_pending_single_updates.clear()
+
 	for entity in updates:
 		if is_instance_valid(entity):
 			for system_name in _systems:
@@ -133,7 +136,8 @@ func _deferred_query_remap() -> void:
 					system._evaluate_single_entity(entity)
 
 
-## Executes a single, unified full world filter sweep across all active tracking nodes
+## Full world filter sweep — asks every system to re-evaluate all active entities.
+## Called by end_batch() and the mass update fallback path.
 func _remap_all_system_queries() -> void:
 	for system_name in _systems:
 		var system = _systems[system_name]
