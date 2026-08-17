@@ -1,7 +1,3 @@
-# Copyright (c) 2026 GoodyWolf / Tong-ST.
-# Distributed under the terms of the MIT License.
-# See LICENSE for more information.
-
 ## Central folder hub node for grouping NCSComponentBase children on an entity.
 ## Add this as a child of your entity root (e.g. CharacterBody2D), then place
 ## component nodes inside it. The hub auto-wires owner_node and config references

@@ -1,10 +1,6 @@
 class_name VisualOOP
 extends Node
 
-## Dedicated visual update component for OOP enemies.
-## Handles viewport screen culling and syncing movement data position
-## to the actual Godot node transform.
-
 @export var actor: EnemyOOP
 
 

@@ -26,14 +26,14 @@ shape = SubResource("CircleShape2D_1yc37")
 
 [node name="Components" type="Node" parent="." unique_id=314059360]
 
-[node name="InputOOP" type="Node" parent="Components" unique_id=411934081 node_paths=PackedStringArray("health_comp")]
-script = ExtResource("3_ed0q7")
-health_comp = NodePath("../HealthOOP")
-
 [node name="EnemyAI_OOP" type="Node" parent="Components" unique_id=27219289 node_paths=PackedStringArray("actor", "input_comp")]
 script = ExtResource("4_yjegb")
 actor = NodePath("../..")
 input_comp = NodePath("../InputOOP")
+
+[node name="InputOOP" type="Node" parent="Components" unique_id=411934081 node_paths=PackedStringArray("health_comp")]
+script = ExtResource("3_ed0q7")
+health_comp = NodePath("../HealthOOP")
 
 [node name="MovementOOP" type="Node" parent="Components" unique_id=1872130734 node_paths=PackedStringArray("actor", "input_comp")]
 script = ExtResource("5_7g2n3")

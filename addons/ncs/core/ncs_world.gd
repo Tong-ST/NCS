@@ -1,10 +1,5 @@
-# Copyright (c) 2026 GoodyWolf / Tong-ST.
-# Distributed under the terms of the MIT License.
-# See LICENSE for more information.
-
-## Drop an NCSWorld node into any scene to automatically discover and register
+## Add NCSWorld node into any scene to automatically discover and register
 ## all NCSSystemBase children as active systems on enter_tree.
-## Supports nested Node folders for grouping systems visually in the scene tree.
 class_name NCSWorld
 extends NCSBase
 

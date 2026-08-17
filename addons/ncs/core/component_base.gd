@@ -1,7 +1,3 @@
-# Copyright (c) 2026 GoodyWolf / Tong-ST.
-# Distributed under the terms of the MIT License.
-# See LICENSE for more information.
-
 ## Base class for all NCS component scripts.
 ## Attach subclasses (e.g. C_Health, C_Movement) as child nodes inside a NCSComponentsHub.
 ##

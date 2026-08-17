@@ -1,11 +1,6 @@
-# Copyright (c) 2026 GoodyWolf / Tong-ST.
-# Distributed under the terms of the MIT License.
-# See LICENSE for more information.
-
 # NCS global singleton (autoload as "NCS"). Owns the master entity list and all system refs.
 # Most calls come through EntityConfig (add_comp, remove_comp) or NCSEntityPool (spawn, despawn).
 extends Node
-
 
 var _systems: Dictionary = {}
 var active_entities: Array[EntityConfig] = []

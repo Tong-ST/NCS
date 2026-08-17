@@ -1,15 +1,11 @@
-# Copyright (c) 2026 GoodyWolf / Tong-ST.
-# Distributed under the terms of the MIT License.
-# See LICENSE for more information.
-
 ## Core entity node. Add one as a child of every NCS entity root (CharacterBody2D etc.).
-## Owns the per-entity runtime data resource and the O(1) component/data lookup maps.
+## Owns the per-entity runtime data resource and component/data lookup maps.
 # Scene layout:
 #   EntityRoot
-#     ├─ NCSEntityConfig   <- this node
-#     └─ NCSComponentsHub
-#          ├─ C_Movement
-#          └─ C_Health
+#     |-- NCSEntityConfig   <- this node
+#     |-- NCSComponentsHub
+#          |-- C_Movement
+#          |-- C_Health
 class_name EntityConfig
 extends NCSBase
 
@@ -322,6 +318,7 @@ func remove_data(data_script: Script) -> void:
 		var data_array = runtime_config.get(&"data_sets")
 		if data_array is Array:
 			data_array.erase(res)
+
 		NCS.update_single_entity(self)
 
 

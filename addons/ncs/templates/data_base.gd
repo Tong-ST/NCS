@@ -1,7 +1,3 @@
-# Copyright (c) 2026 GoodyWolf / Tong-ST.
-# Distributed under the terms of the MIT License.
-# See LICENSE for more information.
-
 ## Base class for all NCS data resources (D_* naming convention).
 ## Extend this to define per-entity runtime data (e.g. D_Health, D_Movement).
 ## Instances live inside NCSEntityDataSet.data_sets and are duplicate per-entity at spawn.

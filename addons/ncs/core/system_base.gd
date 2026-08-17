@@ -1,7 +1,3 @@
-# Copyright (c) 2026 GoodyWolf / Tong-ST.
-# Distributed under the terms of the MIT License.
-# See LICENSE for more information.
-
 ## Base class for all NCS systems. Extend this, override setup_query() to declare filters,
 ## then override ncs_process / ncs_physics_process to run per-frame logic on matched entities.
 # Quick setup:
@@ -16,7 +12,6 @@
 #           entities[i].move_and_slide()
 class_name NCSSystemBase
 extends NCSBase
-
 
 var _entities: Array[Node] = []
 var config_pool: Array[EntityConfig] = []
@@ -133,7 +128,7 @@ func _evaluate_single_entity(config_node: Object) -> void:
 				_flat_data_pools[pool_idx].remove_at(idx)
 
 
-## O(1) append for a freshly spawned entity. Called by NCS.register_entity().
+## Append for a freshly spawned entity. Called by NCS.register_entity().
 func _handle_incremental_arrival(config_node: Object) -> void:
 	if not is_instance_valid(config_node) or not (config_node is EntityConfig):
 		return
@@ -152,7 +147,7 @@ func _handle_incremental_arrival(config_node: Object) -> void:
 				_flat_data_pools[pool_idx].append((config_node as EntityConfig).get_data(_data_targets[pool_idx]))
 
 
-## O(1) removal for a departing entity. Called by NCS.unregister_entity().
+## Removal for a departing entity. Called by NCS.unregister_entity().
 func _handle_incremental_departure(config_node: Object) -> void:
 	var idx = config_pool.find(config_node)
 	if idx != -1:

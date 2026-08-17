@@ -1,7 +1,3 @@
-# Copyright (c) 2026 GoodyWolf / Tong-ST.
-# Distributed under the terms of the MIT License.
-# See LICENSE for more information.
-
 # NCS object pool singleton (autoload as "NCSEntityPool"). Works with any Godot Node.
 # Completely optional — mix freely with normal instantiate/queue_free if preferred.
 #

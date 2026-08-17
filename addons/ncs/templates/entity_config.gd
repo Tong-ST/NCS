@@ -1,7 +1,3 @@
-# Copyright (c) 2026 GoodyWolf / Tong-ST.
-# Distributed under the terms of the MIT License.
-# See LICENSE for more information.
-
 ## Blueprint resource container that holds all data blocks for one entity archetype.
 ## Assign this as the base_config on an EntityConfig node in the inspector.
 ##
