@@ -3,21 +3,29 @@ extends Node
 # Dictionary tracking all active systems. Key: System Class Name, Value: System Instance
 var _systems: Dictionary = {}
 
-# THE CENTRAL ENTITY REGISTRY: Tracks every entity alive in the game world
+# THE CENTRAL ENTITY REGISTRY
 var active_entities: Array[EntityConfig] = []
-var _active_entities_map: Dictionary = {}
+# Map tracks EntityConfig -> Array Index (int) for O(1) Swap-and-Pop lookups
+var _active_entities_map: Dictionary = {} 
 
 # High-speed tracking flags and queues for deferred frame-end processing
 var _query_dirty: bool = false
 var _pending_single_updates: Array[EntityConfig] = []
 
+const MASS_UPDATE_THRESHOLD: int = 200
+var is_batching: bool = false
+
 
 ## Registration hook triggered automatically when an entity mounts into the world tree
 func register_entity(entity: EntityConfig) -> void:
 	if not _active_entities_map.has(entity):
-		_active_entities_map[entity] = true
+		# Store array index in map for O(1) unregistering
+		_active_entities_map[entity] = active_entities.size()
 		active_entities.append(entity)
-		
+
+		if is_batching:
+			return
+
 		for system_name in _systems:
 			var system = _systems[system_name]
 			if system.has_method("_handle_incremental_arrival"):
@@ -26,10 +34,23 @@ func register_entity(entity: EntityConfig) -> void:
 
 ## Unregistration hook triggered automatically when an entity leaves play or is deleted
 func unregister_entity(entity: EntityConfig) -> void:
-	_active_entities_map.erase(entity)
-	active_entities.erase(entity)
-	
-	# High-speed subtraction: notify systems immediately while entity Object is valid
+	if _active_entities_map.has(entity):
+		# O(1) SWAP-AND-POP REMOVAL
+		var idx: int = _active_entities_map[entity]
+		var last_idx: int = active_entities.size() - 1
+		var last_entity: EntityConfig = active_entities[last_idx]
+
+		# Move last element to the deleted slot
+		active_entities[idx] = last_entity
+		_active_entities_map[last_entity] = idx
+
+		# Fast remove last element
+		active_entities.pop_back()
+		_active_entities_map.erase(entity)
+
+	if is_batching:
+		return
+
 	for system_name in _systems:
 		var system = _systems[system_name]
 		if system.has_method("_handle_incremental_departure"):
@@ -37,11 +58,32 @@ func unregister_entity(entity: EntityConfig) -> void:
 
 
 ## Direct targeted entity update when components or data are mutated at runtime.
-## Queued to process safely at frame end to prevent mid-loop array mutation.
 func update_single_entity(entity: EntityConfig) -> void:
+	if is_batching:
+		return
+
 	if is_instance_valid(entity) and not _pending_single_updates.has(entity):
 		_pending_single_updates.append(entity)
 		force_update_system_queries()
+
+
+## Starts a manual batch scope to suppress per-entity updates during loops
+func begin_batch() -> void:
+	is_batching = true
+
+
+## Ends the manual batch scope and executes a single global query rescan
+func end_batch() -> void:
+	is_batching = false
+	_pending_single_updates.clear()
+	_remap_all_system_queries()
+
+
+## Optional wrapper to automatically execute logic inside a batch scope
+func batch_mutate(action: Callable) -> void:
+	begin_batch()
+	action.call()
+	end_batch()
 
 
 ## Connects a system node layout cleanly into our central management hub
@@ -72,16 +114,23 @@ func force_update_system_queries() -> void:
 func _deferred_query_remap() -> void:
 	_query_dirty = false
 
-	# Process pending single entity component/data mutations safely
-	if not _pending_single_updates.is_empty():
-		var updates = _pending_single_updates.duplicate()
+	if _pending_single_updates.is_empty():
+		return
+
+	# Fallback: If single update queue spikes past threshold, do 1 linear pass instead
+	if _pending_single_updates.size() >= MASS_UPDATE_THRESHOLD:
 		_pending_single_updates.clear()
-		for entity in updates:
-			if is_instance_valid(entity):
-				for system_name in _systems:
-					var system = _systems[system_name]
-					if system.has_method("_evaluate_single_entity"):
-						system._evaluate_single_entity(entity)
+		_remap_all_system_queries()
+		return
+
+	var updates = _pending_single_updates.duplicate()
+	_pending_single_updates.clear()
+	for entity in updates:
+		if is_instance_valid(entity):
+			for system_name in _systems:
+				var system = _systems[system_name]
+				if system.has_method("_evaluate_single_entity"):
+					system._evaluate_single_entity(entity)
 
 
 ## Executes a single, unified full world filter sweep across all active tracking nodes
