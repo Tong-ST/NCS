@@ -79,15 +79,15 @@ func setup_query() -> void:
 
 ## Step 2: Process the linear data stream sequentially
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
-	var move_pool = data_pools[0] # allocated data pool.
-	var input_pool = data_pools[1] # with index accordingly to iterate_data() above
+	var move_pool = data_pools[0] as Array[D_Movement] # allocated data pool.
+	var input_pool = data_pools[1] as Array[D_Input] # with index accordingly to iterate_data() above
 	
 	# Iterate through all entities
 	for i in entities.size():
 		# allocate data for each entities
 		var ent = entities[i] as CharacterBody2D
-		var move_data = move_pool[i] as D_Movement
-		var input_data = input_pool[i] as D_Input
+		var move_data = move_pool[i]
+		var input_data = input_pool[i]
 
 		# Always use safety check for data
 		if not is_instance_valid(ent) or not move_data or not input_data:
@@ -115,7 +115,7 @@ if target_enemy_health <= 0:
 	config.remove_comp(C_Movement)
 	
 	# Triggers a visual method in your local components.
-	config.send_signal(C_Health, "flash_red")
+	config.send_signal(C_Health, &"flash_red")
 ```
 - Naming convention for ease of use and remember `S_System` for class_name, s_system.gd for scripts.
 
