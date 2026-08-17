@@ -1,10 +1,16 @@
+## Blueprint resource container that holds all data blocks for one entity archetype.
+## Assign this as the base_config on an EntityConfig node in the inspector.
+##
+## At runtime, each spawned entity receives its own deep-duplicated instance so
+## data changes on one entity never affect others sharing the same base blueprint.
 class_name NCSEntityDataSet
 extends Resource
 
 @export var data_sets: Array[NCSDataBase] = []
 
 
-## Fast runtime duplication of data sets (avoids slow C++ recursive deep duplication)
+## Creates a shallow-per-element duplicate of data_sets.
+## Each NCSDataBase element is individually duplicated so resources are not shared.
 func duplicate_runtime() -> NCSEntityDataSet:
 	var copy = NCSEntityDataSet.new()
 	var new_sets: Array[NCSDataBase] = []
@@ -18,7 +24,7 @@ func duplicate_runtime() -> NCSEntityDataSet:
 	return copy
 
 
-## Finds a specific data sub-block matching the given class name automatically
+## Finds the first data block matching the given Script type inside data_sets.
 func find_data_by_class(target_class: Script) -> NCSDataBase:
 	for data in data_sets:
 		if is_instance_valid(data) and data.get_class_identifier() == target_class.to_string():
