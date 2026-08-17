@@ -31,7 +31,7 @@ var _has_snapshot: bool = false
 
 func _enter_tree() -> void:
 	if base_config and not runtime_config:
-		if base_config.has_method("duplicate_runtime"):
+		if base_config.has_method(&"duplicate_runtime"):
 			runtime_config = base_config.duplicate_runtime()
 		else:
 			runtime_config = base_config.duplicate(true) as NCSEntityDataSet
@@ -54,7 +54,7 @@ func reset_entity() -> void:
 
 	# 1. Reset Data Resources back to base_config defaults
 	if base_config:
-		if base_config.has_method("duplicate_runtime"):
+		if base_config.has_method(&"duplicate_runtime"):
 			runtime_config = base_config.duplicate_runtime()
 		else:
 			runtime_config = base_config.duplicate(true) as NCSEntityDataSet
@@ -98,7 +98,7 @@ func despawn() -> void:
 	is_active = false
 	NCS.unregister_entity(self)
 	var pool = get_tree().root.get_node_or_null("NCSEntityPool") if get_tree() else null
-	if pool and pool.has_method("despawn"):
+	if pool and pool.has_method(&"despawn"):
 		pool.despawn(get_parent())
 		return
 	if get_parent():
@@ -110,7 +110,7 @@ func _rebuild_data_cache() -> void:
 	_data_map.clear()
 	if not runtime_config:
 		return
-	var data_array = runtime_config.get("data_sets")
+	var data_array = runtime_config.get(&"data_sets")
 	if data_array is Array:
 		for res in data_array:
 			if is_instance_valid(res) and res.get_script():
@@ -128,7 +128,7 @@ func _rebuild_component_cache() -> void:
 
 	# Scan direct children of parent body first
 	for child in parent_body.get_children():
-		if child.name.begins_with("__DELETED_"):
+		if child.name.begins_with(&"__DELETED_"):
 			continue
 		var script = child.get_script()
 		if script:
@@ -138,7 +138,7 @@ func _rebuild_component_cache() -> void:
 		if child is NCSComponentsHub or child.name == "NCSComponentsHub":
 			_components_hub_cache = child as NCSComponentsHub
 			for sub_child in child.get_children():
-				if sub_child.name.begins_with("__DELETED_"):
+				if sub_child.name.begins_with(&"__DELETED_"):
 					continue
 				var sub_script = sub_child.get_script()
 				if sub_script:
@@ -239,7 +239,7 @@ func add_comp(comp_script: Script) -> void:
 	if new_node is NCSComponentBase:
 		new_node.owner_node = hub.owner_node
 		new_node.config = self
-		if new_node.has_method("_init_comp"):
+		if new_node.has_method(&"_init_comp"):
 			new_node._init_comp()
 
 	_component_map[comp_script] = new_node as NCSComponentBase
@@ -275,7 +275,7 @@ func remove_comp(comp_script: Script) -> void:
 
 ## Invokes a custom method block on a component script safely if it exists.
 ## Example: config.send_signal(C_Health, "take_damage", [20.0])
-func send_signal(comp_script: Script, method_name: String, args: Array = []) -> bool:
+func send_signal(comp_script: Script, method_name: StringName, args: Array = []) -> bool:
 	if not comp_script: 
 		return false
 	
@@ -305,7 +305,7 @@ func add_data(data_script: Script) -> void:
 				
 	var new_data_instance = data_script.new() as NCSDataBase
 	if new_data_instance:
-		var data_array = runtime_config.get("data_sets")
+		var data_array = runtime_config.get(&"data_sets")
 		if data_array is Array:
 			data_array.append(new_data_instance)
 		_data_map[data_script] = new_data_instance
@@ -321,7 +321,7 @@ func remove_data(data_script: Script) -> void:
 	var res = _data_map.get(data_script, null)
 	if res:
 		_data_map.erase(data_script)
-		var data_array = runtime_config.get("data_sets")
+		var data_array = runtime_config.get(&"data_sets")
 		if data_array is Array:
 			data_array.erase(res)
 		NCS.update_single_entity(self)

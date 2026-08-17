@@ -18,7 +18,7 @@ func ncs_process(entities: Array[Node], _data_pools: Array, _delta: float) -> vo
 		if not is_instance_valid(ent): 
 			continue
 
-		var config = config_pool[i] as EntityConfig
+		var config = config_pool[i]
 		if is_instance_valid(config):
 			_pending_despawn.append(config)
 		else:

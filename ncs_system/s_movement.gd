@@ -8,14 +8,14 @@ func setup_query() -> void:
 
 
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
-	var move_pool = data_pools[0] # allocate data for current frame use
-	var input_pool = data_pools[1] # same index as iterate_data appbrove
-	
+	var move_pool = data_pools[0] as Array[D_Movement]
+	var input_pool = data_pools[1] as Array[D_Input]
+
 	# Iterate and fetching data process.
 	for i in entities.size():
 		var ent = entities[i] as CharacterBody2D
-		var move_data = move_pool[i] as D_Movement
-		var input_data = input_pool[i] as D_Input
+		var move_data = move_pool[i]
+		var input_data = input_pool[i]
 
 		# Always safely check for data that you query, use "continue" to skip loop.
 		if not is_instance_valid(ent) or not move_data or not input_data:
