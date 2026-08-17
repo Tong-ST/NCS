@@ -41,7 +41,8 @@ Components live in the scene tree under the `NCSComponentsHub` folder. They inhe
 # You can put some logic in component with Native godot style.
 # Make sure there focus on local scene.
 # Avoid run process loop inside each comp.
-# Avoid write to D_Data that may use in system, Make habit of Read-only to avoid conflict with S_System. 
+# Avoid Write to D_Data that may use in system,
+# Make habit of Read-only from D_Data to avoid conflict with S_System. 
 
 class_name C_Health
 extends NCSComponentBase
