@@ -25,7 +25,9 @@ func ncs_process(entities: Array[Node], _data_pools: Array, _delta: float) -> vo
 			ent.queue_free()
 
 	# Example for doing batch update. Recommend for system may have multiple entity
-	# Update they components, spawn, despawn at one. Otherwise it slower than normal
+	# Update they components, spawn, despawn at one frame. Otherwise it slower that normal
+	# Another word, It will wait for finish this loop before it re-query system, 
+	# So you may Experience unexpected behavior.
 	if not _pending_despawn.is_empty():
 		NCS.begin_batch()
 

@@ -28,7 +28,7 @@ func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> voi
 
 	# Example of doing batch update. 
 	# If this system may have multiple ent. That may died update at one frame.
-	# e.g. 200+ at once, Otherwise don't do batching it might be slower.
+	# e.g. 500+ at once, Otherwise don't do batching it may slower and prone to bugs
 	if not _pending_add_dead.is_empty():
 		NCS.begin_batch()
 
