@@ -1,0 +1,157 @@
+[gd_scene format=3 uid="uid://d1joja6hsdxrh"]
+
+[ext_resource type="PackedScene" uid="uid://drd0o3om1q3na" path="res://main_game/player.tscn" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://bkmd66vdt4ppj" path="res://main_game/main.gd" id="1_xvufe"]
+[ext_resource type="Script" uid="uid://ws8invgs7t4u" path="res://ncs_system/s_dead.gd" id="2_os3gg"]
+[ext_resource type="Script" uid="uid://dtcdyejtk5tte" path="res://ncs_system/s_input.gd" id="2_qofrp"]
+[ext_resource type="Script" uid="uid://bjse0r78t1isb" path="res://ncs_system/s_enemy_ai.gd" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://cdjdifkshhe0h" path="res://addons/ncs/core/ncs_world.gd" id="3_lquwl"]
+[ext_resource type="Script" uid="uid://ckc1tfcgccqis" path="res://ncs_system/s_movement.gd" id="5_7mycd"]
+[ext_resource type="Script" uid="uid://c881o8prnc4sy" path="res://ncs_system/s_visual.gd" id="6_vis01"]
+[ext_resource type="Script" uid="uid://dujjf8rblw47w" path="res://ncs_system/s_health.gd" id="8_d214i"]
+[ext_resource type="PackedScene" uid="uid://cvael67uegn6h" path="res://main_game/enemy.tscn" id="8_xvufe"]
+[ext_resource type="PackedScene" uid="uid://lvup6a5nx615" path="res://oop_comparision/enemy_oop.tscn" id="9_7km35"]
+
+[node name="Main" type="Node2D" unique_id=945331847]
+script = ExtResource("1_xvufe")
+
+[node name="NCSWorld" type="Node" parent="." unique_id=935555110]
+script = ExtResource("3_lquwl")
+metadata/_custom_type_script = "uid://cdjdifkshhe0h"
+
+[node name="CoreLoops" type="Node" parent="NCSWorld" unique_id=1229781815]
+
+[node name="S_Input" type="Node" parent="NCSWorld/CoreLoops" unique_id=1787844853]
+script = ExtResource("2_qofrp")
+
+[node name="S_Movement" type="Node" parent="NCSWorld/CoreLoops" unique_id=331608418]
+script = ExtResource("5_7mycd")
+
+[node name="S_Visual" type="Node" parent="NCSWorld/CoreLoops" unique_id=892314561]
+script = ExtResource("6_vis01")
+
+[node name="GameplaySystems" type="Node" parent="NCSWorld" unique_id=1640213077]
+
+[node name="S_EnemyAI" type="Node" parent="NCSWorld/GameplaySystems" unique_id=540796171]
+script = ExtResource("3_h2yge")
+
+[node name="S_Health" type="Node" parent="NCSWorld/GameplaySystems" unique_id=1035740470]
+script = ExtResource("8_d214i")
+
+[node name="S_Dead" type="Node" parent="NCSWorld/GameplaySystems" unique_id=636750035]
+script = ExtResource("2_os3gg")
+
+[node name="Player" parent="." unique_id=1562561095 instance=ExtResource("1_ig7tw")]
+position = Vector2(538, 334)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1618945116]
+
+[node name="Control" type="Control" parent="CanvasLayer" unique_id=1829833830]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer/Control" unique_id=1992913153]
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 90.0
+grow_horizontal = 2
+color = Color(0, 0, 0, 0.15686275)
+
+[node name="Label" type="Label" parent="CanvasLayer/Control" unique_id=821245185]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -119.5
+offset_top = -33.0
+offset_right = 119.5
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Press \"ENTER\" To Deal Damage"
+
+[node name="PerfCounter" type="Label" parent="CanvasLayer/Control" unique_id=194156490]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -119.5
+offset_top = 5.0
+offset_right = 119.5
+offset_bottom = 80.0
+grow_horizontal = 2
+text = "FPS:
+PROCESS:
+OBJ:"
+horizontal_alignment = 1
+
+[node name="NCSEntCount" type="Label" parent="CanvasLayer/Control" unique_id=169029808]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 249.0
+offset_bottom = 33.0
+text = "NCS Enemies: xxx"
+
+[node name="OOPEntCount" type="Label" parent="CanvasLayer/Control" unique_id=1963367658]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -249.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 33.0
+grow_horizontal = 0
+text = "OOP Enemies: XXX"
+horizontal_alignment = 2
+
+[node name="NCSBtn" type="Button" parent="CanvasLayer/Control" unique_id=2142314393]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 10.0
+offset_top = 40.0
+offset_right = 111.0
+offset_bottom = 71.0
+focus_mode = 0
+text = "SPAWN NCS"
+
+[node name="OOPBtn" type="Button" parent="CanvasLayer/Control" unique_id=501665499]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -115.0
+offset_top = 40.0
+offset_right = -10.0
+offset_bottom = 71.0
+grow_horizontal = 0
+focus_mode = 0
+text = "SPAWN OOP"
+
+[node name="Enemy" parent="." unique_id=275625331 instance=ExtResource("8_xvufe")]
+position = Vector2(209, 177)
+
+[node name="Enemy2" parent="." unique_id=814834934 instance=ExtResource("8_xvufe")]
+position = Vector2(861, 182)
+
+[node name="EnemyOOP" parent="." unique_id=303922004 instance=ExtResource("9_7km35")]
+position = Vector2(193, 475)
+
+[node name="EnemyOOP2" parent="." unique_id=702293820 instance=ExtResource("9_7km35")]
+position = Vector2(902, 480)
+
+[connection signal="pressed" from="CanvasLayer/Control/NCSBtn" to="." method="_on_ncs_btn_pressed"]
+[connection signal="pressed" from="CanvasLayer/Control/OOPBtn" to="." method="_on_oop_btn_pressed"]

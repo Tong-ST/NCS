@@ -10,20 +10,21 @@ func setup_query() -> void:
 func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> void:
 	if entities.is_empty(): return
 	var current_entities = entities as Array[CharacterBody2D]
+
 	var health_pool = data_pools[0] as Array[D_Health] # allocate data for current frame use
 	if not health_pool: return
 
 	var _pending_add_dead: Array[EntityConfig] = []
 
-	# Iterate and fetching data process.
+	# Iterate and prepare data for each entity.
 	for i in current_entities.size():
 		var ent = current_entities[i]
+		if not is_instance_valid(ent): continue
+
 		var health_data = health_pool[i]
 		var config = config_pool[i]
-
 		# Always safely check for data that you query, use "continue" to skip loop.
-		if not is_instance_valid(ent) or not config or not health_data:
-			continue
+		if not health_data or not config: continue
 
 		if health_data.current_health <= 0:
 			health_data.current_health = 0
@@ -32,6 +33,7 @@ func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> voi
 	# Example of doing batch update. 
 	# If this system may have multiple ent. That may died update at one frame.
 	# e.g. 500+ at once, Otherwise don't do batching it may slower and prone to bugs
+	# This batching is unnecessary for most use-cases, This just for demonstrate.
 	if not _pending_add_dead.is_empty():
 		NCS.begin_batch()
 

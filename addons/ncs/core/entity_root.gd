@@ -273,8 +273,8 @@ func remove_comp(comp_script: Script) -> void:
 		NCS.update_single_entity(self)
 
 
-## Calls a method on a component node safely. Returns true if the call succeeded.
-## Usage: config.send_signal(C_Health, "take_damage", [20.0])
+## Calls a method on a component node. Returns true if the call succeeded.
+## Usage: config.send_signal(C_Health, &"take_damage", [20.0])
 func send_signal(comp_script: Script, method_name: StringName, args: Array = []) -> bool:
 	if not comp_script:
 		return false

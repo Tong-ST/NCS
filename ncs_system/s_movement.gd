@@ -10,19 +10,20 @@ func setup_query() -> void:
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
 	if entities.is_empty(): return
 	var current_entities = entities as Array[CharacterBody2D]
+
 	var move_pool = data_pools[0] as Array[D_Movement]
 	var input_pool = data_pools[1] as Array[D_Input]
 	if not move_pool or not input_pool: return
 
-	# Iterate and fetching data process.
+	# Iterate and prepare data for each entity.
 	for i in current_entities.size():
 		var ent = current_entities[i]
+		if not is_instance_valid(ent): continue
+
 		var move_data = move_pool[i]
 		var input_data = input_pool[i]
-
 		# Always safely check for data that you query, use "continue" to skip loop.
-		if not is_instance_valid(ent) or not move_data or not input_data:
-			continue
+		if not move_data or not input_data: continue
 		
 		# Run regular logic:
 		var current_input = input_data.movement_vector
@@ -36,7 +37,7 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 				Vector2.ZERO, move_data.acceleration * delta
 			)
 
-		# Simulate movement purely in data - seed from entity position on first frame
+		# Simulate movement purely in data and separate scene-tree mutation to S_Visual
 		if not move_data.is_pos_initialized:
 			move_data.next_global_pos = ent.global_position
 			move_data.is_pos_initialized = true

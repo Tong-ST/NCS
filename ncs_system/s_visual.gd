@@ -1,5 +1,6 @@
 ## This is completely optional but recommend to separate scene-tree edit
 ## From pure data calculation in previous system, e.g. S_Input, S_Movement
+##
 ## And this example try simulate of object off-screen they still change position
 ## But only update physics/visual position when on-screen.
 class_name S_Visual
@@ -14,12 +15,12 @@ func setup_query() -> void:
 func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> void:
 	if entities.is_empty(): return
 	var current_entities = entities as Array[CharacterBody2D]
+
 	var move_pool = data_pools[0] as Array[D_Movement]
 	if not move_pool: return
 	
 	var viewport = get_viewport()
-	if not viewport:
-		return
+	if not viewport: return
 
 	# Calculate visible world viewport rectangle with a 64px padding buffer
 	var canvas_transform = viewport.get_canvas_transform()
@@ -30,15 +31,14 @@ func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> voi
 
 	# Synchronize transforms and handle on-screen culling
 	for i in current_entities.size():
-		var ent = entities[i]
-		var move_data = move_pool[i]
+		var ent = current_entities[i]
+		if not is_instance_valid(ent): continue
 
-		if not is_instance_valid(ent) or not move_data:
-			continue
+		var move_data = move_pool[i]
+		if not move_data: continue
 
 		# Skip until S_Movement has seeded the real spawn position on its first physics tick
-		if not move_data.is_pos_initialized:
-			continue
+		if not move_data.is_pos_initialized: continue
 
 		var on_screen = screen_rect.has_point(move_data.next_global_pos)
 		if on_screen:

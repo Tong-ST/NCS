@@ -13,14 +13,14 @@ func ncs_process(entities: Array[Node], _data_pools: Array, _delta: float) -> vo
 
 	var deal_damage = Input.is_action_just_pressed("ui_accept")
 
-	# Iterate and fetching data process.
+	# Iterate and prepare data for each entity.
 	for i in current_entities.size():
 		var ent = current_entities[i]
-		var config = config_pool[i]
+		if not is_instance_valid(ent): continue
 
+		var config = config_pool[i]
 		# Always safely check for data that you query, use "continue" to skip loop.
-		if not is_instance_valid(ent) or not config:
-			continue
+		if not config: continue
 
 		#  send_signal to call function inside component
 		if deal_damage:
