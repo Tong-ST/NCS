@@ -8,12 +8,15 @@ func setup_query() -> void:
 
 
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
+	if entities.is_empty(): return
+	var current_entities = entities as Array[CharacterBody2D]
 	var move_pool = data_pools[0] as Array[D_Movement]
 	var input_pool = data_pools[1] as Array[D_Input]
+	if not move_pool or not input_pool: return
 
 	# Iterate and fetching data process.
-	for i in entities.size():
-		var ent = entities[i] as CharacterBody2D
+	for i in current_entities.size():
+		var ent = current_entities[i]
 		var move_data = move_pool[i]
 		var input_data = input_pool[i]
 

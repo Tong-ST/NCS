@@ -7,19 +7,19 @@ func setup_query() -> void:
 	iterate_data([D_Input]) # caching data
 
 
-func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> void:
-	var input_pool = data_pools[0] as Array[D_Input] # allocate data for current frame use
+func ncs_process(entities: Array[Node], _data_pools: Array, _delta: float) -> void:
+	if entities.is_empty(): return
+	var current_entities = entities as Array[CharacterBody2D]
 
 	var deal_damage = Input.is_action_just_pressed("ui_accept")
 
 	# Iterate and fetching data process.
-	for i in entities.size():
-		var ent = entities[i] as CharacterBody2D
-		var input_data = input_pool[i]
+	for i in current_entities.size():
+		var ent = current_entities[i]
 		var config = config_pool[i]
 
 		# Always safely check for data that you query, use "continue" to skip loop.
-		if not is_instance_valid(ent) or not input_data or not config:
+		if not is_instance_valid(ent) or not config:
 			continue
 
 		#  send_signal to call function inside component

@@ -8,13 +8,16 @@ func setup_query() -> void:
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> void:
+	if entities.is_empty(): return
+	var current_entities = entities as Array[CharacterBody2D]
 	var health_pool = data_pools[0] as Array[D_Health] # allocate data for current frame use
+	if not health_pool: return
 
 	var _pending_add_dead: Array[EntityConfig] = []
 
 	# Iterate and fetching data process.
-	for i in entities.size():
-		var ent = entities[i] as CharacterBody2D
+	for i in current_entities.size():
+		var ent = current_entities[i]
 		var health_data = health_pool[i]
 		var config = config_pool[i]
 

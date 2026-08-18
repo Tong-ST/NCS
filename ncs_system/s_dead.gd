@@ -7,15 +7,14 @@ func setup_query() -> void:
 
 
 func ncs_process(entities: Array[Node], _data_pools: Array, _delta: float) -> void:
-	if entities.is_empty():
-		return
+	if entities.is_empty(): return
 
 	var _pending_despawn: Array[EntityConfig] = []
 
 	# Iterate in reverse for safer despawning/destroying entities
 	for i in range(entities.size() - 1, -1, -1):
-		var ent = entities[i] as CharacterBody2D
-		if not is_instance_valid(ent): 
+		var ent = entities[i]
+		if not is_instance_valid(ent):
 			continue
 
 		var config = config_pool[i]

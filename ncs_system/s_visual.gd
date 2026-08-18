@@ -1,3 +1,7 @@
+## This is completely optional but recommend to separate scene-tree edit
+## From pure data calculation in previous system, e.g. S_Input, S_Movement
+## And this example try simulate of object off-screen they still change position
+## But only update physics/visual position when on-screen.
 class_name S_Visual
 extends NCSSystemBase
 
@@ -8,7 +12,10 @@ func setup_query() -> void:
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> void:
+	if entities.is_empty(): return
+	var current_entities = entities as Array[CharacterBody2D]
 	var move_pool = data_pools[0] as Array[D_Movement]
+	if not move_pool: return
 	
 	var viewport = get_viewport()
 	if not viewport:
@@ -22,8 +29,8 @@ func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> voi
 	var screen_rect = Rect2(screen_origin, screen_size).grow(64.0)
 
 	# Synchronize transforms and handle on-screen culling
-	for i in entities.size():
-		var ent = entities[i] as CharacterBody2D
+	for i in current_entities.size():
+		var ent = entities[i]
 		var move_data = move_pool[i]
 
 		if not is_instance_valid(ent) or not move_data:
