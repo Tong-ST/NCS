@@ -33,9 +33,6 @@ func _ready() -> void:
 			child.owner_node = owner_node
 			child.config = config_node
 
-	if config_node:
-		config_node._rebuild_component_cache()
-
 
 func _enter_tree() -> void:
 	if Engine.is_editor_hint():

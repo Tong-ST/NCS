@@ -14,7 +14,7 @@ func setup_query() -> void:
 
 func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> void:
 	if entities.is_empty(): return
-	var current_entities = entities as Array[CharacterBody2D]
+	var current_entities = entities as Array[Node]
 
 	var move_pool = data_pools[0] as Array[D_Movement]
 	if not move_pool: return

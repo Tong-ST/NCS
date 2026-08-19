@@ -134,47 +134,11 @@ Level_Main
 		|-- S_EnemyAI (Your system script)
 ```
 
-## Extra Tool: Object Pooling (`NCSEntityPool`)
-NCS includes built-in Object Pool system to help with frame stutter during mass spawning or bullet hell / wave games.
-
-It's **optional and decoupled**: you can freely choose to use normal Godot `instantiate()` + `add_child()`, or use `NCSEntityPool` whenever you want pooling system.
-
-### 1. Pre-warm entities (Optional)
-Instantiate entities ahead of time during loading to avoid runtime instantiation lag:
-```gdscript
-# In your level _ready() or loading screen:
-var enemy_scene = preload("res://enemy.tscn")
-NCSEntityPool.prewarm(enemy_scene, 500, parent_node)
-```
-
-### 2. Spawning from Pool
-Spawn a pre-warmed entity (or instantiates a new one automatically if the pool is empty):
-```gdscript
-# Spawns entity, sets position, resets data, and registers with NCS systems
-var enemy = NCSEntityPool.spawn(enemy_scene, spawn_position, self)
-```
-
-### 3. Despawning / Returning to Pool
-When an entity dies or despawns:
-```gdscript
-# In your entity, component, or system (e.g. S_Dead):
-config.despawn() # Automatically returns to pool if pooled, or queue_free() fallback
-```
-Or despawn directly via the pool manager:
-```gdscript
-NCSEntityPool.despawn(enemy_node)
-```
-
-### Object pooling is Optional:
-- **Fallback Safe**: If you spawn an entity normally with `instantiate()` and call `config.despawn()`, it safely falls back to standard `queue_free()`.
-- **Only use with Entity** Don't use object pooling system for your normal scene that doesn't register to NCSEntity (Use only scene with EntityConfig, And NCSComponentsHub)
-
-
 ## Installation
 - Clone this git or download zip.
 - In addons folder copy `ncs` to your godot project addons.
 - Enable plugin via Project>Plugin>NCS
-- Make sure `NCS` and `NCSEntityPool` autoload enable via Project>Globals
+- Make sure `NCS` autoload enable via Project>Globals
 
 ## Recommendation
 - After you clone this project open Godot and import this project and to see full demo on how this plugin work.

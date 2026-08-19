@@ -50,61 +50,6 @@ func _exit_tree() -> void:
 		NCS.unregister_entity(self)
 
 
-## Resets entity to design-time state. Called automatically by NCSEntityPool on recycle.
-## Duplicates fresh runtime_config, removes runtime-added components, re-inits baseline ones.
-func reset_entity() -> void:
-	is_active = true
-	if base_config:
-		if base_config.has_method(&"duplicate_runtime"):
-			runtime_config = base_config.duplicate_runtime()
-		else:
-			runtime_config = base_config.duplicate(true) as NCSEntityDataSet
-
-	_rebuild_data_cache()
-
-	if _has_snapshot:
-		var current_scripts = _component_map.keys()
-		for comp_script in current_scripts:
-			if not _initial_component_scripts.has(comp_script):
-				remove_comp(comp_script)
-
-		for initial_script in _initial_component_scripts:
-			var baseline_node = _baseline_component_nodes.get(initial_script, null) as Node
-			if is_instance_valid(baseline_node):
-				baseline_node.process_mode = PROCESS_MODE_INHERIT
-				if baseline_node is CanvasItem or baseline_node is Node3D:
-					baseline_node.show()
-				if baseline_node is NCSComponentBase and baseline_node.has_method("_init_comp"):
-					baseline_node._init_comp()
-				_component_map[initial_script] = baseline_node as NCSComponentBase
-				if not _active_component_scripts.has(initial_script):
-					_active_component_scripts.append(initial_script)
-			else:
-				add_comp(initial_script)
-
-	_rebuild_component_cache()
-	NCS.update_single_entity(self)
-
-
-## Alias for reset_entity(). Kept for backwards compatibility.
-func reset_data() -> void:
-	reset_entity()
-
-
-## Removes entity from active play. Returns to pool if spawned via NCSEntityPool, else queue_free.
-func despawn() -> void:
-	is_active = false
-	NCS.unregister_entity(self)
-
-	var pool = get_tree().root.get_node_or_null("NCSEntityPool") if get_tree() else null
-	if pool and pool.has_method(&"despawn"):
-		pool.despawn(get_parent())
-		return
-
-	if get_parent():
-		get_parent().queue_free()
-
-
 # ==============================================================================
 # CACHE REBUILDS
 # ==============================================================================
