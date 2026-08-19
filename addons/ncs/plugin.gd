@@ -16,7 +16,7 @@ func _enter_tree() -> void:
 	)
 
 	add_autoload_singleton("NCS", "res://addons/ncs/core/system_manager.gd")
-	print("NCS Framework & Entity Pool Initialized Successfully.")
+	print("NCS Framework Initialized Successfully.")
 
 
 func _exit_tree() -> void:

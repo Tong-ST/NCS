@@ -1,5 +1,5 @@
 # NCS global singleton (autoload as "NCS"). Owns the master entity list and all system refs.
-# Most calls come through EntityConfig (add_comp, remove_comp) or NCSEntityPool (spawn, despawn).
+# Most calls come through EntityConfig (add_comp, remove_comp).
 extends Node
 
 var _systems: Dictionary = {}

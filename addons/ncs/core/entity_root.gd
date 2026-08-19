@@ -20,11 +20,8 @@ var _data_map: Dictionary = {}
 var _component_map: Dictionary = {}
 var _active_component_scripts: Array[Script] = []
 
-## False when entity is pooled/disabled. Systems skip entities where is_active = false.
+## False when entity is disabled. Systems skip entities where is_active = false.
 var is_active: bool = true
-
-## Scene this entity was spawned from. Set by NCSEntityPool for correct pool return.
-var pooled_scene_key: PackedScene = null
 
 var _initial_component_scripts: Array[Script] = []
 var _baseline_component_nodes: Dictionary = {}
@@ -197,8 +194,7 @@ func add_comp(comp_script: Script) -> void:
 	NCS.update_single_entity(self)
 
 
-## Removes a component at runtime. Baseline components are disabled (kept for pool restore).
-## Runtime-added components are queue_freed. Triggers deferred NCS re-query.
+## Removes a component at runtime. and triggers deferred NCS re-query.
 ## Usage: config.remove_comp(C_Movement)
 func remove_comp(comp_script: Script) -> void:
 	if not comp_script:

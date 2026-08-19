@@ -16,7 +16,6 @@ var owner_node: Node
 var config: EntityConfig
 
 
-## Optional lifecycle hook called by EntityConfig.reset_entity() on pool recycle.
 ## Override in subclasses to re-initialize component state back to defaults.
 ## This will run one and before S_System.
 func _init_comp() -> void:
