@@ -10,13 +10,22 @@ extends NCSBase
 ## The editor hub validator will warn you if the resource is missing from the data_sets array.
 @export var require_data: bool = false
 
-# Set automatically by NCSComponentsHub._ready() — points to the parent body (e.g. CharacterBody2D).
+## Points to the parent body (e.g. CharacterBody2D).
 var owner_node: Node
-# Set automatically by NCSComponentsHub._ready() — points to the sibling EntityConfig node.
+## Points to the sibling EntityConfig node.
 var config: EntityConfig
 
 
-## Override in subclasses to re-initialize component state back to defaults.
-## This will run one and before S_System.
-func _init_comp() -> void:
+## Execute at start when entity enter to scene-tree, with owner_node and config references.
+func _on_init_comp() -> void:
+	pass
+
+
+## Execute when new component add to entity, owner_node and config will base on current entity.
+func _on_add_comp() -> void:
+	pass
+
+
+## Execute when component was remove from entity, owner_node and config will base on last entity.
+func _on_remove_comp() -> void:
 	pass

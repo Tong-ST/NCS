@@ -32,6 +32,8 @@ func _ready() -> void:
 		if child is NCSComponentBase:
 			child.owner_node = owner_node
 			child.config = config_node
+			if child.has_method(&"_on_init_comp"):
+				child._on_init_comp()
 
 
 func _enter_tree() -> void:

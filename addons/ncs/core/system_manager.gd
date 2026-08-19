@@ -28,7 +28,7 @@ func register_entity(entity: EntityConfig) -> void:
 				system._handle_incremental_arrival(entity)
 
 
-## Called by EntityConfig._exit_tree() or despawn(). Do not call manually.
+## Called by EntityConfig._exit_tree() Do not call manually.
 func unregister_entity(entity: EntityConfig) -> void:
 	if _active_entities_map.has(entity):
 		var idx: int = _active_entities_map[entity]

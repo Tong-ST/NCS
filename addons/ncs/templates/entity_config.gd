@@ -27,6 +27,6 @@ func duplicate_runtime() -> NCSEntityDataSet:
 ## Finds the first data block matching the given Script type inside data_sets.
 func find_data_by_class(target_class: Script) -> NCSDataBase:
 	for data in data_sets:
-		if is_instance_valid(data) and data.get_class_identifier() == target_class.to_string():
+		if is_instance_valid(data) and data.get_class_identifier() == target_class.get_global_name():
 			return data
 	return null

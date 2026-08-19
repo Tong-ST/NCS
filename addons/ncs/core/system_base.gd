@@ -80,7 +80,7 @@ func _matches_query(config_node: Object) -> bool:
 		return false
 
 	var cfg = config_node as EntityConfig
-	if not cfg.is_active or not cfg.is_inside_tree():
+	if not cfg.is_inside_tree():
 		return false
 
 	var parent_body = cfg.get_parent()

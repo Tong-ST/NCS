@@ -14,3 +14,8 @@ func take_damage(amount: float) -> void:
 	if health_data:
 		health_data.current_health -= amount
 		on_damaged.emit()
+
+
+# This will run once this component was remove from entity.
+func _on_remove_comp() -> void:
+	print('Health component was removed from ', owner_node.name)

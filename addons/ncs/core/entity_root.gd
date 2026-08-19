@@ -1,11 +1,5 @@
 ## Core entity node. Add one as a child of every NCS entity root (CharacterBody2D etc.).
 ## Owns the per-entity runtime data resource and component/data lookup maps.
-# Scene layout:
-#   EntityRoot
-#     |-- NCSEntityConfig   <- this node
-#     |-- NCSComponentsHub
-#          |-- C_Movement
-#          |-- C_Health
 class_name EntityConfig
 extends NCSBase
 
@@ -20,13 +14,6 @@ var _data_map: Dictionary = {}
 var _component_map: Dictionary = {}
 var _active_component_scripts: Array[Script] = []
 
-## False when entity is disabled. Systems skip entities where is_active = false.
-var is_active: bool = true
-
-var _initial_component_scripts: Array[Script] = []
-var _baseline_component_nodes: Dictionary = {}
-var _has_snapshot: bool = false
-
 
 func _enter_tree() -> void:
 	if base_config and not runtime_config:
@@ -38,13 +25,11 @@ func _enter_tree() -> void:
 	_rebuild_data_cache()
 	_rebuild_component_cache()
 
-	if is_active:
-		NCS.register_entity(self)
+	NCS.register_entity(self)
 
 
 func _exit_tree() -> void:
-	if is_active:
-		NCS.unregister_entity(self)
+	NCS.unregister_entity(self)
 
 
 # ==============================================================================
@@ -65,7 +50,7 @@ func _rebuild_data_cache() -> void:
 				_data_map[res.get_script()] = res
 
 
-## Rebuilds _component_map by scanning the entity tree. Captures baseline snapshot on first call.
+## Rebuilds _component_map by scanning the entity tree.
 func _rebuild_component_cache() -> void:
 	_component_map.clear()
 	_active_component_scripts.clear()
@@ -95,17 +80,12 @@ func _rebuild_component_cache() -> void:
 					if not _active_component_scripts.has(sub_script):
 						_active_component_scripts.append(sub_script)
 
-	if not _has_snapshot and not _active_component_scripts.is_empty():
-		_initial_component_scripts = _active_component_scripts.duplicate()
-		_baseline_component_nodes = _component_map.duplicate()
-		_has_snapshot = true
-
 
 # ==============================================================================
 # GETTERS
 # ==============================================================================
 
-## Returns the runtime data resource of the given type in O(1). Logs push_error if missing.
+## Returns the runtime data resource of the given type. Logs push_error if missing.
 ## Usage: var move = config.get_data(D_Movement) as D_Movement
 func get_data(data_script: Script) -> NCSDataBase:
 	if not data_script:
@@ -130,7 +110,7 @@ func get_data(data_script: Script) -> NCSDataBase:
 	return data_block
 
 
-## Returns the component node of the given type in O(1). Logs push_warning if missing.
+## Returns the component node of the given type. Logs push_warning if missing.
 ## Usage: var hp = config.get_comp(C_Health) as C_Health
 func get_comp(comp_script: Script) -> NCSComponentBase:
 	if not comp_script:
@@ -183,13 +163,13 @@ func add_comp(comp_script: Script) -> void:
 	if new_node is NCSComponentBase:
 		new_node.owner_node = hub.owner_node
 		new_node.config = self
-		if new_node.has_method(&"_init_comp"):
-			new_node._init_comp()
 
 	_component_map[comp_script] = new_node as NCSComponentBase
-
 	if not _active_component_scripts.has(comp_script):
 		_active_component_scripts.append(comp_script)
+	
+	if new_node.has_method(&"_on_add_comp"):
+		new_node._on_add_comp()
 
 	NCS.update_single_entity(self)
 
@@ -202,15 +182,13 @@ func remove_comp(comp_script: Script) -> void:
 
 	var target_comp = _component_map.get(comp_script, null) as Node
 	if target_comp:
+		if target_comp.has_method(&"_on_remove_comp"):
+			target_comp._on_remove_comp()
+			
 		_component_map.erase(comp_script)
 		_active_component_scripts.erase(comp_script)
-		if _baseline_component_nodes.has(comp_script):
-			target_comp.process_mode = PROCESS_MODE_DISABLED
-			if target_comp is CanvasItem or target_comp is Node3D:
-				target_comp.hide()
-		else:
-			target_comp.name = "__DELETED_" + target_comp.name
-			target_comp.queue_free()
+		target_comp.name = "__DELETED_" + target_comp.name
+		target_comp.queue_free()
 		NCS.update_single_entity(self)
 
 

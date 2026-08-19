@@ -1,9 +1,8 @@
 class_name Enemy
 extends CharacterBody2D
 
-# Example on how to get all of your entities data to use outside of CustomSystem
-@onready var entity_config: EntityConfig = $EntityConfig
 @onready var sprite_2d: Sprite2D = $Sprite2D
+@onready var entity_config: EntityConfig = $EntityConfig
 @onready var c_health: C_Health = $NCSComponentsHub/C_Health
 
 
