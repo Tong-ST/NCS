@@ -131,13 +131,21 @@ func get_comp(comp_script: Script) -> NCSComponentBase:
 	return comp
 
 
+## Returns true if this entity currently has the given data type in entity config.
+## Usage: if config.has_data(D_Movement): ...
+func has_data(data_script: Script) -> bool:
+	if not data_script:
+		return false
+
+	return _data_map.has(data_script)
+
+
 ## Returns true if this entity currently has the given component type active.
 ## Usage: if config.has_comp(C_Dead): ...
 func has_comp(comp_script: Script) -> bool:
 	if not comp_script:
 		return false
 	return _component_map.has(comp_script)
-
 
 # ==============================================================================
 # RUNTIME MUTATIONS

@@ -7,7 +7,7 @@ func setup_query() -> void:
 	iterate_data([D_EnemyAI, D_Input]) # caching data
 
 
-func ncs_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
+func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, delta: float) -> void:
 	if entities.is_empty(): return
 	var current_entities = entities as Array[CharacterBody2D]
 

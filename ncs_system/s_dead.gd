@@ -6,7 +6,7 @@ func setup_query() -> void:
 	with_all([C_Dead]) # filter entities with C_Dead tag
 
 
-func ncs_process(entities: Array[Node], _data_pools: Array, _delta: float) -> void:
+func ncs_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, _delta: float) -> void:
 	if entities.is_empty(): return
 
 	# Iterate in reverse for safer despawning/destroying entities

@@ -16,8 +16,11 @@ extends NCSBase
 var _entities: Array[Node] = []
 var config_pool: Array[EntityConfig] = []
 var _flat_data_pools: Array[Array] = []
+var _node_targets: Array = []
+var _flat_node_pools: Array[Array] = []
 
 var _all_filters: Array[Script] = []
+var _any_filters: Array[Script] = []
 var _not_filters: Array[Script] = []
 var _data_targets: Array[Script] = []
 
@@ -39,6 +42,13 @@ func with_all(comp_names: Array[Script]) -> NCSSystemBase:
 	return self
 
 
+## Entity must have any listed component types to match this system.
+## Returns self for chaining: with_any([C_Poison, C_Freeze]).with_not([C_Dead])
+func with_any(comp_names: Array[Script]) -> NCSSystemBase:
+	_any_filters = comp_names
+	return self
+
+
 ## Entity must have NONE of the listed component types to match.
 func with_not(comp_names: Array[Script]) -> NCSSystemBase:
 	_not_filters = comp_names
@@ -52,25 +62,32 @@ func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
 	return self
 
 
+## Pre-fetch Nodes (e.g., Sprite2D, AnimationPlayer) into node_pools.
+## Usage: fetch_nodes([Sprite2D, AnimationPlayer])
+func fetch_nodes(node_classes: Array) -> NCSSystemBase:
+	_node_targets = node_classes
+	return self
+
+
 func _process(delta: float) -> void:
 	if not _entities.is_empty():
-		ncs_process(_entities, _flat_data_pools, delta)
+		ncs_process(_entities, _flat_data_pools, _flat_node_pools, delta)
 
 
 func _physics_process(delta: float) -> void:
 	if not _entities.is_empty():
-		ncs_physics_process(_entities, _flat_data_pools, delta)
+		ncs_physics_process(_entities, _flat_data_pools, _flat_node_pools, delta)
 
 
 ## Override for render-tick logic (visuals, UI, camera sync).
 ## entities[i] and data_pools[n][i] are always index-aligned.
-func ncs_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
+func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
 	pass
 
 
 ## Override for physics-tick logic (movement, collision, velocity).
 ## Runs at the fixed physics rate, not the render rate.
-func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
+func ncs_physics_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
 	pass
 
 
@@ -84,15 +101,25 @@ func _matches_query(config_node: Object) -> bool:
 		return false
 
 	var parent_body = cfg.get_parent()
-	if not is_instance_valid(parent_body) or parent_body.process_mode == Node.PROCESS_MODE_DISABLED:
+	if not is_instance_valid(parent_body):
 		return false
+
+	for not_script in _not_filters:
+		if cfg.has_comp(not_script):
+			return false
 
 	for req_script in _all_filters:
 		if not cfg.has_comp(req_script):
 			return false
 
-	for not_script in _not_filters:
-		if cfg.has_comp(not_script):
+	if not _any_filters.is_empty():
+		var has_any_match: bool = false
+		for any_script in _any_filters:
+			if cfg.has_comp(any_script):
+				has_any_match = true
+				break
+		
+		if not has_any_match:
 			return false
 
 	return true
@@ -117,15 +144,21 @@ func _evaluate_single_entity(config_node: Object) -> void:
 			config_pool.append(config_node as EntityConfig)
 			for pool_idx in _data_targets.size():
 				_flat_data_pools[pool_idx].append((config_node as EntityConfig).get_data(_data_targets[pool_idx]))
+			for pool_idx in _node_targets.size():
+				_flat_node_pools[pool_idx].append(_find_node_in_entity(parent_body, _node_targets[pool_idx]))
 		else:
 			for pool_idx in _data_targets.size():
 				_flat_data_pools[pool_idx][idx] = (config_node as EntityConfig).get_data(_data_targets[pool_idx])
+			for pool_idx in _node_targets.size():
+				_flat_node_pools[pool_idx][idx] = _find_node_in_entity(parent_body, _node_targets[pool_idx])
 	else:
 		if idx != -1:
 			_entities.remove_at(idx)
 			config_pool.remove_at(idx)
 			for pool_idx in _flat_data_pools.size():
 				_flat_data_pools[pool_idx].remove_at(idx)
+			for pool_idx in _flat_node_pools.size():
+				_flat_node_pools[pool_idx].remove_at(idx)
 
 
 ## Append for a freshly spawned entity. Called by NCS.register_entity().
@@ -145,6 +178,8 @@ func _handle_incremental_arrival(config_node: Object) -> void:
 
 			for pool_idx in _data_targets.size():
 				_flat_data_pools[pool_idx].append((config_node as EntityConfig).get_data(_data_targets[pool_idx]))
+			for pool_idx in _node_targets.size():
+				_flat_node_pools[pool_idx].append(_find_node_in_entity(parent_body, _node_targets[pool_idx]))
 
 
 ## Removal for a departing entity. Called by NCS.unregister_entity().
@@ -156,6 +191,8 @@ func _handle_incremental_departure(config_node: Object) -> void:
 
 		for pool_idx in _flat_data_pools.size():
 			_flat_data_pools[pool_idx].remove_at(idx)
+		for pool_idx in _flat_node_pools.size():
+			_flat_node_pools[pool_idx].remove_at(idx)
 
 
 ## Full re-query sweep — rebuilds all parallel arrays from NCS.active_entities.
@@ -164,9 +201,12 @@ func _update_query_filter() -> void:
 	var matching_bodies: Array[Node] = []
 	var matching_configs: Array[EntityConfig] = []
 	var new_flat_pools: Array[Array] = []
+	var new_node_pools: Array[Array] = []
 
 	for t in _data_targets.size():
 		new_flat_pools.append([])
+	for t in _node_targets.size():
+		new_node_pools.append([])
 
 	for config_node in NCS.active_entities:
 		if not is_instance_valid(config_node):
@@ -183,10 +223,14 @@ func _update_query_filter() -> void:
 
 			for pool_idx in _data_targets.size():
 				new_flat_pools[pool_idx].append(config_node.get_data(_data_targets[pool_idx]))
+			
+			for pool_idx in _node_targets.size():
+				new_node_pools[pool_idx].append(_find_node_in_entity(parent_body, _node_targets[pool_idx]))
 
 	_entities = matching_bodies
 	config_pool = matching_configs
 	_flat_data_pools = new_flat_pools
+	_flat_node_pools = new_node_pools
 
 
 ## Triggers a single-entity re-evaluation when internal system state changes.
@@ -196,6 +240,23 @@ func signal_query_changed() -> void:
 	)
 
 
-## One-off data fetch outside the main loop. Prefer data_pools[n][i] inside ncs_process.
+## One-off data fetch outside the main loop. 
+## Prefer data fetching inside ncs_process e.g. var health_pool = data_pools[0] as Array[D_Health]
 func _find_data_by_script(ent: EntityConfig, target_script: Script) -> NCSDataBase:
 	return ent.get_data(target_script)
+
+
+## Helper: Locates node instance on parent_body (first direct child match, then recursive)
+func _find_node_in_entity(parent_body: Node, target_type: Variant) -> Node:
+	if not is_instance_valid(parent_body):
+		return null
+
+	for child in parent_body.get_children():
+		if is_instance_of(child, target_type):
+			return child
+
+	for child in parent_body.find_children("*", "", true, false):
+		if is_instance_of(child, target_type):
+			return child
+
+	return null
