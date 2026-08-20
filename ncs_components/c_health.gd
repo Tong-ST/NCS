@@ -10,6 +10,7 @@ signal on_damaged
 # Example on create custom logic bind to this components
 func take_damage(amount: float) -> void:
 	# Example how to access data and manipulated via component itself.
+	if not config.has_data(D_Health): return
 	var health_data = config.get_data(D_Health) as D_Health
 	if health_data:
 		health_data.current_health -= amount

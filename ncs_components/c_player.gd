@@ -12,8 +12,13 @@ func _ready() -> void:
 # with owner_node and config references.
 func _on_init_comp() -> void:
 	print(owner_node.name, " Is ready!, use WASD/Arrow keys to move")
-	var health_data = config.get_data(D_Health) as D_Health
-	print("Current HP: ", health_data.current_health)
+	if config.has_data(D_Health):
+		var health_data = config.get_data(D_Health) as D_Health
+		print("Current HP: ", health_data.current_health)
+
+	if config.has_comp(C_Movement):
+		var movement_comp = config.get_comp(C_Movement) as C_Movement
+		print("Movement Component: ", movement_comp.name)
 
 
 func get_player_input() -> void:

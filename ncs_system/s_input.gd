@@ -4,10 +4,9 @@ extends NCSSystemBase
 
 func setup_query() -> void:
 	with_all([C_Input]).with_not([C_Dead]) # filter entities by components
-	iterate_data([D_Input]) # caching data
 
 
-func ncs_process(entities: Array[Node], _data_pools: Array, _delta: float) -> void:
+func ncs_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, _delta: float) -> void:
 	if entities.is_empty(): return
 	var current_entities = entities as Array[CharacterBody2D]
 

@@ -15,7 +15,7 @@ metadata/_custom_type_script = "uid://bdl22fmu0u6e5"
 script = ExtResource("3_7rfxy")
 metadata/_custom_type_script = "uid://bcrp0alk1qht4"
 
-[sub_resource type="Resource" id="Resource_b3gj3"]
+[sub_resource type="Resource" id="Resource_d214i"]
 script = ExtResource("4_qgdva")
 max_health = 200.0
 current_health = 200.0
@@ -23,5 +23,5 @@ metadata/_custom_type_script = "uid://x18cyu72de8c"
 
 [resource]
 script = ExtResource("4_gluu3")
-data_sets = Array[ExtResource("1_msibu")]([SubResource("Resource_ctvm8"), SubResource("Resource_gg2rq"), SubResource("Resource_b3gj3")])
+data_sets = Array[ExtResource("1_msibu")]([SubResource("Resource_ctvm8"), SubResource("Resource_gg2rq"), SubResource("Resource_d214i")])
 metadata/_custom_type_script = "uid://cahdo7ajcu48f"

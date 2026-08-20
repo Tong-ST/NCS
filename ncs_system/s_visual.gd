@@ -10,14 +10,18 @@ extends NCSSystemBase
 func setup_query() -> void:
 	with_all([C_Movement]).with_not([C_Dead]) # Filter entities with movement components
 	iterate_data([D_Movement]) # Cache movement data
+	fetch_nodes([Sprite2D]) # Optional cache Node into node_pools give null if not exist.
 
 
-func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> void:
+func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, _delta: float) -> void:
 	if entities.is_empty(): return
 	var current_entities = entities as Array[Node]
 
 	var move_pool = data_pools[0] as Array[D_Movement]
 	if not move_pool: return
+
+	var sprite_pool = node_pools[0] as Array[Sprite2D]
+	if not sprite_pool: return
 	
 	var viewport = get_viewport()
 	if not viewport: return
@@ -37,6 +41,8 @@ func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> voi
 		var move_data = move_pool[i]
 		if not move_data: continue
 
+		var sprite = sprite_pool[i]
+
 		# Skip until S_Movement has seeded the real spawn position on its first physics tick
 		if not move_data.is_pos_initialized: continue
 
@@ -45,8 +51,10 @@ func ncs_process(entities: Array[Node], data_pools: Array, _delta: float) -> voi
 			ent.global_position = move_data.next_global_pos
 			if not move_data.is_on_screen:
 				move_data.is_on_screen = true
-				ent.show()
+				if sprite:
+					sprite.visible = true
 		else:
 			if move_data.is_on_screen:
 				move_data.is_on_screen = false
-				ent.hide()
+				if sprite:
+					sprite.visible = false

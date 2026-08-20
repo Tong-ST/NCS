@@ -79,13 +79,14 @@ func setup_query() -> void:
 
 ## Step 2: Process the linear data stream sequentially
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
+	var current_entities = entities as Array[CharacterBody2D]
 	var move_pool = data_pools[0] as Array[D_Movement] # allocated data pool.
 	var input_pool = data_pools[1] as Array[D_Input] # with index accordingly to iterate_data() above
 	
 	# Iterate through all entities
-	for i in entities.size():
+	for i in current_entities.size():
 		# allocate data for each entities
-		var ent = entities[i] as CharacterBody2D
+		var ent = current_entities[i]
 		var move_data = move_pool[i]
 		var input_data = input_pool[i]
 
@@ -108,7 +109,7 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 #### Runtime Component mutations via system.
 ```gdscript
 # Example your custom s_combat.gd system loop...
-var config = config_pool[i] as EntityConfig # Get a config of each entity.
+var config = config_pool[i] # Get a config of each entity.
 
 if target_enemy_health <= 0:
 	config.add_comp(C_Dead)
@@ -118,6 +119,48 @@ if target_enemy_health <= 0:
 	config.send_signal(C_Health, &"flash_red")
 ```
 - Naming convention for ease of use and remember `S_System` for class_name, s_system.gd for scripts.
+
+### Query Filtering & Pre-fetched
+
+System queries are configured in `setup_query()` using method chaining. You can filter entities by their attached components and pre-fetch resources or scene nodes directly into process pools.
+
+#### Filtering Entities
+* `with_all([C_Move, C_Input])`: Entity **must have all** listed components.
+* `with_any([C_Poison, C_Freeze])`: Entity **must have at least one** of the listed components.
+* `with_not([C_Dead])`: Entity **must not have** any of the listed components.
+
+#### Pre-fetched Data & Nodes
+* `iterate_data([D_Move, D_Input])`: Populates `data_pools[n]` with matching data for entities.
+* `fetch_nodes([Sprite2D, AnimationPlayer])`: Populates `node_pools[n]` with references to optional internal sub-nodes (returns `null` if not found).
+* `config_pool`: Built-in array providing direct access to each matched entity's `EntityConfig` without setup.
+
+#### Example
+```gdscript
+class_name S_Render
+extends NCSSystemBase
+
+func setup_query() -> void:
+    with_all([C_Movement]).with_any([C_Poison, C_Freeze]).with_not([C_Dead])
+    iterate_data([D_Movement])
+    fetch_nodes([Sprite2D, AnimationPlayer])
+
+func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
+	var current_entities = entities as Array[CharacterBody2D]
+    var move_pool = data_pools[0] as Array[D_Movement]
+    var sprite_pool = node_pools[0] as Array[Sprite2D]
+    var anim_pool = node_pools[1] as Array[AnimationPlayer]
+
+    for i in entities.size():
+		var ent = entities[i]
+        var move_data = move_pool[i]
+        var sprite = sprite_pool[i]
+        var anim = anim_pool[i]
+        var config = config_pool[i] # Automatically accessible
+
+        if move_data and sprite:
+            sprite.flip_h = move_data.velocity.x < 0
+```
+- You can still do e.g. `ent.get_node_or_null("Sprite2D")` at process if you don't want pre-fetched.
 
 ### The layout on your game world
 To activate your systems and allow your entities to be tracked automatically, you use an NCSWorld node inside your main level scene.
