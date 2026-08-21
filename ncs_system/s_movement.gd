@@ -3,17 +3,14 @@ extends NCSSystemBase
 
 
 func setup_query() -> void:
-	with_all([C_Movement, C_Input]).with_not([C_Dead]) # filter entitie
-	iterate_data([D_Movement, D_Input]) # caching data
+	with_all([C_Movement]) # filter entitie
+	iterate_data([D_Movement, D_Input])  # caching data & filter all ent. must have these data.
 
 
 func ncs_physics_process(entities: Array[Node], data_pools: Array, _node_pools: Array, delta: float) -> void:
-	if entities.is_empty(): return
 	var current_entities = entities as Array[CharacterBody2D]
-
 	var move_pool = data_pools[0] as Array[D_Movement]
 	var input_pool = data_pools[1] as Array[D_Input]
-	if not move_pool or not input_pool: return
 
 	# Iterate and prepare data for each entity.
 	for i in current_entities.size():
@@ -22,9 +19,7 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, _node_pools: 
 
 		var move_data = move_pool[i]
 		var input_data = input_pool[i]
-		# Always safely check for data that you query, use "continue" to skip loop.
-		if not move_data or not input_data: continue
-		
+
 		# Run regular logic:
 		var current_input = input_data.movement_vector
 		if current_input != Vector2.ZERO:

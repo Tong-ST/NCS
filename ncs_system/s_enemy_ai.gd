@@ -3,17 +3,14 @@ extends NCSSystemBase
 
 
 func setup_query() -> void:
-	with_all([C_EnemyAI]).with_not([C_Dead]) # ftiler entities by components
-	iterate_data([D_EnemyAI, D_Input]) # caching data
+	with_all([C_EnemyAI]) # ftiler entities by components
+	iterate_data([D_EnemyAI, D_Input]) # caching data & filter all ent. must have these data.
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, delta: float) -> void:
-	if entities.is_empty(): return
 	var current_entities = entities as Array[CharacterBody2D]
-
 	var enemy_ai_pool = data_pools[0] as Array[D_EnemyAI] # allocate data for current frame use
 	var input_pool = data_pools[1] as Array[D_Input] # same index as iterate_data abrove
-	if not enemy_ai_pool or not input_pool: return
 
 	# Iterate and prepare data for each entity.
 	for i in current_entities.size():
@@ -22,9 +19,6 @@ func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, d
 
 		var enemy_ai = enemy_ai_pool[i]
 		var input_data = input_pool[i]
-
-		# Always safely check for data that you query, use "continue" to skip loop.
-		if not enemy_ai or not input_data: continue
 		
 		# Run regular logic:
 		if not enemy_ai.is_aggressive:

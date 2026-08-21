@@ -6,7 +6,7 @@
 extends EditorPlugin
 
 const CONFIG_NODE_NAME = "NCSEntityConfig"
-const CONFIG_NODE_SCRIPT = preload("res://addons/ncs/core/entity_root.gd")
+const CONFIG_NODE_SCRIPT = preload("res://addons/ncs/core/entity_config.gd")
 const CONFIG_NODE_ICON = null
 
 

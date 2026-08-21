@@ -25,50 +25,14 @@ var _not_filters: Array[Script] = []
 var _data_targets: Array[Script] = []
 
 # Array of component scripts this system
+var interest_scripts: Array[Script] = []
 var interest_components: Array[Script] = []
 
 
 func _ready() -> void:
-	_update_query_filter()
-
-
-## Override to declare query filters and data pre-fetch targets. Called once on _ready.
-func setup_query() -> void:
-	pass
-
-
-## Entity must have ALL listed component types to match this system.
-## Returns self for chaining: with_all([C_Move]).with_not([C_Dead])
-func with_all(comp_names: Array[Script]) -> NCSSystemBase:
-	_all_filters = comp_names
-	return self
-
-
-## Entity must have any listed component types to match this system.
-## Returns self for chaining: with_any([C_Poison, C_Freeze]).with_not([C_Dead])
-func with_any(comp_names: Array[Script]) -> NCSSystemBase:
-	_any_filters = comp_names
-	return self
-
-
-## Entity must have NONE of the listed component types to match.
-func with_not(comp_names: Array[Script]) -> NCSSystemBase:
-	_not_filters = comp_names
-	return self
-
-
-## Declares data types to pre-fetch into data_pools. Order determines index in ncs_process.
-## Usage: iterate_data([D_Movement, D_Health]) -> data_pools[0] = D_Movement, [1] = D_Health
-func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
-	_data_targets = data_classes
-	return self
-
-
-## Pre-fetch Nodes (e.g., Sprite2D, AnimationPlayer) into node_pools.
-## Usage: fetch_nodes([Sprite2D, AnimationPlayer])
-func fetch_nodes(node_classes: Array) -> NCSSystemBase:
-	_node_targets = node_classes
-	return self
+	setup_query()
+	_compile_interest_scripts()
+	_update_query_filter.call_deferred()
 
 
 func _process(delta: float) -> void:
@@ -93,7 +57,46 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, node_pools: A
 	pass
 
 
-## Returns true if the entity passes all filters and is active in the scene tree.
+## Override to declare query filters and data pre-fetch targets. Called once on _ready.
+func setup_query() -> void:
+	pass
+
+
+## Entity must have ALL listed component types to match this system.
+## Returns self for chaining: with_all([C_Move]).with_not([C_Dead])
+func with_all(type_scripts: Array[Script]) -> NCSSystemBase:
+	_all_filters = type_scripts
+	return self
+
+
+## Entity must have any listed component types to match this system.
+## Returns self for chaining: with_any([C_Poison, C_Freeze]).with_not([C_Dead])
+func with_any(type_scripts: Array[Script]) -> NCSSystemBase:
+	_any_filters = type_scripts
+	return self
+
+
+## Entity must have NONE of the listed component types to match.
+func with_not(type_scripts: Array[Script]) -> NCSSystemBase:
+	_not_filters = type_scripts
+	return self
+
+
+## Pre-fetch data into data_pools. Entity must have all data required to exist in system.
+## Usage: iterate_data([D_Movement, D_Health]) -> data_pools[0] = D_Movement, [1] = D_Health
+func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
+	_data_targets = data_classes
+	return self
+
+
+## Pre-fetch Nodes (e.g., Sprite2D, AnimationPlayer) into node_pools.
+## Usage: fetch_nodes([Sprite2D, AnimationPlayer])
+func fetch_nodes(node_classes: Array) -> NCSSystemBase:
+	_node_targets = node_classes
+	return self
+
+
+## Returns true if the entity passes all filters and has all iterated data blocks.
 func _matches_query(config_node: Object) -> bool:
 	if not is_instance_valid(config_node) or not (config_node is EntityConfig):
 		return false
@@ -106,44 +109,60 @@ func _matches_query(config_node: Object) -> bool:
 	if not is_instance_valid(parent_body):
 		return false
 
+	# 1. NOT Filter (Must not have component OR data)
 	for not_script in _not_filters:
-		if cfg.has_comp(not_script):
+		if _entity_has_type(cfg, not_script):
 			return false
 
+	# 2. ALL Filter (Must have component OR data)
 	for req_script in _all_filters:
-		if not cfg.has_comp(req_script):
+		if not _entity_has_type(cfg, req_script):
 			return false
 
 	if not _any_filters.is_empty():
 		var has_any_match: bool = false
 		for any_script in _any_filters:
-			if cfg.has_comp(any_script):
+			if _entity_has_type(cfg, any_script):
 				has_any_match = true
 				break
-		
 		if not has_any_match:
+			return false
+
+	for data_script in _data_targets:
+		if not _entity_has_type(cfg, data_script):
 			return false
 
 	return true
 
 
-func _compile_interest_components() -> void:
-	var unique_set: Dictionary = {}
-	for script in _all_filters:
-		if script: unique_set[script] = true
-	for script in _any_filters:
-		if script: unique_set[script] = true
-	for script in _not_filters:
-		if script: unique_set[script] = true
+## Helper: Checks if entity possesses either a Component Node or a Data Resource.
+func _entity_has_type(cfg: EntityConfig, type_script: Script) -> bool:
+	if not type_script: return false
+	return cfg.has_comp(type_script) or cfg.has_data(type_script)
 
-	interest_components.clear()
-	interest_components.assign(unique_set.keys())
+
+## Compiles all scripts this system cares about.
+func _compile_interest_scripts() -> void:
+	var unique_set: Dictionary = {}
+	for list in [_all_filters, _any_filters, _not_filters, _data_targets]:
+		for script in list:
+			if script: unique_set[script] = true
+
+	interest_scripts.clear()
+	interest_scripts.assign(unique_set.keys())
+	
+	# Alias for backward compatibility if NCS singleton accesses interest_components
+	interest_components = interest_scripts.duplicate()
 
 
 ## Re-evaluates one entity after its components or data changed. Called by NCS deferred remap.
 ## Handles: newly matches (append), already matched (refresh data), no longer matches (remove).
-func _evaluate_single_entity(config_node: Object) -> void:
+func _evaluate_single_entity(config_node: Object, changed_script: Script = null) -> void:
 	if not is_instance_valid(config_node) or not (config_node is EntityConfig):
+		return
+
+	# Fast skip if changed script isn't tracked by this system
+	if changed_script and not interest_scripts.has(changed_script):
 		return
 
 	var parent_body = config_node.get_parent()
@@ -176,34 +195,12 @@ func _evaluate_single_entity(config_node: Object) -> void:
 				_flat_node_pools[pool_idx].remove_at(idx)
 
 
-## Append for a freshly spawned entity. Called by NCS.register_entity().
-func _handle_incremental_arrival(config_node: Object) -> void:
-	if not is_instance_valid(config_node) or not (config_node is EntityConfig):
-		return
-
-	var parent_body = config_node.get_parent()
-	if not is_instance_valid(parent_body):
-		return
-
-	if _matches_query(config_node):
-		if config_pool.find(config_node as EntityConfig) == -1:
-			parent_body.set(&"config", config_node)
-			_entities.append(parent_body)
-			config_pool.append(config_node as EntityConfig)
-
-			for pool_idx in _data_targets.size():
-				_flat_data_pools[pool_idx].append((config_node as EntityConfig).get_data(_data_targets[pool_idx]))
-			for pool_idx in _node_targets.size():
-				_flat_node_pools[pool_idx].append(_find_node_in_entity(parent_body, _node_targets[pool_idx]))
-
-
 ## Removal for a departing entity. Called by NCS.unregister_entity().
 func _handle_incremental_departure(config_node: Object) -> void:
 	var idx = config_pool.find(config_node)
 	if idx != -1:
 		_entities.remove_at(idx)
 		config_pool.remove_at(idx)
-
 		for pool_idx in _flat_data_pools.size():
 			_flat_data_pools[pool_idx].remove_at(idx)
 		for pool_idx in _flat_node_pools.size():
@@ -214,7 +211,7 @@ func _handle_incremental_departure(config_node: Object) -> void:
 ## Called on system registration and after batch operations.
 func _update_query_filter() -> void:
 	setup_query()
-	_compile_interest_components()
+	_compile_interest_scripts()
 
 	var matching_bodies: Array[Node] = []
 	var matching_configs: Array[EntityConfig] = []

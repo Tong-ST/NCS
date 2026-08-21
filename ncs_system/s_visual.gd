@@ -8,20 +8,15 @@ extends NCSSystemBase
 
 
 func setup_query() -> void:
-	with_all([C_Movement]).with_not([C_Dead]) # Filter entities with movement components
-	iterate_data([D_Movement]) # Cache movement data
+	with_all([C_Movement])
+	iterate_data([D_Movement])
 	fetch_nodes([Sprite2D]) # Optional cache Node into node_pools give null if not exist.
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, _delta: float) -> void:
-	if entities.is_empty(): return
-	var current_entities = entities as Array[Node]
-
+	var current_entities = entities
 	var move_pool = data_pools[0] as Array[D_Movement]
-	if not move_pool: return
-
 	var sprite_pool = node_pools[0] as Array[Sprite2D]
-	if not sprite_pool: return
 	
 	var viewport = get_viewport()
 	if not viewport: return
@@ -39,8 +34,6 @@ func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, _d
 		if not is_instance_valid(ent): continue
 
 		var move_data = move_pool[i]
-		if not move_data: continue
-
 		var sprite = sprite_pool[i]
 
 		# Skip until S_Movement has seeded the real spawn position on its first physics tick

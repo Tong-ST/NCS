@@ -3,6 +3,7 @@
 class_name EntityConfig
 extends NCSBase
 
+
 ## Design-time blueprint resource. Set in the inspector. Never mutate at runtime.
 @export var base_config: NCSEntityDataSet
 
@@ -13,6 +14,11 @@ var _components_hub_cache: NCSComponentsHub
 var _data_map: Dictionary = {}
 var _component_map: Dictionary = {}
 var _active_component_scripts: Array[Script] = []
+
+# data watcher for changed, add, remove at runtime.
+var _data_watchers: Dictionary = {}
+var _data_added_watchers: Dictionary = {}
+var _data_removed_watchers: Dictionary = {}
 
 
 func _enter_tree() -> void:
@@ -82,7 +88,7 @@ func _rebuild_component_cache() -> void:
 
 
 # ==============================================================================
-# GETTERS
+# GETTERS & DATA MUTATIONS
 # ==============================================================================
 
 ## Returns the runtime data resource of the given type. Logs push_error if missing.
@@ -108,6 +114,37 @@ func get_data(data_script: Script) -> NCSDataBase:
 		return null
 
 	return data_block
+
+
+## Send signal when specific data has changed.
+func watch_data(data_script: Script, property_name: StringName, callback: Callable) -> void:
+	if not _data_watchers.has(data_script):
+		_data_watchers[data_script] = {}
+	if not _data_watchers[data_script].has(property_name):
+		_data_watchers[data_script][property_name] = []
+	
+	_data_watchers[data_script][property_name].append(callback)
+
+
+## Safely updates a field on an existing data resource in one line. Returns true if successful.
+## Usage: config.change_data(D_Movement, &"max_speed", 300.0)
+func change_data(data_script: Script, property_name: StringName, new_value: Variant) -> bool:
+	var data_block = get_data(data_script)
+	if not is_instance_valid(data_block) or not (property_name in data_block):
+		return false
+
+	if data_block.get(property_name) == new_value:
+		return true
+
+	data_block.set(property_name, new_value)
+
+	# Route change only to components watching this specific property
+	if _data_watchers.has(data_script) and _data_watchers[data_script].has(property_name):
+		for callback in _data_watchers[data_script][property_name]:
+			if callback.is_valid():
+				callback.call(new_value)
+
+	return true
 
 
 ## Returns the component node of the given type. Logs push_warning if missing.
@@ -151,11 +188,17 @@ func has_comp(comp_script: Script) -> bool:
 ## Returns an array of component Scripts currently attached to this entity.
 func get_component_scripts() -> Array[Script]:
 	var scripts: Array[Script] = []
-	# Assuming 'components' is a Dictionary mapping [Script -> NCSComponentBase]
 	for script in _component_map.keys():
 		scripts.append(script as Script)
 	return scripts
 
+
+func get_data_scripts() -> Array[Script]:
+	var list: Array[Script] = []
+	for script in _data_map.keys():
+		if script is Script:
+			list.append(script)
+	return list
 
 # ==============================================================================
 # RUNTIME MUTATIONS
@@ -185,14 +228,14 @@ func add_comp(comp_script: Script) -> void:
 	_component_map[comp_script] = new_node as NCSComponentBase
 	if not _active_component_scripts.has(comp_script):
 		_active_component_scripts.append(comp_script)
-	
+
 	if new_node.has_method(&"_on_add_comp"):
 		new_node._on_add_comp()
 
-	NCS.update_single_entity(self)
+	NCS.update_single_entity(self, comp_script)
 
 
-## Removes a component at runtime. and triggers deferred NCS re-query.
+## Removes a component at runtime and triggers deferred NCS re-query.
 ## Usage: config.remove_comp(C_Movement)
 func remove_comp(comp_script: Script) -> void:
 	if not comp_script:
@@ -202,17 +245,17 @@ func remove_comp(comp_script: Script) -> void:
 	if target_comp:
 		if target_comp.has_method(&"_on_remove_comp"):
 			target_comp._on_remove_comp()
-			
+
 		_component_map.erase(comp_script)
 		_active_component_scripts.erase(comp_script)
 		target_comp.name = "__DELETED_" + target_comp.name
 		target_comp.queue_free()
-		NCS.update_single_entity(self)
+		NCS.update_single_entity(self, comp_script)
 
 
 ## Calls a method on a component node. Returns true if the call succeeded.
-## Usage: config.send_signal(C_Health, &"take_damage", [20.0])
-func send_signal(comp_script: Script, method_name: StringName, args: Array = []) -> bool:
+## Usage: config.call_method(C_Health, &"take_damage", [20.0])
+func call_method(comp_script: Script, method_name: StringName, args: Array = []) -> bool:
 	if not comp_script:
 		return false
 
@@ -225,6 +268,31 @@ func send_signal(comp_script: Script, method_name: StringName, args: Array = [])
 		return true
 
 	return false
+
+# ==============================================================================
+# DATA LIFECYCLE WATCHERS
+# ==============================================================================
+
+## Call when a specific data script is added to this entity.
+func watch_data_added(data_script: Script, callback: Callable) -> void:
+	if not _data_added_watchers.has(data_script):
+		_data_added_watchers[data_script] = []
+	_data_added_watchers[data_script].append(callback)
+
+
+## Call when a specific data script is removed from this entity.
+func watch_data_removed(data_script: Script, callback: Callable) -> void:
+	if not _data_removed_watchers.has(data_script):
+		_data_removed_watchers[data_script] = []
+	_data_removed_watchers[data_script].append(callback)
+
+
+## Convenience method to watch both addition and removal in one line.
+func watch_data_lifecycle(data_script: Script, on_added: Callable, on_removed: Callable) -> void:
+	if on_added.is_valid():
+		watch_data_added(data_script, on_added)
+	if on_removed.is_valid():
+		watch_data_removed(data_script, on_removed)
 
 
 ## Adds a new data resource at runtime. No-op if already present. Triggers deferred NCS re-query.
@@ -240,7 +308,13 @@ func add_data(data_script: Script) -> void:
 			data_array.append(new_data_instance)
 		_data_map[data_script] = new_data_instance
 
-		NCS.update_single_entity(self)
+		# Notify targeted watchers
+		if _data_added_watchers.has(data_script):
+			for callback in _data_added_watchers[data_script]:
+				if callback.is_valid():
+					callback.call(new_data_instance)
+
+		NCS.update_single_entity(self, data_script)
 
 
 ## Removes a data resource at runtime. Triggers deferred NCS re-query.
@@ -256,7 +330,13 @@ func remove_data(data_script: Script) -> void:
 		if data_array is Array:
 			data_array.erase(res)
 
-		NCS.update_single_entity(self)
+		# Notify targeted watchers
+		if _data_removed_watchers.has(data_script):
+			for callback in _data_removed_watchers[data_script]:
+				if callback.is_valid():
+					callback.call(res)
+
+		NCS.update_single_entity(self, data_script)
 
 
 # ==============================================================================

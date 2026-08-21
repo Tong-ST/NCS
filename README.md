@@ -51,7 +51,7 @@ signal health_updated(current_hp: float)
 
 @export var sprite_2d: Sprite2D
 
-# Can also call from systems via config.send_signal()
+# Can also call from systems via config.call_method()
 func flash_red() -> void:
 	if is_instance_valid(sprite_2d):
 		var tween = create_tween()
@@ -74,27 +74,24 @@ extends NCSSystemBase
 
 ## Step 1: Query step filters and caches from components and data
 func setup_query() -> void:
-	with_all([C_Movement, C_Input]).with_not([C_Dead]) # filter for entities
-	iterate_data([D_Movement, D_Input]) # caching data
+	with_all([C_Movement]).with_not([C_Dead]) # filter for entities
+	iterate_data([D_Movement, D_Input]) # caching data and all data must exist in entity.
 
 ## Step 2: Process the linear data stream sequentially
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
-	var current_entities = entities as Array[CharacterBody2D]
 	var move_pool = data_pools[0] as Array[D_Movement] # allocated data pool.
 	var input_pool = data_pools[1] as Array[D_Input] # with index accordingly to iterate_data() above
 	
 	# Iterate through all entities
-	for i in current_entities.size():
+	for i in entities.size():
 		# allocate data for each entities
-		var ent = current_entities[i]
+		var ent = entities[i]
+		if not is_instance_valid(ent): continue
+
 		var move_data = move_pool[i]
 		var input_data = input_pool[i]
 
-		# Always use safety check for data
-		if not is_instance_valid(ent) or not move_data or not input_data:
-			continue
-
-		# Do system-wide logic of those ent.
+		# Do regular logic.
 		var current_input = input_data.movement_vector
 		if current_input != Vector2.ZERO:
 			move_data.velocity = move_data.velocity.move_toward(
@@ -116,7 +113,7 @@ if target_enemy_health <= 0:
 	config.remove_comp(C_Movement)
 	
 	# Triggers a visual method in your local components.
-	config.send_signal(C_Health, &"flash_red")
+	config.call_method(C_Health, &"flash_red")
 ```
 - Naming convention for ease of use and remember `S_System` for class_name, s_system.gd for scripts.
 
@@ -130,7 +127,7 @@ System queries are configured in `setup_query()` using method chaining. You can 
 * `with_not([C_Dead])`: Entity **must not have** any of the listed components.
 
 #### Pre-fetched Data & Nodes
-* `iterate_data([D_Move, D_Input])`: Populates `data_pools[n]` with matching data for entities.
+* `iterate_data([D_Move, D_Input])`: Populates `data_pools[n]` and all data must exist in entity.
 * `fetch_nodes([Sprite2D, AnimationPlayer])`: Populates `node_pools[n]` with references to optional internal sub-nodes (returns `null` if not found).
 * `config_pool`: Built-in array providing direct access to each matched entity's `EntityConfig` without setup.
 

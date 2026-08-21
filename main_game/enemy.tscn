@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cvael67uegn6h"]
 
 [ext_resource type="Script" uid="uid://buxyhxys111b3" path="res://main_game/enemy.gd" id="1_cgx3m"]
-[ext_resource type="Script" uid="uid://fn1jf75ey4vw" path="res://addons/ncs/core/entity_root.gd" id="1_okyv6"]
+[ext_resource type="Script" uid="uid://fn1jf75ey4vw" path="res://addons/ncs/core/entity_config.gd" id="1_okyv6"]
 [ext_resource type="Resource" uid="uid://d83lrrklk786" path="res://main_game/enemy_data.tres" id="2_nlenb"]
 [ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="3_80f77"]
 [ext_resource type="Script" uid="uid://bd5qdwgeah7so" path="res://addons/ncs/core/components_hub.gd" id="4_qhlc3"]

@@ -76,9 +76,7 @@ offset_right = 119.5
 offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 0
-text = "Press \"ENTER\" To Deal Damage
-Press \"END\" To Apply Poison"
-horizontal_alignment = 1
+text = "Press \"ENTER\" To Deal Damage"
 
 [node name="PerfCounter" type="Label" parent="CanvasLayer/Control" unique_id=194156490]
 unique_name_in_owner = true
