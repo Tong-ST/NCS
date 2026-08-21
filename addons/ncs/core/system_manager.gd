@@ -10,7 +10,7 @@ var _query_dirty: bool = false
 # Key: EntityConfig, Value: Array[Script] of changed scripts
 var _pending_single_updates: Dictionary = {}
 
-const MASS_UPDATE_THRESHOLD: int = 200
+const MASS_UPDATE_THRESHOLD: int = 500
 var is_batching: bool = false
 
 # Key: Script (Component or Data), Value: Array[NCSSystemBase]
@@ -131,8 +131,6 @@ func register_system(system_name: String, system_instance: Node) -> void:
 	var scripts_to_index: Array = []
 	if "interest_scripts" in system_instance:
 		scripts_to_index.append_array(system_instance.interest_scripts)
-	if "interest_components" in system_instance:
-		scripts_to_index.append_array(system_instance.interest_components)
 
 	for script in scripts_to_index:
 		if not _script_to_systems.has(script):

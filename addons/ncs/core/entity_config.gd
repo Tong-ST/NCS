@@ -3,7 +3,6 @@
 class_name EntityConfig
 extends NCSBase
 
-
 ## Design-time blueprint resource. Set in the inspector. Never mutate at runtime.
 @export var base_config: NCSEntityDataSet
 

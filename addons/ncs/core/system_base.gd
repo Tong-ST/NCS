@@ -24,9 +24,8 @@ var _any_filters: Array[Script] = []
 var _not_filters: Array[Script] = []
 var _data_targets: Array[Script] = []
 
-# Array of component scripts this system
+# Array of component/data scripts
 var interest_scripts: Array[Script] = []
-var interest_components: Array[Script] = []
 
 
 func _ready() -> void:
@@ -150,9 +149,6 @@ func _compile_interest_scripts() -> void:
 
 	interest_scripts.clear()
 	interest_scripts.assign(unique_set.keys())
-	
-	# Alias for backward compatibility if NCS singleton accesses interest_components
-	interest_components = interest_scripts.duplicate()
 
 
 ## Re-evaluates one entity after its components or data changed. Called by NCS deferred remap.
@@ -161,7 +157,6 @@ func _evaluate_single_entity(config_node: Object, changed_script: Script = null)
 	if not is_instance_valid(config_node) or not (config_node is EntityConfig):
 		return
 
-	# Fast skip if changed script isn't tracked by this system
 	if changed_script and not interest_scripts.has(changed_script):
 		return
 
