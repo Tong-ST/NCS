@@ -80,7 +80,7 @@ func with_not(type_scripts: Array[Script]) -> NCSSystemBase:
 	return self
 
 
-## Pre-fetch data into data_pools. Entity must have all data required to exist in system.
+## Pre-fetch data into data_pools and Entity must have all data required to exist in system.
 ## Usage: iterate_data([DataMovement, DataHealth]) -> data_pools[0] = DataMovement, [1] = DataHealth
 func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
 	_data_targets = data_classes
