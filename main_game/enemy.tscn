@@ -45,12 +45,12 @@ script = ExtResource("7_pa6kk")
 require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
-[node name="C_Movement" type="Node" parent="NCSComponentsHub" unique_id=679268832]
-script = ExtResource("5_b3gj3")
-require_data = true
-metadata/_custom_type_script = "uid://5gd7eowt31f7"
-
 [node name="C_Health" type="Node" parent="NCSComponentsHub" unique_id=1121043216]
 script = ExtResource("9_cgx3m")
 require_data = true
 metadata/_custom_type_script = "uid://chjaq4g4jwye5"
+
+[node name="C_Movement" type="Node" parent="NCSComponentsHub" unique_id=679268832]
+script = ExtResource("5_b3gj3")
+require_data = true
+metadata/_custom_type_script = "uid://5gd7eowt31f7"

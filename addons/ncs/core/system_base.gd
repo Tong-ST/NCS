@@ -24,9 +24,11 @@ var _any_filters: Array[Script] = []
 var _not_filters: Array[Script] = []
 var _data_targets: Array[Script] = []
 
+# Array of component scripts this system
+var interest_components: Array[Script] = []
+
 
 func _ready() -> void:
-	setup_query()
 	_update_query_filter()
 
 
@@ -125,6 +127,19 @@ func _matches_query(config_node: Object) -> bool:
 	return true
 
 
+func _compile_interest_components() -> void:
+	var unique_set: Dictionary = {}
+	for script in _all_filters:
+		if script: unique_set[script] = true
+	for script in _any_filters:
+		if script: unique_set[script] = true
+	for script in _not_filters:
+		if script: unique_set[script] = true
+
+	interest_components.clear()
+	interest_components.assign(unique_set.keys())
+
+
 ## Re-evaluates one entity after its components or data changed. Called by NCS deferred remap.
 ## Handles: newly matches (append), already matched (refresh data), no longer matches (remove).
 func _evaluate_single_entity(config_node: Object) -> void:
@@ -198,6 +213,9 @@ func _handle_incremental_departure(config_node: Object) -> void:
 ## Full re-query sweep — rebuilds all parallel arrays from NCS.active_entities.
 ## Called on system registration and after batch operations.
 func _update_query_filter() -> void:
+	setup_query()
+	_compile_interest_components()
+
 	var matching_bodies: Array[Node] = []
 	var matching_configs: Array[EntityConfig] = []
 	var new_flat_pools: Array[Array] = []

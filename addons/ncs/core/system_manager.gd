@@ -12,6 +12,27 @@ var _pending_single_updates: Array[EntityConfig] = []
 const MASS_UPDATE_THRESHOLD: int = 200
 var is_batching: bool = false
 
+# Key: Component Script, Value: Array[NCSSystemBase]
+var _component_to_systems: Dictionary = {}
+
+
+## Returns only systems that care about for entity update.
+func _get_candidate_systems_for(entity: EntityConfig) -> Array[NCSSystemBase]:
+	if not is_instance_valid(entity):
+		return []
+
+	var candidates: Dictionary = {}
+	var comp_scripts = entity.get_component_scripts()
+
+	for comp_script in comp_scripts:
+		if _component_to_systems.has(comp_script):
+			for sys in _component_to_systems[comp_script]:
+				candidates[sys] = true
+
+	var result: Array[NCSSystemBase] = []
+	result.assign(candidates.keys())
+	return result
+
 
 ## Called by EntityConfig._enter_tree(). Do not call manually.
 func register_entity(entity: EntityConfig) -> void:
@@ -22,10 +43,10 @@ func register_entity(entity: EntityConfig) -> void:
 		if is_batching:
 			return
 
-		for system_name in _systems:
-			var system = _systems[system_name]
-			if system.has_method(&"_handle_incremental_arrival"):
-				system._handle_incremental_arrival(entity)
+		# Dispatch exclusively to interested systems
+		var candidates = _get_candidate_systems_for(entity)
+		for system in candidates:
+			system._handle_incremental_arrival(entity)
 
 
 ## Called by EntityConfig._exit_tree() Do not call manually.
@@ -42,10 +63,10 @@ func unregister_entity(entity: EntityConfig) -> void:
 	if is_batching:
 		return
 
-	for system_name in _systems:
-		var system = _systems[system_name]
-		if system.has_method(&"_handle_incremental_departure"):
-			system._handle_incremental_departure(entity)
+	# Dispatch exclusively to interested systems
+	var candidates = _get_candidate_systems_for(entity)
+	for system in candidates:
+		system._handle_incremental_departure(entity)
 
 
 ## Call after mutating an entity's components or data at runtime.
@@ -88,9 +109,28 @@ func register_system(system_name: String, system_instance: Node) -> void:
 	if system_instance.has_method(&"_update_query_filter"):
 		system_instance._update_query_filter()
 
+	# Index system under each component it queries
+	if "interest_components" in system_instance:
+		for comp_script in system_instance.interest_components:
+			if not _component_to_systems.has(comp_script):
+				_component_to_systems[comp_script] = []
+			
+			var sys_list: Array = _component_to_systems[comp_script]
+			if not sys_list.has(system_instance):
+				sys_list.append(system_instance)
+
 
 ## Removes a system from the registry.
 func unregister_system(system_name: String) -> void:
+	var system_instance = _systems.get(system_name)
+	if system_instance:
+		# Clean system out of index map
+		for comp_script in _component_to_systems.keys():
+			var sys_list: Array = _component_to_systems[comp_script]
+			sys_list.erase(system_instance)
+			if sys_list.is_empty():
+				_component_to_systems.erase(comp_script)
+
 	_systems.erase(system_name)
 
 
@@ -125,10 +165,9 @@ func _deferred_query_remap() -> void:
 
 	for entity in updates:
 		if is_instance_valid(entity):
-			for system_name in _systems:
-				var system = _systems[system_name]
-				if system.has_method(&"_evaluate_single_entity"):
-					system._evaluate_single_entity(entity)
+			var candidates = _get_candidate_systems_for(entity)
+			for system in candidates:
+				system._evaluate_single_entity(entity)
 
 
 ## Full world filter sweep — asks every system to re-evaluate all active entities.

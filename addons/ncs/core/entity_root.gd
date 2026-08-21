@@ -147,6 +147,16 @@ func has_comp(comp_script: Script) -> bool:
 		return false
 	return _component_map.has(comp_script)
 
+
+## Returns an array of component Scripts currently attached to this entity.
+func get_component_scripts() -> Array[Script]:
+	var scripts: Array[Script] = []
+	# Assuming 'components' is a Dictionary mapping [Script -> NCSComponentBase]
+	for script in _component_map.keys():
+		scripts.append(script as Script)
+	return scripts
+
+
 # ==============================================================================
 # RUNTIME MUTATIONS
 # ==============================================================================
