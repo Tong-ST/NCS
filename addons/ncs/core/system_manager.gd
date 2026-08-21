@@ -2,23 +2,23 @@
 # Most calls come through EntityConfig (add_comp, remove_comp, add_data, remove_data).
 extends Node
 
-var _systems: Dictionary = {}
+const MASS_UPDATE_THRESHOLD: int = 500
+
 var active_entities: Array[EntityConfig] = []
+
+var _systems: Dictionary = {}
 var _active_entities_map: Dictionary = {}
 
 var _query_dirty: bool = false
-# Key: EntityConfig, Value: Array[Script] of changed scripts
 var _pending_single_updates: Dictionary = {}
-
-const MASS_UPDATE_THRESHOLD: int = 500
-var is_batching: bool = false
-
-# Key: Script (Component or Data), Value: Array[NCSSystemBase]
+var _is_batching: bool = false
 var _script_to_systems: Dictionary = {}
 
 
 ## Returns systems that care about the entity's current components/data OR specific changed scripts.
-func _get_candidate_systems_for(entity: EntityConfig, changed_scripts: Array = []) -> Array[NCSSystemBase]:
+func _get_candidate_systems_for(
+			entity: EntityConfig,
+			changed_scripts: Array = []) -> Array[NCSSystemBase]:
 	if not is_instance_valid(entity):
 		return []
 
@@ -50,7 +50,7 @@ func register_entity(entity: EntityConfig) -> void:
 		_active_entities_map[entity] = active_entities.size()
 		active_entities.append(entity)
 
-		if is_batching:
+		if _is_batching:
 			return
 
 		var candidates = _get_candidate_systems_for(entity)
@@ -76,7 +76,7 @@ func unregister_entity(entity: EntityConfig) -> void:
 		active_entities.pop_back()
 		_active_entities_map.erase(entity)
 
-	if is_batching:
+	if _is_batching:
 		return
 
 	_pending_single_updates.erase(entity)
@@ -90,7 +90,7 @@ func unregister_entity(entity: EntityConfig) -> void:
 ## Call after mutating an entity's components or data at runtime.
 ## Usage: NCS.update_single_entity(config, D_PoisonStatus)
 func update_single_entity(entity: EntityConfig, changed_script: Script = null) -> void:
-	if is_batching or not is_instance_valid(entity):
+	if _is_batching or not is_instance_valid(entity):
 		return
 
 	if not _pending_single_updates.has(entity):
@@ -104,12 +104,12 @@ func update_single_entity(entity: EntityConfig, changed_script: Script = null) -
 
 ## Opens a batch window — suppresses incremental system updates until end_batch().
 func begin_batch() -> void:
-	is_batching = true
+	_is_batching = true
 
 
 ## Closes the batch window and triggers a single full-world re-query sweep.
 func end_batch() -> void:
-	is_batching = false
+	_is_batching = false
 	_pending_single_updates.clear()
 	_remap_all_system_queries()
 

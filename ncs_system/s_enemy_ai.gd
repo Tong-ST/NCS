@@ -19,7 +19,7 @@ func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, d
 
 		var enemy_ai = enemy_ai_pool[i]
 		var input_data = input_pool[i]
-		
+
 		# Run regular logic:
 		if not enemy_ai.is_aggressive:
 			input_data.movement_vector = Vector2.ZERO
@@ -30,7 +30,7 @@ func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, d
 		if enemy_ai.state_timer >= enemy_ai.choose_time_target:
 			enemy_ai.state_timer = 0.0
 			enemy_ai.choose_time_target = randf_range(1.5, 3.5)
-			
+
 			if randf() > 0.5:
 				enemy_ai.is_idling = true
 				enemy_ai.current_wander_direction = Vector2.ZERO

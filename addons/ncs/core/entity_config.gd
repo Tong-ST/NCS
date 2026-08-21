@@ -107,9 +107,21 @@ func get_data(data_script: Script) -> NCSDataBase:
 
 	if not is_instance_valid(data_block):
 		var entity_name = get_parent().name
-		var scene_path = get_parent().scene_file_path if get_parent().scene_file_path else "Runtime Spawned Entity"
-		var class_str = data_script.get_global_name() if not data_script.get_global_name().is_empty() else "UnnamedScript"
-		push_error("NCS Error: Entity '" + entity_name + "' is missing data block -> [" + class_str + "]. Check scene: [" + scene_path + "]")
+		var scene_path = (
+				get_parent().scene_file_path
+				if get_parent().scene_file_path
+				else "Runtime Spawned Entity"
+		)
+		var class_str = (
+				data_script.get_global_name()
+				if not data_script.get_global_name().is_empty()
+				else "UnnamedScript"
+		)
+		push_error(
+				"NCS Error: Entity '" + entity_name + "
+				' is missing data block -> [" + class_str + "]. 
+				Check scene: [" + scene_path + "]"
+		)
 		return null
 
 	return data_block
@@ -121,7 +133,7 @@ func watch_data(data_script: Script, property_name: StringName, callback: Callab
 		_data_watchers[data_script] = {}
 	if not _data_watchers[data_script].has(property_name):
 		_data_watchers[data_script][property_name] = []
-	
+
 	_data_watchers[data_script][property_name].append(callback)
 
 
@@ -159,8 +171,13 @@ func get_comp(comp_script: Script) -> NCSComponentBase:
 
 	if not is_instance_valid(comp):
 		var entity_name = get_parent().name
-		var scene_path = get_parent().scene_file_path if get_parent().scene_file_path else "Runtime Spawned Entity"
-		var class_str = comp_script.get_global_name() if not comp_script.get_global_name().is_empty() else "UnnamedScript"
+		var scene_path = (get_parent().scene_file_path 
+				if get_parent().scene_file_path 
+				else "Runtime Spawned Entity")
+		var class_str = (comp_script.get_global_name()
+				if not comp_script.get_global_name().is_empty()
+				else "UnnamedScript"
+			)
 		push_warning("NCS Warning: Entity '" + entity_name + "' requested missing component -> [" + class_str + "]. Check hub layout: [" + scene_path + "]")
 		return null
 

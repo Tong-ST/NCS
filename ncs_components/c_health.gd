@@ -11,7 +11,7 @@ func _on_init_comp() -> void:
 	# NCS Observer pattern for signal base event.
 	config.watch_data(D_Health, &"status", _on_status_changed)
 	config.watch_data_lifecycle(
-		D_PoisonStatus, 
+		D_PoisonStatus,
 		_on_posion_applied,
 		_on_posion_removed,
 	)

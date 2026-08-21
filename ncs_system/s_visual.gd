@@ -17,7 +17,7 @@ func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, _d
 	var current_entities = entities
 	var move_pool = data_pools[0] as Array[D_Movement]
 	var sprite_pool = node_pools[0] as Array[Sprite2D]
-	
+
 	var viewport = get_viewport()
 	if not viewport: return
 

@@ -54,7 +54,7 @@ func _exit_tree() -> void:
 			inspector.edited_object_changed.disconnect(_on_editor_context_changed)
 
 
-func _on_property_edited(what: String) -> void:
+func _on_property_edited(_what: String) -> void:
 	update_configuration_warnings()
 
 
@@ -102,7 +102,11 @@ func _get_configuration_warnings() -> PackedStringArray:
 		if "require_data" in child and child.get(&"require_data") == true:
 			var script = child.get_script()
 			if not script:
-				warnings.append("NCS Layout Error: Node [" + child.name + "] has 'Require Data' enabled but does not have a script attached! All components require a type class script.")
+				warnings.append(
+						"NCS Layout Error: Node [" + child.name + "]
+						has 'Require Data' enabled but does not have a script attached! 
+						All components require a type class script."
+				)
 				continue
 
 			# Derive expected resource name: C_Movement -> D_Movement.
@@ -111,7 +115,11 @@ func _get_configuration_warnings() -> PackedStringArray:
 				var base_identity = script_class_name.replace("Component", "")
 				var expected_data_class_1 = base_identity.replace("C_", "D_")
 				if not available_data_classes.has(expected_data_class_1):
-					warnings.append("NCS Configuration Error: Component class [" + script_class_name + "] explicitly requires a Data Resource named [" + expected_data_class_1 + "], but it's missing from your EntityConfig array!")
+					warnings.append(
+							"NCS Configuration Error: Component class [" + script_class_name + "]
+							explicitly requires a Data Resource named [" + expected_data_class_1 + "],
+							but it's missing from your EntityConfig array!"
+					)
 
 	return warnings
 

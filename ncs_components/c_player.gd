@@ -3,7 +3,7 @@ extends NCSComponentBase
 
 
 # Original Godot _ready() run first at component enter scene-tree,
-# But will NOT have owner_node, config references yet. 
+# But will NOT have owner_node, config references yet.
 func _ready() -> void:
 	print("GAME START!")
 

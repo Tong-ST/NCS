@@ -10,7 +10,7 @@ func setup_query() -> void:
 func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, _delta: float) -> void:
 	var current_entities = entities as Array[CharacterBody2D]
 	var health_pool = data_pools[0] as Array[D_Health] # allocate data for current frame use
-	
+
 	# Example on batching comp mutation.
 	#var _pending_remove_comp: Array[EntityConfig] = []
 
@@ -24,11 +24,11 @@ func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, _
 
 		if health_data.current_health <= 0:
 			# Change data and send signal to watch_data() in C_Health.
-			config.change_data(D_Health, &"status", "DEAD") 
+			config.change_data(D_Health, &"status", "DEAD")
 
 			#_pending_remove_comp.append(config)
 
-	# Example of doing batch update. 
+	# Example of doing batch update.
 	# If this system may have multiple ent. That may died update at one frame.
 	# e.g. 500+ at once, Otherwise don't do batching it may slower and prone to bugs
 	# This batching is unnecessary for most use-cases, This just for demonstrate.
@@ -38,4 +38,4 @@ func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, _
 #		for config in _pending_remove_comp:
 #			config.remove_comp(C_Movement)
 #
-#		NCS.end_batch() 
+#		NCS.end_batch()

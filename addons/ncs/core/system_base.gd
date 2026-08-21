@@ -13,8 +13,10 @@
 class_name NCSSystemBase
 extends NCSBase
 
-var _entities: Array[Node] = []
 var config_pool: Array[EntityConfig] = []
+var interest_scripts: Array[Script] = []
+
+var _entities: Array[Node] = []
 var _flat_data_pools: Array[Array] = []
 var _node_targets: Array = []
 var _flat_node_pools: Array[Array] = []
@@ -23,9 +25,6 @@ var _all_filters: Array[Script] = []
 var _any_filters: Array[Script] = []
 var _not_filters: Array[Script] = []
 var _data_targets: Array[Script] = []
-
-# Array of component/data scripts
-var interest_scripts: Array[Script] = []
 
 
 func _ready() -> void:
@@ -172,14 +171,24 @@ func _evaluate_single_entity(config_node: Object, changed_script: Script = null)
 			_entities.append(parent_body)
 			config_pool.append(config_node as EntityConfig)
 			for pool_idx in _data_targets.size():
-				_flat_data_pools[pool_idx].append((config_node as EntityConfig).get_data(_data_targets[pool_idx]))
+				_flat_data_pools[pool_idx].append(
+						(config_node as EntityConfig)
+						.get_data(_data_targets[pool_idx])
+				)
 			for pool_idx in _node_targets.size():
-				_flat_node_pools[pool_idx].append(_find_node_in_entity(parent_body, _node_targets[pool_idx]))
+				_flat_node_pools[pool_idx].append(
+						_find_node_in_entity(parent_body, _node_targets[pool_idx])
+				)
 		else:
 			for pool_idx in _data_targets.size():
-				_flat_data_pools[pool_idx][idx] = (config_node as EntityConfig).get_data(_data_targets[pool_idx])
+				_flat_data_pools[pool_idx][idx] = (
+						(config_node as EntityConfig)
+						.get_data(_data_targets[pool_idx])
+				)
 			for pool_idx in _node_targets.size():
-				_flat_node_pools[pool_idx][idx] = _find_node_in_entity(parent_body, _node_targets[pool_idx])
+				_flat_node_pools[pool_idx][idx] = (
+						_find_node_in_entity(parent_body, _node_targets[pool_idx])
+				)
 	else:
 		if idx != -1:
 			_entities.remove_at(idx)
@@ -233,7 +242,7 @@ func _update_query_filter() -> void:
 
 			for pool_idx in _data_targets.size():
 				new_flat_pools[pool_idx].append(config_node.get_data(_data_targets[pool_idx]))
-			
+
 			for pool_idx in _node_targets.size():
 				new_node_pools[pool_idx].append(_find_node_in_entity(parent_body, _node_targets[pool_idx]))
 
@@ -250,7 +259,7 @@ func signal_query_changed() -> void:
 	)
 
 
-## One-off data fetch outside the main loop. 
+## One-off data fetch outside the main loop.
 ## Prefer data fetching inside ncs_process e.g. var health_pool = data_pools[0] as Array[D_Health]
 func _find_data_by_script(ent: EntityConfig, target_script: Script) -> NCSDataBase:
 	return ent.get_data(target_script)

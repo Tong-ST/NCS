@@ -24,12 +24,12 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, _node_pools: 
 		var current_input = input_data.movement_vector
 		if current_input != Vector2.ZERO:
 			move_data.velocity = move_data.velocity.move_toward(
-				current_input * move_data.max_speed, 
-				move_data.acceleration * delta
+					current_input * move_data.max_speed,
+					move_data.acceleration * delta
 			)
 		else:
 			move_data.velocity = move_data.velocity.move_toward(
-				Vector2.ZERO, move_data.acceleration * delta
+					Vector2.ZERO, move_data.acceleration * delta
 			)
 
 		# Simulate movement purely in data and separate scene-tree mutation to S_Visual
