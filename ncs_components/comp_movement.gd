@@ -1,2 +1,2 @@
-class_name C_Input
+class_name CompMovement
 extends NCSComponentBase

@@ -1,16 +1,16 @@
-class_name S_Movement
+class_name SysMovement
 extends NCSSystemBase
 
 
 func setup_query() -> void:
-	with_all([C_Movement]) # filter entitie
-	iterate_data([D_Movement, D_Input])  # caching data & filter all ent. must have these data.
+	with_all([CompMovement]) # filter entitie
+	iterate_data([DataMovement, DataInput])  # caching data & filter all ent. must have these data.
 
 
 func ncs_physics_process(entities: Array[Node], data_pools: Array, _node_pools: Array, delta: float) -> void:
 	var current_entities = entities as Array[CharacterBody2D]
-	var move_pool = data_pools[0] as Array[D_Movement]
-	var input_pool = data_pools[1] as Array[D_Input]
+	var move_pool = data_pools[0] as Array[DataMovement]
+	var input_pool = data_pools[1] as Array[DataInput]
 
 	# Iterate and prepare data for each entity.
 	for i in current_entities.size():
@@ -32,7 +32,7 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, _node_pools: 
 					Vector2.ZERO, move_data.acceleration * delta
 			)
 
-		# Simulate movement purely in data and separate scene-tree mutation to S_Visual
+		# Simulate movement purely in data and separate scene-tree mutation to SysVisual
 		if not move_data.is_pos_initialized:
 			move_data.next_global_pos = ent.global_position
 			move_data.is_pos_initialized = true

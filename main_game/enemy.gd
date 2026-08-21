@@ -3,11 +3,11 @@ extends CharacterBody2D
 
 @onready var sprite_2d: Sprite2D = $Sprite2D
 @onready var entity_config: EntityConfig = $EntityConfig
-@onready var c_health: C_Health = $NCSComponentsHub/C_Health
+@onready var comp_health: CompHealth = $NCSComponentsHub/CompHealth
 
 
 func _ready() -> void:
-	c_health.on_damaged.connect(_on_damaged)
+	comp_health.on_damaged.connect(_on_damaged)
 
 
 func _on_damaged() -> void:

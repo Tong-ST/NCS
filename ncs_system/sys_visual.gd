@@ -1,21 +1,21 @@
 ## This is completely optional but recommend to separate scene-tree edit
-## From pure data calculation in previous system, e.g. S_Input, S_Movement
+## From pure data calculation in previous system, e.g. SysInput, SysMovement
 ##
 ## And this example try simulate of object off-screen they still change position
 ## But only update physics/visual position when on-screen.
-class_name S_Visual
+class_name SysVisual
 extends NCSSystemBase
 
 
 func setup_query() -> void:
-	with_all([C_Movement])
-	iterate_data([D_Movement])
+	with_all([CompMovement])
+	iterate_data([DataMovement])
 	fetch_nodes([Sprite2D]) # Optional cache Node into node_pools give null if not exist.
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, _delta: float) -> void:
 	var current_entities = entities
-	var move_pool = data_pools[0] as Array[D_Movement]
+	var move_pool = data_pools[0] as Array[DataMovement]
 	var sprite_pool = node_pools[0] as Array[Sprite2D]
 
 	var viewport = get_viewport()
@@ -36,7 +36,7 @@ func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, _d
 		var move_data = move_pool[i]
 		var sprite = sprite_pool[i]
 
-		# Skip until S_Movement has seeded the real spawn position on its first physics tick
+		# Skip until SysMovement has seeded the real spawn position on its first physics tick
 		if not move_data.is_pos_initialized: continue
 
 		var on_screen = screen_rect.has_point(move_data.next_global_pos)

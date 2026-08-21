@@ -1,15 +1,15 @@
-class_name S_Health
+class_name SysHealth
 extends NCSSystemBase
 
 
 func setup_query() -> void:
-	with_all([C_Health]) # filter entities by components
-	iterate_data([D_Health])  # caching data & filter all ent. must have these data.
+	with_all([CompHealth]) # filter entities by components
+	iterate_data([DataHealth])  # caching data & filter all ent. must have these data.
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, _delta: float) -> void:
 	var current_entities = entities as Array[CharacterBody2D]
-	var health_pool = data_pools[0] as Array[D_Health] # allocate data for current frame use
+	var health_pool = data_pools[0] as Array[DataHealth] # allocate data for current frame use
 
 	# Example on batching comp mutation.
 	#var _pending_remove_comp: Array[EntityConfig] = []
@@ -23,8 +23,8 @@ func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, _
 		var config = config_pool[i]
 
 		if health_data.current_health <= 0:
-			# Change data and send signal to watch_data() in C_Health.
-			config.change_data(D_Health, &"status", "DEAD")
+			# Change data and send signal to watch_data() in CompHealth.
+			config.change_data(DataHealth, &"status", "DEAD")
 
 			#_pending_remove_comp.append(config)
 
@@ -36,6 +36,6 @@ func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, _
 #		NCS.begin_batch()
 #
 #		for config in _pending_remove_comp:
-#			config.remove_comp(C_Movement)
+#			config.remove_comp(CompMovement)
 #
 #		NCS.end_batch()

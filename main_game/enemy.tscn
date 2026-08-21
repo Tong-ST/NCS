@@ -5,10 +5,10 @@
 [ext_resource type="Resource" uid="uid://d83lrrklk786" path="res://main_game/enemy_data.tres" id="2_nlenb"]
 [ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="3_80f77"]
 [ext_resource type="Script" uid="uid://bd5qdwgeah7so" path="res://addons/ncs/core/components_hub.gd" id="4_qhlc3"]
-[ext_resource type="Script" uid="uid://5gd7eowt31f7" path="res://ncs_components/c_movement.gd" id="5_b3gj3"]
-[ext_resource type="Script" uid="uid://c17fu44cgwhlq" path="res://ncs_components/c_input.gd" id="6_cgx3m"]
-[ext_resource type="Script" uid="uid://fbak7uj16ldf" path="res://ncs_components/c_enemy_ai.gd" id="7_pa6kk"]
-[ext_resource type="Script" uid="uid://chjaq4g4jwye5" path="res://ncs_components/c_health.gd" id="9_cgx3m"]
+[ext_resource type="Script" uid="uid://5gd7eowt31f7" path="res://ncs_components/comp_movement.gd" id="5_b3gj3"]
+[ext_resource type="Script" uid="uid://c17fu44cgwhlq" path="res://ncs_components/comp_input.gd" id="6_cgx3m"]
+[ext_resource type="Script" uid="uid://fbak7uj16ldf" path="res://ncs_components/comp_enemy_ai.gd" id="7_pa6kk"]
+[ext_resource type="Script" uid="uid://chjaq4g4jwye5" path="res://ncs_components/comp_health.gd" id="9_cgx3m"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1yc37"]
 radius = 20.0
@@ -35,22 +35,22 @@ script = ExtResource("4_qhlc3")
 owner_node = NodePath("..")
 metadata/_custom_type_script = "uid://bd5qdwgeah7so"
 
-[node name="C_Input" type="Node" parent="NCSComponentsHub" unique_id=1497073893]
+[node name="CompInput" type="Node" parent="NCSComponentsHub" unique_id=1497073893]
 script = ExtResource("6_cgx3m")
 require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
-[node name="C_Health" type="Node" parent="NCSComponentsHub" unique_id=1121043216]
+[node name="CompHealth" type="Node" parent="NCSComponentsHub" unique_id=1121043216]
 script = ExtResource("9_cgx3m")
 require_data = true
 metadata/_custom_type_script = "uid://chjaq4g4jwye5"
 
-[node name="C_EnemyAI" type="Node" parent="NCSComponentsHub" unique_id=913011947]
+[node name="CompEnemyAI" type="Node" parent="NCSComponentsHub" unique_id=913011947]
 script = ExtResource("7_pa6kk")
 require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
-[node name="C_Movement" type="Node" parent="NCSComponentsHub" unique_id=679268832]
+[node name="CompMovement" type="Node" parent="NCSComponentsHub" unique_id=679268832]
 script = ExtResource("5_b3gj3")
 require_data = true
 metadata/_custom_type_script = "uid://5gd7eowt31f7"

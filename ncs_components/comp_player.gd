@@ -1,4 +1,4 @@
-class_name C_Player
+class_name CompPlayer
 extends NCSComponentBase
 
 
@@ -12,17 +12,17 @@ func _ready() -> void:
 # with owner_node and config references.
 func _on_init_comp() -> void:
 	print(owner_node.name, " Is ready!, use WASD/Arrow keys to move")
-	if config.has_data(D_Health):
-		var health_data = config.get_data(D_Health) as D_Health
+	if config.has_data(DataHealth):
+		var health_data = config.get_data(DataHealth) as DataHealth
 		print("Current HP: ", health_data.current_health)
 
-	if config.has_comp(C_Movement):
-		var movement_comp = config.get_comp(C_Movement) as C_Movement
+	if config.has_comp(CompMovement):
+		var movement_comp = config.get_comp(CompMovement) as CompMovement
 		print("Movement Component: ", movement_comp.name)
 
 
 func get_player_input() -> void:
 	# Only specific for player is Fine to just put on player scene.
 	var raw_dir = Input.get_vector("left", "right", "up", "down")
-	var input_data = config.get_data(D_Input) as D_Input
+	var input_data = config.get_data(DataInput) as DataInput
 	input_data.movement_vector = raw_dir

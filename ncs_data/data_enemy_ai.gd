@@ -1,4 +1,4 @@
-class_name D_EnemyAI
+class_name DataEnemyAI
 extends NCSDataBase
 
 @export var is_aggressive: bool = true

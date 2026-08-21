@@ -1,17 +1,17 @@
-class_name C_Health
+class_name CompHealth
 extends NCSComponentBase
 
 # You can still write logic on component script, But keep logic that need to...
 # interact with local node, e.g. Update UI, Emit VFX, Local specific, etc.
-# For core logic that should share across all component write at S_System instead.
+# For core logic that should share across all component write at SysSystem instead.
 signal on_damaged
 
 
 func _on_init_comp() -> void:
 	# NCS Observer pattern for signal base event.
-	config.watch_data(D_Health, &"status", _on_status_changed)
+	config.watch_data(DataHealth, &"status", _on_status_changed)
 	config.watch_data_lifecycle(
-		D_PoisonStatus,
+		DataPoisonStatus,
 		_on_posion_applied,
 		_on_posion_removed,
 	)
@@ -20,8 +20,8 @@ func _on_init_comp() -> void:
 # Example on create custom logic bind to this components
 func take_damage(amount: float) -> void:
 	# Example how to access data and manipulated via component itself.
-	if not config.has_data(D_Health): return
-	var health_data = config.get_data(D_Health) as D_Health
+	if not config.has_data(DataHealth): return
+	var health_data = config.get_data(DataHealth) as DataHealth
 	if health_data:
 		health_data.current_health -= amount
 		on_damaged.emit()

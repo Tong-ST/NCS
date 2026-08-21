@@ -1,4 +1,4 @@
-class_name D_Health
+class_name DataHealth
 extends NCSDataBase
 
 @export_enum("ALIVE", "DEAD") var status: String = "ALIVE"

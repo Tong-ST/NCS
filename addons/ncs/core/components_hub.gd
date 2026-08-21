@@ -4,7 +4,7 @@
 ## to all child components on _ready.
 ##
 ## Editor validation: the hub runs configuration warnings if a component declares
-## require_data=true but the matching D_* resource is absent from the EntityConfig data_sets.
+## require_data=true but the matching Data* resource is absent from the EntityConfig data_sets.
 @tool
 class_name NCSComponentsHub
 extends NCSBase
@@ -72,7 +72,7 @@ func _notification(what: int) -> void:
 
 
 ## Editor validation: checks that every component with require_data=true has a matching
-## D_* resource in the sibling EntityConfig's data_sets array.
+## Data* resource in the sibling EntityConfig's data_sets array.
 ## Runs on the editor's 0.5-second heartbeat tick and on property edits.
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings = PackedStringArray()
@@ -97,7 +97,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 							available_data_classes.append(class_info.class)
 							break
 
-	# Validate: C_Movement -> expects D_Movement in data_sets.
+	# Validate: CompMovement -> expects DataMovement in data_sets.
 	for child in get_children():
 		if "require_data" in child and child.get(&"require_data") == true:
 			var script = child.get_script()
@@ -109,11 +109,11 @@ func _get_configuration_warnings() -> PackedStringArray:
 				)
 				continue
 
-			# Derive expected resource name: C_Movement -> D_Movement.
+			# Derive expected resource name: CompMovement -> DataMovement.
 			var script_class_name = script.get_global_name()
 			if not script_class_name.is_empty():
 				var base_identity = script_class_name.replace("Component", "")
-				var expected_data_class_1 = base_identity.replace("C_", "D_")
+				var expected_data_class_1 = base_identity.replace("Comp", "Data")
 				if not available_data_classes.has(expected_data_class_1):
 					warnings.append(
 							"NCS Configuration Error: Component class [" + script_class_name + "]

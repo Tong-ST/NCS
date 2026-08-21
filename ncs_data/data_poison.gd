@@ -1,4 +1,4 @@
-class_name D_PoisonStatus
+class_name DataPoisonStatus
 extends NCSDataBase
 
 @export var damage_per_sec: float = 10.0

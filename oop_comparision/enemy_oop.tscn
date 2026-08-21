@@ -26,7 +26,7 @@ shape = SubResource("CircleShape2D_1yc37")
 
 [node name="Components" type="Node" parent="." unique_id=314059360]
 
-[node name="EnemyAI_OOP" type="Node" parent="Components" unique_id=27219289 node_paths=PackedStringArray("actor", "input_comp")]
+[node name="EnemyAIOOP" type="Node" parent="Components" unique_id=27219289 node_paths=PackedStringArray("actor", "input_comp")]
 script = ExtResource("4_yjegb")
 actor = NodePath("../..")
 input_comp = NodePath("../InputOOP")

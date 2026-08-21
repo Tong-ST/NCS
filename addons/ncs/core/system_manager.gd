@@ -88,7 +88,7 @@ func unregister_entity(entity: EntityConfig) -> void:
 
 
 ## Call after mutating an entity's components or data at runtime.
-## Usage: NCS.update_single_entity(config, D_PoisonStatus)
+## Usage: NCS.update_single_entity(config, DataPoisonStatus)
 func update_single_entity(entity: EntityConfig, changed_script: Script = null) -> void:
 	if _is_batching or not is_instance_valid(entity):
 		return

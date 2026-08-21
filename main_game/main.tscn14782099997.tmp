@@ -2,13 +2,13 @@
 
 [ext_resource type="PackedScene" uid="uid://drd0o3om1q3na" path="res://main_game/player.tscn" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://bkmd66vdt4ppj" path="res://main_game/main.gd" id="1_xvufe"]
-[ext_resource type="Script" uid="uid://dtcdyejtk5tte" path="res://ncs_system/s_input.gd" id="2_qofrp"]
+[ext_resource type="Script" uid="uid://dtcdyejtk5tte" path="res://ncs_system/SysInput.gd" id="2_qofrp"]
 [ext_resource type="Script" uid="uid://bjse0r78t1isb" path="res://ncs_system/s_enemy_ai.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://cdjdifkshhe0h" path="res://addons/ncs/core/ncs_world.gd" id="3_lquwl"]
-[ext_resource type="Script" uid="uid://ckc1tfcgccqis" path="res://ncs_system/s_movement.gd" id="5_7mycd"]
-[ext_resource type="Script" uid="uid://c881o8prnc4sy" path="res://ncs_system/s_visual.gd" id="6_vis01"]
-[ext_resource type="Script" uid="uid://dujjf8rblw47w" path="res://ncs_system/s_health.gd" id="8_d214i"]
-[ext_resource type="Script" uid="uid://cc2tpopq1ql8n" path="res://ncs_system/s_poison.gd" id="8_sayuc"]
+[ext_resource type="Script" uid="uid://ckc1tfcgccqis" path="res://ncs_system/SysMovement.gd" id="5_7mycd"]
+[ext_resource type="Script" uid="uid://c881o8prnc4sy" path="res://ncs_system/SysVisual.gd" id="6_vis01"]
+[ext_resource type="Script" uid="uid://dujjf8rblw47w" path="res://ncs_system/SysHealth.gd" id="8_d214i"]
+[ext_resource type="Script" uid="uid://cc2tpopq1ql8n" path="res://ncs_system/SysPoison.gd" id="8_sayuc"]
 [ext_resource type="PackedScene" uid="uid://cvael67uegn6h" path="res://main_game/enemy.tscn" id="8_xvufe"]
 [ext_resource type="PackedScene" uid="uid://lvup6a5nx615" path="res://oop_comparision/enemy_oop.tscn" id="9_7km35"]
 
@@ -21,24 +21,24 @@ metadata/_custom_type_script = "uid://cdjdifkshhe0h"
 
 [node name="CoreLoops" type="Node" parent="NCSWorld" unique_id=1229781815]
 
-[node name="S_Input" type="Node" parent="NCSWorld/CoreLoops" unique_id=1787844853]
+[node name="SysInput" type="Node" parent="NCSWorld/CoreLoops" unique_id=1787844853]
 script = ExtResource("2_qofrp")
 
-[node name="S_Movement" type="Node" parent="NCSWorld/CoreLoops" unique_id=331608418]
+[node name="SysMovement" type="Node" parent="NCSWorld/CoreLoops" unique_id=331608418]
 script = ExtResource("5_7mycd")
 
-[node name="S_Visual" type="Node" parent="NCSWorld/CoreLoops" unique_id=892314561]
+[node name="SysVisual" type="Node" parent="NCSWorld/CoreLoops" unique_id=892314561]
 script = ExtResource("6_vis01")
 
 [node name="GameplaySystems" type="Node" parent="NCSWorld" unique_id=1640213077]
 
-[node name="S_EnemyAI" type="Node" parent="NCSWorld/GameplaySystems" unique_id=540796171]
+[node name="SysEnemyAI" type="Node" parent="NCSWorld/GameplaySystems" unique_id=540796171]
 script = ExtResource("3_h2yge")
 
-[node name="S_Health" type="Node" parent="NCSWorld/GameplaySystems" unique_id=1035740470]
+[node name="SysHealth" type="Node" parent="NCSWorld/GameplaySystems" unique_id=1035740470]
 script = ExtResource("8_d214i")
 
-[node name="S_Poison" type="Node" parent="NCSWorld/GameplaySystems" unique_id=1673918735]
+[node name="SysPoison" type="Node" parent="NCSWorld/GameplaySystems" unique_id=1673918735]
 script = ExtResource("8_sayuc")
 
 [node name="Player" parent="." unique_id=1562561095 instance=ExtResource("1_ig7tw")]

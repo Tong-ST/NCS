@@ -91,7 +91,7 @@ func _rebuild_component_cache() -> void:
 # ==============================================================================
 
 ## Returns the runtime data resource of the given type. Logs push_error if missing.
-## Usage: var move = config.get_data(D_Movement) as D_Movement
+## Usage: var move = config.get_data(DataMovement) as DataMovement
 func get_data(data_script: Script) -> NCSDataBase:
 	if not data_script:
 		return null
@@ -138,7 +138,7 @@ func watch_data(data_script: Script, property_name: StringName, callback: Callab
 
 
 ## Safely updates a field on an existing data resource in one line. Returns true if successful.
-## Usage: config.change_data(D_Movement, &"max_speed", 300.0)
+## Usage: config.change_data(DataMovement, &"max_speed", 300.0)
 func change_data(data_script: Script, property_name: StringName, new_value: Variant) -> bool:
 	var data_block = get_data(data_script)
 	if not is_instance_valid(data_block) or not (property_name in data_block):
@@ -159,7 +159,7 @@ func change_data(data_script: Script, property_name: StringName, new_value: Vari
 
 
 ## Returns the component node of the given type. Logs push_warning if missing.
-## Usage: var hp = config.get_comp(C_Health) as C_Health
+## Usage: var hp = config.get_comp(CompHealth) as CompHealth
 func get_comp(comp_script: Script) -> NCSComponentBase:
 	if not comp_script:
 		return null
@@ -185,7 +185,7 @@ func get_comp(comp_script: Script) -> NCSComponentBase:
 
 
 ## Returns true if this entity currently has the given data type in entity config.
-## Usage: if config.has_data(D_Movement): ...
+## Usage: if config.has_data(DataMovement): ...
 func has_data(data_script: Script) -> bool:
 	if not data_script:
 		return false
@@ -194,7 +194,7 @@ func has_data(data_script: Script) -> bool:
 
 
 ## Returns true if this entity currently has the given component type active.
-## Usage: if config.has_comp(C_Dead): ...
+## Usage: if config.has_comp(CompDead): ...
 func has_comp(comp_script: Script) -> bool:
 	if not comp_script:
 		return false
@@ -221,7 +221,7 @@ func get_data_scripts() -> Array[Script]:
 # ==============================================================================
 
 ## Adds a new component at runtime. No-op if already present. Triggers deferred NCS re-query.
-## Usage: config.add_comp(C_Dead)
+## Usage: config.add_comp(CompDead)
 func add_comp(comp_script: Script) -> void:
 	if not comp_script or _component_map.has(comp_script):
 		return
@@ -235,7 +235,7 @@ func add_comp(comp_script: Script) -> void:
 		return
 
 	var class_str = comp_script.get_global_name()
-	new_node.name = class_str if not class_str.is_empty() else "C_Newcomp"
+	new_node.name = class_str if not class_str.is_empty() else "CompNew"
 	hub.add_child(new_node)
 	if new_node is NCSComponentBase:
 		new_node.owner_node = hub.owner_node
@@ -252,7 +252,7 @@ func add_comp(comp_script: Script) -> void:
 
 
 ## Removes a component at runtime and triggers deferred NCS re-query.
-## Usage: config.remove_comp(C_Movement)
+## Usage: config.remove_comp(CompMovement)
 func remove_comp(comp_script: Script) -> void:
 	if not comp_script:
 		return
@@ -270,7 +270,7 @@ func remove_comp(comp_script: Script) -> void:
 
 
 ## Calls a method on a component node. Returns true if the call succeeded.
-## Usage: config.call_method(C_Health, &"take_damage", [20.0])
+## Usage: config.call_method(CompHealth, &"take_damage", [20.0])
 func call_method(comp_script: Script, method_name: StringName, args: Array = []) -> bool:
 	if not comp_script:
 		return false
@@ -312,7 +312,7 @@ func watch_data_lifecycle(data_script: Script, on_added: Callable, on_removed: C
 
 
 ## Adds a new data resource at runtime. No-op if already present. Triggers deferred NCS re-query.
-## Usage: config.add_data(D_PoisonStatus)
+## Usage: config.add_data(DataPoisonStatus)
 func add_data(data_script: Script) -> void:
 	if not runtime_config or not data_script or _data_map.has(data_script):
 		return
@@ -334,7 +334,7 @@ func add_data(data_script: Script) -> void:
 
 
 ## Removes a data resource at runtime. Triggers deferred NCS re-query.
-## Usage: config.remove_data(D_PoisonStatus)
+## Usage: config.remove_data(DataPoisonStatus)
 func remove_data(data_script: Script) -> void:
 	if not runtime_config or not data_script:
 		return

@@ -17,14 +17,14 @@ Enemy (Entity can be Char2d, Node, etc.)
 |-- EntityConfig (Data container)
 |-- Sprite2D, etc.
 |-- NCSComponentsHub (Hub for all comp.)
-	|-- C_Movement (Every comp need a script with/without logic)
-	|-- C_Input
+	|-- CompMovement (Every comp need a script with/without logic)
+	|-- CompInput
 ```
 
 ### 1. Data (Resource)
 Data blocks contain only raw variables. They are written as custom script classes extending `NCSDataBase`.
 ```gdscript
-class_name D_Movement
+class_name DataMovement
 extends NCSDataBase
 
 @export var max_speed: float = 150.0
@@ -32,7 +32,7 @@ extends NCSDataBase
 
 var velocity: Vector2 = Vector2.ZERO
 ```
-- Naming convention for ease of use and remember `D_Data` for class_name, d_data.gd for template.
+- Naming convention for ease of use and remember `DataName` for class_name, data_name.gd for template.
 
 ### 2. Component (Node)
 Components live in the scene tree under the `NCSComponentsHub` folder. They inherit from `NCSComponentBase` and handle localized, visual tasks (like playing a sound, triggering particles, or running a hit-flash color tween).
@@ -41,10 +41,10 @@ Components live in the scene tree under the `NCSComponentsHub` folder. They inhe
 # You can put logics in component with Native godot style.
 # Make sure there focus on local scene.
 # Avoid run process loop inside each comp.
-# Avoid Write to D_Data that may use in system,
-# Make habit of Read-only from D_Data to avoid conflict with S_System. 
+# Avoid Write to DataName that may use in system,
+# Make habit of Read-only from DataName to avoid conflict with SysSystem. 
 
-class_name C_Health
+class_name CompHealth
 extends NCSComponentBase
 
 signal health_updated(current_hp: float)
@@ -58,29 +58,29 @@ func flash_red() -> void:
 		sprite_2d.modulate = Color.RED
 		tween.tween_property(sprite_2d, "modulate", Color.WHITE, 0.05).set_delay(0.1)
 
-# Recommend to read-only from D_Data to update in scene-tree.
+# Recommend to read-only from Data to update in scene-tree.
 func update_health() -> void:
-	var health_data = config.get_data(D_Health) as D_Health
+	var health_data = config.get_data(DataHealth) as DataHealth
 	health_updated.emit(health_data.current_health)
 ```
-- Naming convention for ease of use and remember `C_Component` for class_name, c_component.gd for scripts.
+- Naming convention for ease of use and remember `CompComponent` for class_name, comp_component.gd for scripts.
 
 ### 3. System (Node)
 Systems are the "process" of your game architecture, Which will filter from components, to filtered arrays of entities, That you loop through and create game logic.
 
 ```gdscript
-class_name S_Movement
+class_name SysMovement
 extends NCSSystemBase
 
 ## Step 1: Query step filters and caches from components and data
 func setup_query() -> void:
-	with_all([C_Movement]).with_not([C_Dead]) # filter for entities
-	iterate_data([D_Movement, D_Input]) # caching data and all data must exist in entity.
+	with_all([CompMovement]).with_not([CompDead]) # filter for entities
+	iterate_data([DataMovement, DataInput]) # caching data and all data must exist in entity.
 
 ## Step 2: Process the linear data stream sequentially
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
-	var move_pool = data_pools[0] as Array[D_Movement] # allocated data pool.
-	var input_pool = data_pools[1] as Array[D_Input] # with index accordingly to iterate_data() above
+	var move_pool = data_pools[0] as Array[DataMovement] # allocated data pool.
+	var input_pool = data_pools[1] as Array[DataInput] # with index accordingly to iterate_data() above
 	
 	# Iterate through all entities
 	for i in entities.size():
@@ -109,41 +109,41 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 var config = config_pool[i] # Get a config of each entity.
 
 if target_enemy_health <= 0:
-	config.add_comp(C_Dead)
-	config.remove_comp(C_Movement)
+	config.add_comp(CompDead)
+	config.remove_comp(CompMovement)
 	
 	# Triggers a visual method in your local components.
-	config.call_method(C_Health, &"flash_red")
+	config.call_method(CompHealth, &"flash_red")
 ```
-- Naming convention for ease of use and remember `S_System` for class_name, s_system.gd for scripts.
+- Naming convention for ease of use and remember `SysSystem` for class_name, s_system.gd for scripts.
 
 ### Query Filtering & Pre-fetched
 
 System queries are configured in `setup_query()` using method chaining. You can filter entities by their attached components and pre-fetch resources or scene nodes directly into process pools.
 
 #### Filtering Entities
-* `with_all([C_Move, C_Input])`: Entity **must have all** listed components.
-* `with_any([C_Poison, C_Freeze])`: Entity **must have at least one** of the listed components.
-* `with_not([C_Dead])`: Entity **must not have** any of the listed components.
+* `with_all([CompMove, CompInput])`: Entity **must have all** listed components.
+* `with_any([CompPoison, CompFreeze])`: Entity **must have at least one** of the listed components.
+* `with_not([CompDead])`: Entity **must not have** any of the listed components.
 
 #### Pre-fetched Data & Nodes
-* `iterate_data([D_Move, D_Input])`: Populates `data_pools[n]` and all data must exist in entity.
+* `iterate_data([DataMove, DataInput])`: Populates `data_pools[n]` and all data must exist in entity.
 * `fetch_nodes([Sprite2D, AnimationPlayer])`: Populates `node_pools[n]` with references to optional internal sub-nodes (returns `null` if not found).
 * `config_pool`: Built-in array providing direct access to each matched entity's `EntityConfig` without setup.
 
 #### Example
 ```gdscript
-class_name S_Render
+class_name SysRender
 extends NCSSystemBase
 
 func setup_query() -> void:
-    with_all([C_Movement]).with_any([C_Poison, C_Freeze]).with_not([C_Dead])
-    iterate_data([D_Movement])
+    with_all([CompMovement]).with_any([CompPoison, CompFreeze]).with_not([CompDead])
+    iterate_data([DataMovement])
     fetch_nodes([Sprite2D, AnimationPlayer])
 
 func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
 	var current_entities = entities as Array[CharacterBody2D]
-    var move_pool = data_pools[0] as Array[D_Movement]
+    var move_pool = data_pools[0] as Array[DataMovement]
     var sprite_pool = node_pools[0] as Array[Sprite2D]
     var anim_pool = node_pools[1] as Array[AnimationPlayer]
 
@@ -168,10 +168,10 @@ Level_Main
 |-- Enemy
 |-- NCSWorld
 	|-- CoreLoops (Just a folder)
-	|   |-- S_Input (Your system script)
-	|   |-- S_Movement (Your system script)
+	|   |-- SysInput (Your system script)
+	|   |-- SysMovement (Your system script)
 	|-- AISystems (folder)
-		|-- S_EnemyAI (Your system script)
+		|-- SysEnemyAI (Your system script)
 ```
 
 ## Installation

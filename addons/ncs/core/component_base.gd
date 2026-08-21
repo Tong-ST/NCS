@@ -1,12 +1,12 @@
 ## Base class for all NCS component scripts.
-## Attach subclasses (e.g. C_Health, C_Movement) as child nodes inside a NCSComponentsHub.
+## Attach subclasses (e.g. CompHealth, CompMovement) as child nodes inside a NCSComponentsHub.
 ##
-## Naming convention matters: use C_ prefix for component nodes (C_Health, C_Input, C_Dead).
+## Naming convention matters: use Comp prefix for component nodes (CompHealth, CompInput, CompDead).
 ## Components can be pure tag-nodes with no script logic — used only as query filters.
 class_name NCSComponentBase
 extends NCSBase
 
-## require_data: set true if this component expects a matching D_* resource in the EntityConfig.
+## require_data: set true if this component expects a matching Data* resource in the EntityConfig.
 ## The editor hub validator will warn you if the resource is missing from the data_sets array.
 @export var require_data: bool = false
 

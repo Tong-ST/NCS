@@ -1,16 +1,16 @@
-class_name S_EnemyAI
+class_name SysEnemyAI
 extends NCSSystemBase
 
 
 func setup_query() -> void:
-	with_all([C_EnemyAI]) # ftiler entities by components
-	iterate_data([D_EnemyAI, D_Input]) # caching data & filter all ent. must have these data.
+	with_all([CompEnemyAI]) # ftiler entities by components
+	iterate_data([DataEnemyAI, DataInput]) # caching data & filter all ent. must have these data.
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, delta: float) -> void:
 	var current_entities = entities as Array[CharacterBody2D]
-	var enemy_ai_pool = data_pools[0] as Array[D_EnemyAI] # allocate data for current frame use
-	var input_pool = data_pools[1] as Array[D_Input] # same index as iterate_data abrove
+	var enemy_ai_pool = data_pools[0] as Array[DataEnemyAI] # allocate data for current frame use
+	var input_pool = data_pools[1] as Array[DataInput] # same index as iterate_data abrove
 
 	# Iterate and prepare data for each entity.
 	for i in current_entities.size():

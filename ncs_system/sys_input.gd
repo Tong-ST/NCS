@@ -1,9 +1,9 @@
-class_name S_Input
+class_name SysInput
 extends NCSSystemBase
 
 
 func setup_query() -> void:
-	with_all([C_Input]) # filter entities by components
+	with_all([CompInput]) # filter entities by components
 
 
 func ncs_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, _delta: float) -> void:
@@ -21,9 +21,9 @@ func ncs_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, 
 
 		# Call a method inside component
 		if deal_damage:
-			config.call_method(C_Health, &"take_damage", [20])
+			config.call_method(CompHealth, &"take_damage", [20])
 			# More command e.g. add_comp, remove_comp, add_data, remove_data, etc.
 
 		# Add data at runtime
 		if add_posion:
-			config.add_data(D_PoisonStatus)
+			config.add_data(DataPoisonStatus)

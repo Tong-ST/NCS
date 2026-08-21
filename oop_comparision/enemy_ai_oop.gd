@@ -1,4 +1,4 @@
-class_name EnemyAI_OOP
+class_name EnemyAIOOP
 extends Node
 
 @export var actor: Node

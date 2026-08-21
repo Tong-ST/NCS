@@ -2,12 +2,12 @@
 ## then override ncs_process / ncs_physics_process to run per-frame logic on matched entities.
 # Quick setup:
 #   func setup_query() -> void:
-#       with_all([C_Movement]).with_not([C_Dead])
-#       iterate_data([D_Movement])
+#       with_all([CompMovement]).with_not([CompDead])
+#       iterate_data([DataMovement])
 #
 #   func ncs_physics_process(entities, data_pools, delta):
 #       for i in entities.size():
-#           var move: D_Movement = data_pools[0][i]
+#           var move = data_pools[0][i] as DataMovement
 #           entities[i].velocity = move.direction * move.speed
 #           entities[i].move_and_slide()
 class_name NCSSystemBase
@@ -61,14 +61,14 @@ func setup_query() -> void:
 
 
 ## Entity must have ALL listed component types to match this system.
-## Returns self for chaining: with_all([C_Move]).with_not([C_Dead])
+## Returns self for chaining: with_all([CompMove]).with_not([CompDead])
 func with_all(type_scripts: Array[Script]) -> NCSSystemBase:
 	_all_filters = type_scripts
 	return self
 
 
 ## Entity must have any listed component types to match this system.
-## Returns self for chaining: with_any([C_Poison, C_Freeze]).with_not([C_Dead])
+## Returns self for chaining: with_any([CompPoison, CompFreeze]).with_not([CompDead])
 func with_any(type_scripts: Array[Script]) -> NCSSystemBase:
 	_any_filters = type_scripts
 	return self
@@ -81,7 +81,7 @@ func with_not(type_scripts: Array[Script]) -> NCSSystemBase:
 
 
 ## Pre-fetch data into data_pools. Entity must have all data required to exist in system.
-## Usage: iterate_data([D_Movement, D_Health]) -> data_pools[0] = D_Movement, [1] = D_Health
+## Usage: iterate_data([DataMovement, DataHealth]) -> data_pools[0] = DataMovement, [1] = DataHealth
 func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
 	_data_targets = data_classes
 	return self
@@ -260,7 +260,7 @@ func signal_query_changed() -> void:
 
 
 ## One-off data fetch outside the main loop.
-## Prefer data fetching inside ncs_process e.g. var health_pool = data_pools[0] as Array[D_Health]
+## Prefer data fetching inside ncs_process e.g. var health_pool = data_pools[0] as Array[DataHealth]
 func _find_data_by_script(ent: EntityConfig, target_script: Script) -> NCSDataBase:
 	return ent.get_data(target_script)
 
