@@ -4,9 +4,9 @@ extends NCSSystemBase
 
 func setup_query() -> void:
 	# You can also query by just Data no node component need for this system.
-	# using iterate_data mean all ent. must have these data.
-	# with_any([DataPoisonStatus, DataBurnStatus]) also work for query data.
-	iterate_data([DataPoisonStatus, DataHealth])
+	# iterate_data also act like with_all() filter,
+	# all data must exist in ent. Otherwise will not get filter.
+	iterate_data([DataPoisonStatus, DataHealth]) # e.g. must have DataPoisonStatus and DataHealth.
 
 
 func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, delta: float) -> void:

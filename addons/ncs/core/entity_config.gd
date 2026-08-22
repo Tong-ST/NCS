@@ -99,7 +99,10 @@ func get_data(data_script: Script) -> NCSDataBase:
 	var data_block = _data_map.get(data_script, null) as NCSDataBase
 	if not is_instance_valid(data_block):
 		if not runtime_config:
-			push_warning("EntityConfig on '" + get_parent().name + "' has no base_config assigned!")
+			push_warning(
+					"EntityConfig on '" + get_parent().name
+					+ "' has no base_config assigned!"
+			)
 			return null
 
 		_rebuild_data_cache()
@@ -171,14 +174,21 @@ func get_comp(comp_script: Script) -> NCSComponentBase:
 
 	if not is_instance_valid(comp):
 		var entity_name = get_parent().name
-		var scene_path = (get_parent().scene_file_path 
+		var scene_path = (
+				get_parent().scene_file_path 
 				if get_parent().scene_file_path 
-				else "Runtime Spawned Entity")
-		var class_str = (comp_script.get_global_name()
+				else "Runtime Spawned Entity"
+		)
+		var class_str = (
+				comp_script.get_global_name()
 				if not comp_script.get_global_name().is_empty()
 				else "UnnamedScript"
-			)
-		push_warning("NCS Warning: Entity '" + entity_name + "' requested missing component -> [" + class_str + "]. Check hub layout: [" + scene_path + "]")
+		)
+		push_warning(
+				"NCS Warning: Entity '" + entity_name
+				+ "' requested missing component -> [" + class_str + "].
+				Check hub layout: [" + scene_path + "]"
+		)
 		return null
 
 	return comp
@@ -210,11 +220,11 @@ func get_component_scripts() -> Array[Script]:
 
 
 func get_data_scripts() -> Array[Script]:
-	var list: Array[Script] = []
+	var scripts: Array[Script] = []
 	for script in _data_map.keys():
 		if script is Script:
-			list.append(script)
-	return list
+			scripts.append(script)
+	return scripts
 
 # ==============================================================================
 # RUNTIME MUTATIONS

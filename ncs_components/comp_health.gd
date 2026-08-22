@@ -34,7 +34,7 @@ func _on_remove_comp() -> void:
 
 func _on_status_changed(status: Variant) -> void:
 	if status == "DEAD":
-		# Do something, Play anim, etc. than queue_free parent.
+		# Do something, Play anim, etc. then queue_free parent.
 		owner_node.queue_free()
 
 

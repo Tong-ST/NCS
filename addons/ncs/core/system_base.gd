@@ -107,12 +107,10 @@ func _matches_query(config_node: Object) -> bool:
 	if not is_instance_valid(parent_body):
 		return false
 
-	# 1. NOT Filter (Must not have component OR data)
 	for not_script in _not_filters:
 		if _entity_has_type(cfg, not_script):
 			return false
 
-	# 2. ALL Filter (Must have component OR data)
 	for req_script in _all_filters:
 		if not _entity_has_type(cfg, req_script):
 			return false

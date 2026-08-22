@@ -3,7 +3,7 @@ extends NCSSystemBase
 
 
 func setup_query() -> void:
-	with_all([CompHealth]) # filter entities by components
+	with_all([DataHealth]) # Can also filter by just Data or mix and match with Comp.
 	iterate_data([DataHealth])  # caching data & filter all ent. must have these data.
 
 
@@ -20,11 +20,10 @@ func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, _
 		if not is_instance_valid(ent): continue
 
 		var health_data = health_pool[i]
-		var config = config_pool[i]
 
 		if health_data.current_health <= 0:
 			# Change data and send signal to watch_data() in CompHealth.
-			config.change_data(DataHealth, &"status", "DEAD")
+			config_pool[i].change_data(DataHealth, &"status", "DEAD")
 
 			#_pending_remove_comp.append(config)
 

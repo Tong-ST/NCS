@@ -115,7 +115,7 @@ if target_enemy_health <= 0:
 	# Triggers a visual method in your local components.
 	config.call_method(CompHealth, &"flash_red")
 ```
-- Naming convention for ease of use and remember `SysSystem` for class_name, s_system.gd for scripts.
+- Naming convention for ease of use and remember `SysSystem` for class_name, sys_system.gd for scripts.
 
 ### Query Filtering & Pre-fetched
 

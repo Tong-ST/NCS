@@ -54,7 +54,6 @@ func register_entity(entity: EntityConfig) -> void:
 			return
 
 		var candidates = _get_candidate_systems_for(entity)
-		# Fallback to all systems if entity has no initial scripts attached yet
 		if candidates.is_empty():
 			for sys in _systems.values():
 				if sys.has_method(&"_evaluate_single_entity"):
