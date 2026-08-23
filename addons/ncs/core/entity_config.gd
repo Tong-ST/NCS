@@ -302,16 +302,14 @@ func call_method(comp_script: Script, method_name: StringName, args: Array = [])
 	return false
 
 
-## Calls a component method safely via command buffer if mid-frame.
+## Calls a component method safely via typed queue without closure allocations.
 ## Usage: config.call_method_deferred(CompHealth, &"take_damage", [20.0])
 func call_method_deferred(
 		comp_script: Script,
 		method_name: StringName,
 		args: Array = []
 ) -> void:
-	NCS.push_command(func():
-		call_method(comp_script, method_name, args)
-	)
+	NCS.push_method_call(self, comp_script, method_name, args)
 
 # ==============================================================================
 # DATA LIFECYCLE WATCHERS

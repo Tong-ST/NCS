@@ -4,7 +4,7 @@ extends Node
 
 ## Auto-detection threshold: if queued changes in a frame >= this threshold, batch re-query is used.
 ## Otherwise, incremental single-entity evaluation is used.
-const MASS_UPDATE_THRESHOLD: int = 500
+const MASS_UPDATE_THRESHOLD: int = 50
 
 var active_entities: Array[EntityConfig] = []
 
@@ -24,6 +24,12 @@ var _flush_scheduled: bool = false
 # Typed despawn queue — avoids per-entity lambda closure allocations.
 var _despawn_queue: Array[Node] = []
 
+# Typed method call queue — avoids per-entity lambda closure allocations for call_method_deferred.
+var _method_call_configs: Array[EntityConfig] = []
+var _method_call_scripts: Array[Script] = []
+var _method_call_names: Array[StringName] = []
+var _method_call_args: Array[Array] = []
+
 
 func _process(_delta: float) -> void:
 	if _flush_scheduled:
@@ -34,7 +40,7 @@ func _physics_process(_delta: float) -> void:
 		flush()
 
 # ==============================================================================
-# COMMAND BUFFER & DIRTY MARKING
+# COMMAND BUFFER, METHOD CALLS & DIRTY MARKING
 # ==============================================================================
 
 ## Enqueues a structural command to execute safely during flush.
@@ -42,6 +48,17 @@ func push_command(command: Callable) -> void:
 	if not command.is_valid():
 		return
 	_command_queue.append(command)
+	_schedule_flush()
+
+
+## Enqueues a typed component method call without allocating lambda closures.
+func push_method_call(config: EntityConfig, comp_script: Script, method_name: StringName, args: Array = []) -> void:
+	if not is_instance_valid(config):
+		return
+	_method_call_configs.append(config)
+	_method_call_scripts.append(comp_script)
+	_method_call_names.append(method_name)
+	_method_call_args.append(args)
 	_schedule_flush()
 
 
@@ -72,7 +89,22 @@ func _schedule_flush() -> void:
 func flush() -> void:
 	_flush_scheduled = false
 
-	# Phase 1: Process structural commands first (e.g. spawn instantiation commands).
+	# Phase 1: Process typed method calls (zero closure allocations).
+	if not _method_call_configs.is_empty():
+		var configs = _method_call_configs
+		var scripts = _method_call_scripts
+		var names = _method_call_names
+		var args_list = _method_call_args
+		_method_call_configs = []
+		_method_call_scripts = []
+		_method_call_names = []
+		_method_call_args = []
+		for i in configs.size():
+			var cfg = configs[i]
+			if is_instance_valid(cfg):
+				cfg.call_method(scripts[i], names[i], args_list[i])
+
+	# Phase 2: Process structural commands (e.g. spawn instantiation commands).
 	if not _command_queue.is_empty():
 		var commands = _command_queue
 		_command_queue = []
@@ -93,8 +125,8 @@ func flush() -> void:
 
 	# =========================================================================
 	# BATCH MODE (Changes >= MASS_UPDATE_THRESHOLD)
-	# Fast-path for mass spawns / mass despawns: single O(1) registry updates
-	# followed by ONE unified _remap_all_system_queries() pass for all systems.
+	# Fast-path for mass spawns / mass despawns / mass mutations:
+	# single O(1) registry updates followed by ONE unified _remap_all pass.
 	# =========================================================================
 	if total_changes >= MASS_UPDATE_THRESHOLD:
 		print("[NCS SystemManager] Auto-detected MASS update (%d changes) -> Executing BATCH re-query" % total_changes)
@@ -134,6 +166,8 @@ func flush() -> void:
 	# INCREMENTAL MODE (Changes < MASS_UPDATE_THRESHOLD)
 	# Granular path for small changes: individual departures and candidate evaluations.
 	# =========================================================================
+	print("[NCS SystemManager] Auto-detected INCREMENTAL update (%d changes) -> Executing single evaluations" % total_changes)
+
 	# 1. Incremental Despawns
 	if not _despawn_queue.is_empty():
 		var despawns = _despawn_queue
@@ -164,7 +198,7 @@ func flush() -> void:
 			if is_instance_valid(entity):
 				_apply_entity_registration(entity)
 
-	# 4. Incremental Dirty Evaluations
+	# 4. Incremental Dirty Evaluations (add_comp, remove_comp, add_data, remove_data)
 	if not _dirty_entities.is_empty():
 		var dirty_snapshot = _dirty_entities
 		_dirty_entities = {}
