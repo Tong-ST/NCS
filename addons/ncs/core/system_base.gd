@@ -187,6 +187,8 @@ func _evaluate_single_entity(config_node: Object, changed_script: Script = null)
 
 	var idx = config_pool.find(config_node)
 	var is_match = _matches_query(config_node)
+	var sys_name = name if not name.is_empty() else get_script().get_global_name()
+	print("[%s] _evaluate_single_entity: %s | Match: %s | Current Pool Idx: %d" % [sys_name, parent_body.name, is_match, idx])
 
 	if is_match:
 		if idx == -1:
@@ -223,6 +225,9 @@ func _handle_incremental_departure(config_node: Object) -> void:
 
 
 func _remove_entity_at_index(idx: int) -> void:
+	var sys_name = name if not name.is_empty() else get_script().get_global_name()
+	var ent_name = _entities[idx].name if idx < _entities.size() and is_instance_valid(_entities[idx]) else "Unknown"
+	print("[%s] _remove_entity_at_index: %s (idx: %d)" % [sys_name, ent_name, idx])
 	_entities.remove_at(idx)
 	config_pool.remove_at(idx)
 	for pool in _flat_data_pools:
@@ -270,6 +275,9 @@ func _update_query_filter() -> void:
 	config_pool = matching_configs
 	_flat_data_pools = new_flat_pools
 	_flat_node_pools = new_node_pools
+
+	var sys_name = name if not name.is_empty() else get_script().get_global_name()
+	print("[%s] _update_query_filter (BATCH REBUILD): %d matched out of %d active entities" % [sys_name, config_pool.size(), NCS.active_entities.size()])
 
 
 ## Triggers a single-entity re-evaluation when internal system state changes.
