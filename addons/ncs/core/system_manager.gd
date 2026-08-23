@@ -1,5 +1,5 @@
-# NCS global singleton (autoload as "NCS"). Owns the master entity list and all system refs.
-# Most calls come through EntityConfig (add_comp, remove_comp, add_data, remove_data).
+## Global singleton (autoload as "NCS").
+## Manages the active entity registry, system queries, and frame flush pipeline.
 extends Node
 
 ## Auto-detection threshold: if queued changes in a frame >= this threshold, batch re-query is used.
@@ -13,31 +13,32 @@ var _systems_list: Array[NCSSystemBase] = []
 var _active_entities_map: Dictionary = {}
 var _script_to_systems: Dictionary = {}
 
-# Command buffer & flush state.
+# Command buffer & flush queues
 var _command_queue: Array[Callable] = []
 var _dirty_entities: Dictionary = {}
 var _pending_registrations: Array[EntityConfig] = []
 var _pending_unregistrations: Array[Variant] = []
-var _is_updating: bool = false
-var _flush_scheduled: bool = false
-
-# Typed despawn queue — avoids per-entity lambda closure allocations.
 var _despawn_queue: Array[Node] = []
 
-# Typed method call queue — avoids per-entity lambda closure allocations for call_method_deferred.
+# Typed method call queue (zero closure allocations)
 var _method_call_configs: Array[EntityConfig] = []
 var _method_call_scripts: Array[Script] = []
 var _method_call_names: Array[StringName] = []
 var _method_call_args: Array[Array] = []
+
+var _is_updating: bool = false
+var _flush_scheduled: bool = false
 
 
 func _process(_delta: float) -> void:
 	if _flush_scheduled:
 		flush()
 
+
 func _physics_process(_delta: float) -> void:
 	if _flush_scheduled:
 		flush()
+
 
 # ==============================================================================
 # COMMAND BUFFER, METHOD CALLS & DIRTY MARKING
@@ -51,7 +52,7 @@ func push_command(command: Callable) -> void:
 	_schedule_flush()
 
 
-## Enqueues a typed component method call without allocating lambda closures.
+## Enqueues a component method call without allocating closures.
 func push_method_call(config: EntityConfig, comp_script: Script, method_name: StringName, args: Array = []) -> void:
 	if not is_instance_valid(config):
 		return
@@ -72,12 +73,14 @@ func mark_dirty(entity: Variant, changed_script: Script = null) -> void:
 		_dirty_entities[entity].append(changed_script)
 	_schedule_flush()
 
+
 # ==============================================================================
 # FLUSH PIPELINE (AUTO-DETECT BATCH VS INCREMENTAL)
 # ==============================================================================
 
 func set_updating_state(state: bool) -> void:
 	_is_updating = state
+
 
 func _schedule_flush() -> void:
 	if not _flush_scheduled:
@@ -89,7 +92,7 @@ func _schedule_flush() -> void:
 func flush() -> void:
 	_flush_scheduled = false
 
-	# Phase 1: Process typed method calls (zero closure allocations).
+	# 1. Process typed method calls
 	if not _method_call_configs.is_empty():
 		var configs = _method_call_configs
 		var scripts = _method_call_scripts
@@ -104,7 +107,7 @@ func flush() -> void:
 			if is_instance_valid(cfg):
 				cfg.call_method(scripts[i], names[i], args_list[i])
 
-	# Phase 2: Process structural commands (e.g. spawn instantiation commands).
+	# 2. Process structural commands (e.g. spawn lambdas)
 	if not _command_queue.is_empty():
 		var commands = _command_queue
 		_command_queue = []
@@ -112,7 +115,6 @@ func flush() -> void:
 			if cmd.is_valid():
 				cmd.call()
 
-	# Calculate total changes queued for this frame.
 	var total_changes: int = (
 			_despawn_queue.size()
 			+ _pending_unregistrations.size()
@@ -123,52 +125,13 @@ func flush() -> void:
 	if total_changes == 0:
 		return
 
-	# =========================================================================
-	# BATCH MODE (Changes >= MASS_UPDATE_THRESHOLD)
-	# Fast-path for mass spawns / mass despawns / mass mutations:
-	# single O(1) registry updates followed by ONE unified _remap_all pass.
-	# =========================================================================
-	if total_changes >= MASS_UPDATE_THRESHOLD:
+	var is_batch: bool = total_changes >= MASS_UPDATE_THRESHOLD
+	if is_batch:
 		print("[NCS SystemManager] Auto-detected MASS update (%d changes) -> Executing BATCH re-query" % total_changes)
+	else:
+		print("[NCS SystemManager] Auto-detected INCREMENTAL update (%d changes) -> Executing single evaluations" % total_changes)
 
-		if not _despawn_queue.is_empty():
-			var despawns = _despawn_queue
-			_despawn_queue = []
-			for target_node in despawns:
-				if not is_instance_valid(target_node):
-					continue
-				var config: EntityConfig = _extract_config(target_node)
-				var free_target: Node = _extract_free_target(target_node)
-				if is_instance_valid(config):
-					_unregister_from_active(config)
-				if is_instance_valid(free_target):
-					free_target.queue_free()
-
-		if not _pending_unregistrations.is_empty():
-			var unregs = _pending_unregistrations
-			_pending_unregistrations = []
-			for entity in unregs:
-				if is_instance_valid(entity):
-					_unregister_from_active(entity)
-
-		if not _pending_registrations.is_empty():
-			var regs = _pending_registrations
-			_pending_registrations = []
-			for entity in regs:
-				if is_instance_valid(entity):
-					_register_to_active(entity)
-
-		_dirty_entities.clear()
-		_remap_all_system_queries()
-		return
-
-	# =========================================================================
-	# INCREMENTAL MODE (Changes < MASS_UPDATE_THRESHOLD)
-	# Granular path for small changes: individual departures and candidate evaluations.
-	# =========================================================================
-	print("[NCS SystemManager] Auto-detected INCREMENTAL update (%d changes) -> Executing single evaluations" % total_changes)
-
-	# 1. Incremental Despawns
+	# Process despawn queue
 	if not _despawn_queue.is_empty():
 		var despawns = _despawn_queue
 		_despawn_queue = []
@@ -178,28 +141,40 @@ func flush() -> void:
 			var config: EntityConfig = _extract_config(target_node)
 			var free_target: Node = _extract_free_target(target_node)
 			if is_instance_valid(config):
-				_apply_entity_unregistration(config)
+				if is_batch:
+					_unregister_from_active(config)
+				else:
+					_apply_entity_unregistration(config)
 			if is_instance_valid(free_target):
 				free_target.queue_free()
 
-	# 2. Incremental Unregistrations
+	# Process unregistrations
 	if not _pending_unregistrations.is_empty():
 		var unregs = _pending_unregistrations
 		_pending_unregistrations = []
 		for entity in unregs:
 			if is_instance_valid(entity):
-				_apply_entity_unregistration(entity)
+				if is_batch:
+					_unregister_from_active(entity)
+				else:
+					_apply_entity_unregistration(entity)
 
-	# 3. Incremental Registrations
+	# Process registrations
 	if not _pending_registrations.is_empty():
 		var regs = _pending_registrations
 		_pending_registrations = []
 		for entity in regs:
 			if is_instance_valid(entity):
-				_apply_entity_registration(entity)
+				if is_batch:
+					_register_to_active(entity)
+				else:
+					_apply_entity_registration(entity)
 
-	# 4. Incremental Dirty Evaluations (add_comp, remove_comp, add_data, remove_data)
-	if not _dirty_entities.is_empty():
+	# Finalize Batch vs Incremental updates
+	if is_batch:
+		_dirty_entities.clear()
+		_remap_all_system_queries()
+	elif not _dirty_entities.is_empty():
 		var dirty_snapshot = _dirty_entities
 		_dirty_entities = {}
 		for entity in dirty_snapshot.keys():
@@ -237,7 +212,7 @@ func _unregister_from_active(entity: Variant) -> void:
 	_dirty_entities.erase(cfg)
 
 
-## Reliably extracts the EntityConfig node from any node format (flat, child, or property).
+## Extracts EntityConfig node from any node hierarchy or property binding.
 func _extract_config(node_or_config: Variant) -> EntityConfig:
 	if not is_instance_valid(node_or_config):
 		return null
@@ -261,11 +236,12 @@ func _extract_free_target(node_or_config: Variant) -> Node:
 		return node_or_config.get_parent() if node_or_config.get_parent() else node_or_config
 	return node_or_config as Node
 
+
 # ==============================================================================
 # ENTITY LIFECYCLE
 # ==============================================================================
 
-## Called by EntityConfig._enter_tree(). Do not call manually.
+## Registers an entity for evaluation during flush.
 func register_entity(entity: Variant) -> void:
 	if not is_instance_valid(entity) or not (entity is EntityConfig):
 		return
@@ -274,7 +250,7 @@ func register_entity(entity: Variant) -> void:
 		_schedule_flush()
 
 
-## Called by EntityConfig._exit_tree(). Do not call manually.
+## Unregisters an entity during flush.
 func unregister_entity(entity: Variant) -> void:
 	if not is_instance_valid(entity) or not (entity is EntityConfig):
 		return
@@ -310,12 +286,12 @@ func _apply_entity_unregistration(entity: Variant) -> void:
 	for sys in _systems_list:
 		sys._handle_incremental_departure(entity)
 
+
 # ==============================================================================
 # SPAWN & DESPAWN
 # ==============================================================================
 
-## Queues a node for despawn. Flushed at frame end.
-## Accepts EntityConfig or the entity root node (CharacterBody2D etc.).
+## Queues an entity or node for despawn at next flush.
 func despawn(node_or_config: Variant) -> void:
 	if not is_instance_valid(node_or_config):
 		return
@@ -329,7 +305,7 @@ func despawn(node_or_config: Variant) -> void:
 		_schedule_flush()
 
 
-## Safely spawns a 2D or 3D scene node without interrupting system ticks.
+## Safely instantiates and adds a 2D/3D entity to the scene tree.
 func spawn(
 		scene: PackedScene,
 		parent: Node,
@@ -363,11 +339,12 @@ func spawn(
 			setup_callback.call(instance)
 	)
 
+
 # ==============================================================================
 # SYSTEM REGISTRATION & CANDIDATE LOOKUPS
 # ==============================================================================
 
-## Registers a system into the world. Called automatically by NCSWorld.
+## Registers a system instance into the world.
 func register_system(system_name: String, system_instance: Node) -> void:
 	_systems[system_name] = system_instance
 	_systems_list.append(system_instance)
@@ -387,6 +364,7 @@ func register_system(system_name: String, system_instance: Node) -> void:
 			sys_list.append(system_instance)
 
 
+## Unregisters a system from the world.
 func unregister_system(system_name: String) -> void:
 	var system_instance = _systems.get(system_name)
 	if system_instance:
@@ -400,7 +378,7 @@ func unregister_system(system_name: String) -> void:
 	_systems.erase(system_name)
 
 
-## Returns systems that care about the entity's current components/data OR specific changed scripts.
+## Returns systems interested in the entity's components/data or changed scripts.
 func _get_candidate_systems_for(
 		entity: Variant,
 		changed_scripts: Array = []
@@ -430,7 +408,7 @@ func _get_candidate_systems_for(
 	return result
 
 
-## Returns a live system instance by class name, or null.
+## Returns a live system instance by name, or null.
 func get_system_by_name(system_name: String) -> Node:
 	return _systems.get(system_name, null)
 
