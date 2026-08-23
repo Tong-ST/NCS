@@ -29,9 +29,9 @@ texture = ExtResource("4_n1lqc")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1469912647]
 shape = SubResource("CircleShape2D_1yc37")
 
-[node name="NCSComponentsHub" type="Node" parent="." unique_id=614655683 node_paths=PackedStringArray("owner_node")]
+[node name="NCSComponentsHub" type="Node" parent="." unique_id=614655683 node_paths=PackedStringArray("entity")]
 script = ExtResource("5_daot8")
-owner_node = NodePath("..")
+entity = NodePath("..")
 metadata/_custom_type_script = "uid://bd5qdwgeah7so"
 
 [node name="CompPlayer" type="Node" parent="NCSComponentsHub" unique_id=1564120248]

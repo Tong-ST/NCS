@@ -29,18 +29,18 @@ func take_damage(amount: float) -> void:
 
 # This will run once this component was remove from entity.
 func _on_remove_comp() -> void:
-	print('Health component was removed from ', owner_node.name)
+	print('Health component was removed from ', entity.name)
 
 
 func _on_status_changed(status: Variant) -> void:
 	if status == "DEAD":
-		# Do something, Play anim, etc. then queue_free parent.
-		owner_node.queue_free()
+		# Safely despawn entity at the end of frame use NCS.despawn(target_node)
+		NCS.despawn(entity)
 
 
 func _on_posion_applied(_posion_data: NCSDataBase) -> void:
-	print(owner_node.name, " Get poison!")
+	print(entity.name, " Get poison!")
 
 
 func _on_posion_removed(_posion_data: NCSDataBase) -> void:
-	print("Poison was removed from ", owner_node.name)
+	print("Poison was removed from ", entity.name)

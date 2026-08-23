@@ -1,6 +1,6 @@
 ## Central folder hub node for grouping NCSComponentBase children on an entity.
 ## Add this as a child of your entity root (e.g. CharacterBody2D), then place
-## component nodes inside it. The hub auto-wires owner_node and config references
+## component nodes inside it. The hub auto-wires entity and config references
 ## to all child components on _ready.
 ##
 ## Editor validation: the hub runs configuration warnings if a component declares
@@ -11,7 +11,7 @@ extends NCSBase
 
 ## The physical body this hub's components operate on.
 ## Auto-resolved to the scene owner if left blank in the inspector.
-@export var owner_node: Node
+@export var entity: Node
 
 # Cached reference to the sibling EntityConfig node found at runtime.
 var config_node: EntityConfig
@@ -21,16 +21,16 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 
-	# Resolve owner_node from scene owner when not explicitly set in the inspector.
-	if not owner_node:
-		owner_node = owner
+	# Resolve entity from scene owner when not explicitly set in the inspector.
+	if not entity:
+		entity = owner
 
 	config_node = _find_config_node(get_parent())
 
-	# Push owner_node and config references down to every child component automatically.
+	# Push entity and config references down to every child component automatically.
 	for child in get_children():
 		if child is NCSComponentBase:
-			child.owner_node = owner_node
+			child.entity = entity
 			child.config = config_node
 			if child.has_method(&"_on_init_comp"):
 				child._on_init_comp()

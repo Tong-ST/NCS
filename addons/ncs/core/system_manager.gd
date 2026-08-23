@@ -53,11 +53,6 @@ func mark_dirty(entity: EntityConfig, changed_script: Script = null) -> void:
 
 	_schedule_flush()
 
-
-## Backwards-compatible alias for mark_dirty.
-func update_single_entity(entity: EntityConfig, changed_script: Script = null) -> void:
-	mark_dirty(entity, changed_script)
-
 # ==============================================================================
 # POST-FRAME FLUSH PIPELINE
 # ==============================================================================
@@ -76,7 +71,6 @@ func _schedule_flush() -> void:
 func flush() -> void:
 	_flush_scheduled = false
 
-	# Step 1: Execute all queued structural commands (lambdas, spawns, despawns)
 	if not _command_queue.is_empty():
 		var commands = _command_queue.duplicate()
 		_command_queue.clear()
@@ -84,21 +78,18 @@ func flush() -> void:
 			if cmd.is_valid():
 				cmd.call()
 
-	# Step 2: Flush pending registrations
 	if not _pending_registrations.is_empty():
 		var to_register = _pending_registrations.duplicate()
 		_pending_registrations.clear()
 		for entity in to_register:
 			_apply_entity_registration(entity)
 
-	# Step 3: Flush pending unregistrations
 	if not _pending_unregistrations.is_empty():
 		var to_unregister = _pending_unregistrations.duplicate()
 		_pending_unregistrations.clear()
 		for entity in to_unregister:
 			_apply_entity_unregistration(entity)
 
-	# Step 4: Unified Re-Query Sweep for Dirty Entities
 	if _dirty_entities.is_empty():
 		return
 
@@ -175,6 +166,62 @@ func _apply_entity_unregistration(entity: EntityConfig) -> void:
 	for sys in _systems.values():
 		if sys.has_method(&"_handle_incremental_departure"):
 			sys._handle_incremental_departure(entity)
+
+# ==============================================================================
+# LIFECYCLE & SPAWN/DESPAWN HELPERS
+# ==============================================================================
+
+## Despawns any Node or EntityConfig via command buffer.
+func despawn(node_or_config: Node) -> void:
+	if not is_instance_valid(node_or_config):
+		return
+
+	var target_node: Node = node_or_config
+	if node_or_config is EntityConfig:
+		target_node = node_or_config.entity if node_or_config.entity else node_or_config
+
+	push_command(func():
+		if is_instance_valid(target_node):
+			target_node.queue_free()
+	)
+
+
+## Instantiates and adds a scene tree node without interrupting system ticks.
+## Safely instantiates and adds a 2D or 3D scene tree node without interrupting system ticks.
+## Accepts Vector2, Vector3, Transform2D, or Transform3D for spatial positioning.
+func spawn(
+		scene: PackedScene,
+		parent: Node,
+		position_or_transform: Variant = null,
+		setup_callback: Callable = Callable()
+) -> void:
+	if not scene or not is_instance_valid(parent):
+		return
+
+	push_command(func():
+		if not is_instance_valid(parent):
+			return
+
+		var instance = scene.instantiate()
+
+		# Apply spatial transform based on instance and variant type
+		if position_or_transform != null:
+			if instance is Node3D:
+				if position_or_transform is Vector3:
+					instance.global_position = position_or_transform
+				elif position_or_transform is Transform3D:
+					instance.global_transform = position_or_transform
+			elif instance is Node2D:
+				if position_or_transform is Vector2:
+					instance.global_position = position_or_transform
+				elif position_or_transform is Transform2D:
+					instance.global_transform = position_or_transform
+
+		parent.add_child(instance)
+
+		if setup_callback.is_valid():
+			setup_callback.call(instance)
+	)
 
 # ==============================================================================
 # SYSTEM REGISTRATION & CANDIDATE LOOKUPS

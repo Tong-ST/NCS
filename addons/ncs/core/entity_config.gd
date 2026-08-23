@@ -248,7 +248,7 @@ func add_comp(comp_script: Script) -> void:
 	new_node.name = class_str if not class_str.is_empty() else "CompNew"
 	hub.add_child(new_node)
 	if new_node is NCSComponentBase:
-		new_node.owner_node = hub.owner_node
+		new_node.entity = hub.entity
 		new_node.config = self
 
 	_component_map[comp_script] = new_node as NCSComponentBase
@@ -294,6 +294,18 @@ func call_method(comp_script: Script, method_name: StringName, args: Array = [])
 		return true
 
 	return false
+
+
+## Calls a component method safely via command buffer if mid-frame.
+## Usage: config.call_method_deferred(CompHealth, &"take_damage", [20.0])
+func call_method_deferred(
+		comp_script: Script,
+		method_name: StringName,
+		args: Array = []
+) -> void:
+	NCS.push_command(func():
+		call_method(comp_script, method_name, args)
+	)
 
 # ==============================================================================
 # DATA LIFECYCLE WATCHERS
