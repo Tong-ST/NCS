@@ -258,7 +258,7 @@ func add_comp(comp_script: Script) -> void:
 	if new_node.has_method(&"_on_add_comp"):
 		new_node._on_add_comp()
 
-	NCS.update_single_entity(self, comp_script)
+	NCS.mark_dirty(self, comp_script)
 
 
 ## Removes a component at runtime and triggers deferred NCS re-query.
@@ -276,7 +276,7 @@ func remove_comp(comp_script: Script) -> void:
 		_active_component_scripts.erase(comp_script)
 		target_comp.name = "__DELETED_" + target_comp.name
 		target_comp.queue_free()
-		NCS.update_single_entity(self, comp_script)
+		NCS.mark_dirty(self, comp_script)
 
 
 ## Calls a method on a component node. Returns true if the call succeeded.
@@ -334,13 +334,12 @@ func add_data(data_script: Script) -> void:
 			data_array.append(new_data_instance)
 		_data_map[data_script] = new_data_instance
 
-		# Notify targeted watchers
 		if _data_added_watchers.has(data_script):
 			for callback in _data_added_watchers[data_script]:
 				if callback.is_valid():
 					callback.call(new_data_instance)
 
-		NCS.update_single_entity(self, data_script)
+		NCS.mark_dirty(self, data_script)
 
 
 ## Removes a data resource at runtime. Triggers deferred NCS re-query.
@@ -356,13 +355,12 @@ func remove_data(data_script: Script) -> void:
 		if data_array is Array:
 			data_array.erase(res)
 
-		# Notify targeted watchers
 		if _data_removed_watchers.has(data_script):
 			for callback in _data_removed_watchers[data_script]:
 				if callback.is_valid():
 					callback.call(res)
 
-		NCS.update_single_entity(self, data_script)
+		NCS.mark_dirty(self, data_script)
 
 
 # ==============================================================================

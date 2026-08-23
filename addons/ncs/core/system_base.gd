@@ -30,17 +30,21 @@ var _data_targets: Array[Script] = []
 func _ready() -> void:
 	setup_query()
 	_compile_interest_scripts()
+	_ensure_pools_initialized()
 	_update_query_filter.call_deferred()
 
 
 func _process(delta: float) -> void:
 	if not _entities.is_empty():
+		NCS.set_updating_state(true)
 		ncs_process(_entities, _flat_data_pools, _flat_node_pools, delta)
-
+		NCS.set_updating_state(false)
 
 func _physics_process(delta: float) -> void:
 	if not _entities.is_empty():
+		NCS.set_updating_state(true)
 		ncs_physics_process(_entities, _flat_data_pools, _flat_node_pools, delta)
+		NCS.set_updating_state(false)
 
 
 ## Override for render-tick logic (visuals, UI, camera sync).
@@ -92,6 +96,11 @@ func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
 func fetch_nodes(node_classes: Array) -> NCSSystemBase:
 	_node_targets = node_classes
 	return self
+
+
+## Helper to push structural mutation commands directly to NCS command buffer.
+func push_command(command: Callable) -> void:
+	NCS.push_command(command)
 
 
 ## Returns true if the entity passes all filters and has all iterated data blocks.
@@ -148,6 +157,19 @@ func _compile_interest_scripts() -> void:
 	interest_scripts.assign(unique_set.keys())
 
 
+## Guarantees sub-array pools match declared target counts even when empty.
+func _ensure_pools_initialized() -> void:
+	if _flat_data_pools.size() != _data_targets.size():
+		_flat_data_pools.clear()
+		for i in _data_targets.size():
+			_flat_data_pools.append([])
+
+	if _flat_node_pools.size() != _node_targets.size():
+		_flat_node_pools.clear()
+		for i in _node_targets.size():
+			_flat_node_pools.append([])
+
+
 ## Re-evaluates one entity after its components or data changed. Called by NCS deferred remap.
 ## Handles: newly matches (append), already matched (refresh data), no longer matches (remove).
 func _evaluate_single_entity(config_node: Object, changed_script: Script = null) -> void:
@@ -161,8 +183,11 @@ func _evaluate_single_entity(config_node: Object, changed_script: Script = null)
 	if not is_instance_valid(parent_body):
 		return
 
+	_ensure_pools_initialized()
+
 	var idx = config_pool.find(config_node)
 	var is_match = _matches_query(config_node)
+
 	if is_match:
 		if idx == -1:
 			parent_body.set(&"config", config_node)
@@ -170,8 +195,7 @@ func _evaluate_single_entity(config_node: Object, changed_script: Script = null)
 			config_pool.append(config_node as EntityConfig)
 			for pool_idx in _data_targets.size():
 				_flat_data_pools[pool_idx].append(
-						(config_node as EntityConfig)
-						.get_data(_data_targets[pool_idx])
+						(config_node as EntityConfig).get_data(_data_targets[pool_idx])
 				)
 			for pool_idx in _node_targets.size():
 				_flat_node_pools[pool_idx].append(
@@ -180,8 +204,7 @@ func _evaluate_single_entity(config_node: Object, changed_script: Script = null)
 		else:
 			for pool_idx in _data_targets.size():
 				_flat_data_pools[pool_idx][idx] = (
-						(config_node as EntityConfig)
-						.get_data(_data_targets[pool_idx])
+						(config_node as EntityConfig).get_data(_data_targets[pool_idx])
 				)
 			for pool_idx in _node_targets.size():
 				_flat_node_pools[pool_idx][idx] = (
@@ -189,24 +212,23 @@ func _evaluate_single_entity(config_node: Object, changed_script: Script = null)
 				)
 	else:
 		if idx != -1:
-			_entities.remove_at(idx)
-			config_pool.remove_at(idx)
-			for pool_idx in _flat_data_pools.size():
-				_flat_data_pools[pool_idx].remove_at(idx)
-			for pool_idx in _flat_node_pools.size():
-				_flat_node_pools[pool_idx].remove_at(idx)
+			_remove_entity_at_index(idx)
 
 
 ## Removal for a departing entity. Called by NCS.unregister_entity().
 func _handle_incremental_departure(config_node: Object) -> void:
 	var idx = config_pool.find(config_node)
 	if idx != -1:
-		_entities.remove_at(idx)
-		config_pool.remove_at(idx)
-		for pool_idx in _flat_data_pools.size():
-			_flat_data_pools[pool_idx].remove_at(idx)
-		for pool_idx in _flat_node_pools.size():
-			_flat_node_pools[pool_idx].remove_at(idx)
+		_remove_entity_at_index(idx)
+
+
+func _remove_entity_at_index(idx: int) -> void:
+	_entities.remove_at(idx)
+	config_pool.remove_at(idx)
+	for pool_idx in _flat_data_pools.size():
+		_flat_data_pools[pool_idx].remove_at(idx)
+	for pool_idx in _flat_node_pools.size():
+		_flat_node_pools[pool_idx].remove_at(idx)
 
 
 ## Full re-query sweep — rebuilds all parallel arrays from NCS.active_entities.
@@ -252,7 +274,7 @@ func _update_query_filter() -> void:
 
 ## Triggers a single-entity re-evaluation when internal system state changes.
 func signal_query_changed() -> void:
-	NCS.update_single_entity(
+	NCS.mark_dirty(
 		NCS.active_entities[0] if not NCS.active_entities.is_empty() else null
 	)
 
