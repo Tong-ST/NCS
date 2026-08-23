@@ -11,21 +11,21 @@ extends NCSBase
 @export var require_data: bool = false
 
 ## Points to the parent body (e.g. CharacterBody2D).
-var owner_node: Node
+var entity: Node
 ## Points to the sibling EntityConfig node.
 var config: EntityConfig
 
 
-## Execute at start when entity enter to scene-tree, with owner_node and config references.
+## Execute at start when entity enter to scene-tree, with entity and config references.
 func _on_init_comp() -> void:
 	pass
 
 
-## Execute when new component add to entity, owner_node and config will base on current entity.
+## Execute when new component add to entity, entity and config will base on current entity.
 func _on_add_comp() -> void:
 	pass
 
 
-## Execute when component was remove from entity, owner_node and config will base on last entity.
+## Execute when component was remove from entity, entity and config will base on last entity.
 func _on_remove_comp() -> void:
 	pass

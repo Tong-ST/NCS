@@ -3,15 +3,15 @@ extends NCSComponentBase
 
 
 # Original Godot _ready() run first at component enter scene-tree,
-# But will NOT have owner_node, config references yet.
+# But will NOT have entity, config references yet.
 func _ready() -> void:
 	print("GAME START!")
 
 
 # This will execute at start when entity enter to scene-tree,
-# with owner_node and config references.
+# with entity and config references.
 func _on_init_comp() -> void:
-	print(owner_node.name, " Is ready!, use WASD/Arrow keys to move")
+	print(entity.name, " Is ready!, use WASD/Arrow keys to move")
 	if config.has_data(DataHealth):
 		var health_data = config.get_data(DataHealth) as DataHealth
 		print("Current HP: ", health_data.current_health)

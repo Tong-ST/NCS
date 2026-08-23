@@ -14,6 +14,9 @@ var _data_map: Dictionary = {}
 var _component_map: Dictionary = {}
 var _active_component_scripts: Array[Script] = []
 
+# Prevents double-unregister when NCS.despawn() + queue_free both trigger _exit_tree.
+var _is_registered: bool = false
+
 # data watcher for changed, add, remove at runtime.
 var _data_watchers: Dictionary = {}
 var _data_added_watchers: Dictionary = {}
@@ -30,11 +33,14 @@ func _enter_tree() -> void:
 	_rebuild_data_cache()
 	_rebuild_component_cache()
 
+	_is_registered = true
 	NCS.register_entity(self)
 
 
 func _exit_tree() -> void:
-	NCS.unregister_entity(self)
+	if _is_registered:
+		_is_registered = false
+		NCS.unregister_entity(self)
 
 
 # ==============================================================================
@@ -248,7 +254,7 @@ func add_comp(comp_script: Script) -> void:
 	new_node.name = class_str if not class_str.is_empty() else "CompNew"
 	hub.add_child(new_node)
 	if new_node is NCSComponentBase:
-		new_node.owner_node = hub.owner_node
+		new_node.entity = hub.entity
 		new_node.config = self
 
 	_component_map[comp_script] = new_node as NCSComponentBase
@@ -258,7 +264,7 @@ func add_comp(comp_script: Script) -> void:
 	if new_node.has_method(&"_on_add_comp"):
 		new_node._on_add_comp()
 
-	NCS.update_single_entity(self, comp_script)
+	NCS.mark_dirty(self, comp_script)
 
 
 ## Removes a component at runtime and triggers deferred NCS re-query.
@@ -276,7 +282,7 @@ func remove_comp(comp_script: Script) -> void:
 		_active_component_scripts.erase(comp_script)
 		target_comp.name = "__DELETED_" + target_comp.name
 		target_comp.queue_free()
-		NCS.update_single_entity(self, comp_script)
+		NCS.mark_dirty(self, comp_script)
 
 
 ## Calls a method on a component node. Returns true if the call succeeded.
@@ -294,6 +300,16 @@ func call_method(comp_script: Script, method_name: StringName, args: Array = [])
 		return true
 
 	return false
+
+
+## Calls a component method safely via typed queue without closure allocations.
+## Usage: config.call_method_deferred(CompHealth, &"take_damage", [20.0])
+func call_method_deferred(
+		comp_script: Script,
+		method_name: StringName,
+		args: Array = []
+) -> void:
+	NCS.push_method_call(self, comp_script, method_name, args)
 
 # ==============================================================================
 # DATA LIFECYCLE WATCHERS
@@ -334,13 +350,12 @@ func add_data(data_script: Script) -> void:
 			data_array.append(new_data_instance)
 		_data_map[data_script] = new_data_instance
 
-		# Notify targeted watchers
 		if _data_added_watchers.has(data_script):
 			for callback in _data_added_watchers[data_script]:
 				if callback.is_valid():
 					callback.call(new_data_instance)
 
-		NCS.update_single_entity(self, data_script)
+		NCS.mark_dirty(self, data_script)
 
 
 ## Removes a data resource at runtime. Triggers deferred NCS re-query.
@@ -356,13 +371,12 @@ func remove_data(data_script: Script) -> void:
 		if data_array is Array:
 			data_array.erase(res)
 
-		# Notify targeted watchers
 		if _data_removed_watchers.has(data_script):
 			for callback in _data_removed_watchers[data_script]:
 				if callback.is_valid():
 					callback.call(res)
 
-		NCS.update_single_entity(self, data_script)
+		NCS.mark_dirty(self, data_script)
 
 
 # ==============================================================================

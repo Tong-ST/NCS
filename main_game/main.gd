@@ -18,9 +18,10 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	var fps = Performance.get_monitor(Performance.TIME_FPS)
 	var process_time = Performance.get_monitor(Performance.TIME_PROCESS) * 1000
+	var physics_time = Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000
 	var object_count = Performance.get_monitor(Performance.OBJECT_COUNT)
 
-	perf_counter.text = "FPS: %d\nProcess: %.2f ms\nObjects: %d" % [fps, process_time, object_count]
+	perf_counter.text = "FPS: %d\nProcess: %.2f ms\nPhysics Process: %.2f ms\nObjects: %d" % [fps, process_time, physics_time, object_count]
 
 
 func _on_ent_changed() -> void:
@@ -39,9 +40,14 @@ func _on_ncs_btn_pressed() -> void:
 		
 		for j in range(10):
 			var spawn_pos = player.global_position if player else Vector2.ZERO
-			var enemy = enemy_scene.instantiate() as Enemy
-			enemy.global_position = spawn_pos
-			add_child(enemy)
+			
+			# Safely spawn new entity to world use:
+			# NCS.spawn(scene, parent_node, position, custom_setup if needed)
+			NCS.spawn(enemy_scene, get_parent(), spawn_pos,
+				func(enemy_node: Enemy):
+					enemy_node.sprite_2d.modulate = Color.WHITE
+			)
+
 			total_ncs_count += 1
 			ent_changed.emit()
 
