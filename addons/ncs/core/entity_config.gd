@@ -13,6 +13,7 @@ var _components_hub_cache: NCSComponentsHub
 var _data_map: Dictionary = {}
 var _component_map: Dictionary = {}
 var _active_component_scripts: Array[Script] = []
+var _callable_cache: Dictionary = {}
 
 # Prevents double-unregister when NCS.despawn() + queue_free both trigger _exit_tree.
 var _is_registered: bool = false
@@ -65,6 +66,7 @@ func _rebuild_data_cache() -> void:
 func _rebuild_component_cache() -> void:
 	_component_map.clear()
 	_active_component_scripts.clear()
+	_callable_cache.clear()
 
 	var parent_body = get_parent()
 	if not parent_body:
@@ -285,31 +287,55 @@ func remove_comp(comp_script: Script) -> void:
 		NCS.mark_dirty(self, comp_script)
 
 
-## Calls a method on a component node. Returns true if the call succeeded.
-## Usage: config.call_method(CompHealth, &"take_damage", [20.0])
-func call_method(comp_script: Script, method_name: StringName, args: Array = []) -> bool:
+## Returns a cached Callable for a component method, or an invalid Callable if not found.
+func get_callable(comp_script: Script, method_name: StringName) -> Callable:
 	if not comp_script:
-		return false
+		return Callable()
+
+	if _callable_cache.has(comp_script):
+		var methods: Dictionary = _callable_cache[comp_script]
+		if methods.has(method_name):
+			return methods[method_name]
+	else:
+		_callable_cache[comp_script] = {}
 
 	var comp = get_comp(comp_script)
-	if not is_instance_valid(comp):
+	if is_instance_valid(comp) and comp.has_method(method_name):
+		var callable = Callable(comp, method_name)
+		_callable_cache[comp_script][method_name] = callable
+		return callable
+
+	return Callable()
+
+
+## Calls a method on a component node. Returns true if the call succeeded.
+## Usage: config.call_method(CompHealth, &"take_damage", 20.0)
+## call with multiple args use array e.g. [20.0, "other args", etc]
+func call_method(comp_script: Script, method_name: StringName, arg_or_args: Variant = null) -> bool:
+	var callable = get_callable(comp_script, method_name)
+	if not callable.is_valid():
 		return false
 
-	if comp.has_method(method_name):
-		comp.callv(method_name, args)
-		return true
-
-	return false
+	if arg_or_args == null:
+		callable.call()
+	elif arg_or_args is Array:
+		callable.callv(arg_or_args)
+	else:
+		callable.call(arg_or_args)
+	return true
 
 
 ## Calls a component method safely via typed queue without closure allocations.
-## Usage: config.call_method_deferred(CompHealth, &"take_damage", [20.0])
+## Usage: config.call_method_deferred(CompHealth, &"take_damage", 20.0)
+## call with multiple args use array e.g. [20.0, "other args", etc]
 func call_method_deferred(
 		comp_script: Script,
 		method_name: StringName,
-		args: Array = []
+		arg_or_args: Variant = null
 ) -> void:
-	NCS.push_method_call(self, comp_script, method_name, args)
+	var callable = get_callable(comp_script, method_name)
+	if callable.is_valid():
+		NCS.push_callable(callable, arg_or_args)
 
 # ==============================================================================
 # DATA LIFECYCLE WATCHERS

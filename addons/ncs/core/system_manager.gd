@@ -20,11 +20,9 @@ var _pending_registrations: Array[EntityConfig] = []
 var _pending_unregistrations: Array[Variant] = []
 var _despawn_queue: Array[Node] = []
 
-# Typed method call queue (zero closure allocations)
-var _method_call_configs: Array[EntityConfig] = []
-var _method_call_scripts: Array[Script] = []
-var _method_call_names: Array[StringName] = []
-var _method_call_args: Array[Array] = []
+## Typed callable queue (zero reflection & zero closure allocations)
+var _deferred_callables: Array[Callable] = []
+var _deferred_args: Array[Variant] = []
 
 var _is_updating: bool = false
 var _flush_scheduled: bool = false
@@ -52,14 +50,12 @@ func push_command(command: Callable) -> void:
 	_schedule_flush()
 
 
-## Enqueues a component method call without allocating closures.
-func push_method_call(config: EntityConfig, comp_script: Script, method_name: StringName, args: Array = []) -> void:
-	if not is_instance_valid(config):
+## Enqueues a pre-bound Callable for deferred execution without allocating closures.
+func push_callable(callable: Callable, arg_or_args: Variant = null) -> void:
+	if not callable.is_valid():
 		return
-	_method_call_configs.append(config)
-	_method_call_scripts.append(comp_script)
-	_method_call_names.append(method_name)
-	_method_call_args.append(args)
+	_deferred_callables.append(callable)
+	_deferred_args.append(arg_or_args)
 	_schedule_flush()
 
 
@@ -92,20 +88,22 @@ func _schedule_flush() -> void:
 func flush() -> void:
 	_flush_scheduled = false
 
-	# 1. Process typed method calls
-	if not _method_call_configs.is_empty():
-		var configs = _method_call_configs
-		var scripts = _method_call_scripts
-		var names = _method_call_names
-		var args_list = _method_call_args
-		_method_call_configs = []
-		_method_call_scripts = []
-		_method_call_names = []
-		_method_call_args = []
-		for i in configs.size():
-			var cfg = configs[i]
-			if is_instance_valid(cfg):
-				cfg.call_method(scripts[i], names[i], args_list[i])
+	# 1. Process deferred callables
+	if not _deferred_callables.is_empty():
+		var callables = _deferred_callables
+		var args_list = _deferred_args
+		_deferred_callables = []
+		_deferred_args = []
+		for i in callables.size():
+			var callable = callables[i]
+			if callable.is_valid():
+				var args = args_list[i]
+				if args == null:
+					callable.call()
+				elif args is Array:
+					callable.callv(args)
+				else:
+					callable.call(args)
 
 	# 2. Process structural commands (e.g. spawn lambdas)
 	if not _command_queue.is_empty():
@@ -126,10 +124,10 @@ func flush() -> void:
 		return
 
 	var is_batch: bool = total_changes >= MASS_UPDATE_THRESHOLD
-	if is_batch:
-		print("[NCS SystemManager] Auto-detected MASS update (%d changes) -> Executing BATCH re-query" % total_changes)
-	else:
-		print("[NCS SystemManager] Auto-detected INCREMENTAL update (%d changes) -> Executing single evaluations" % total_changes)
+#	if is_batch:
+#		print("[NCS SystemManager] Auto-detected MASS update (%d changes) -> Executing BATCH re-query" % total_changes)
+#	else:
+#		print("[NCS SystemManager] Auto-detected INCREMENTAL update (%d changes) -> Executing single evaluations" % total_changes)
 
 	# Process despawn queue
 	if not _despawn_queue.is_empty():

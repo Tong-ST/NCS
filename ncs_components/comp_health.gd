@@ -6,10 +6,13 @@ extends NCSComponentBase
 # For core logic that should share across all component write at SysSystem instead.
 signal on_damaged
 
+var health_data: DataHealth
+
 
 func _on_init_comp() -> void:
-	# NCS Observer pattern for signal base event.
-	config.watch_data(DataHealth, &"status", _on_status_changed)
+	health_data = config.get_data(DataHealth)
+	# NCS Observer pattern for event-based call.
+	config.watch_data(DataHealth, &"state", _on_state_changed)
 	config.watch_data_lifecycle(
 			DataPoisonStatus,
 			_on_posion_applied,
@@ -19,9 +22,11 @@ func _on_init_comp() -> void:
 
 # Example on create custom logic bind to this components
 func take_damage(amount: float) -> void:
-	# Example how to access data and manipulated via component itself.
-	if not config.has_data(DataHealth): return
-	var health_data = config.get_data(DataHealth) as DataHealth
+	if not health_data:
+		health_data = config.get_data(DataHealth)
+	
+	# This just for example, Recommend comp method to be Read-only to avoid conflict.
+	# Write to data as below should be in system.
 	if health_data:
 		health_data.current_health -= amount
 		on_damaged.emit()
@@ -32,8 +37,8 @@ func _on_remove_comp() -> void:
 	print('Health component was removed from ', entity.name)
 
 
-func _on_status_changed(status: Variant) -> void:
-	if status == "DEAD":
+func _on_state_changed(state: Variant) -> void:
+	if state == "DEAD":
 		# Safely despawn entity at the end of frame use NCS.despawn(target_node)
 		NCS.despawn(entity)
 
