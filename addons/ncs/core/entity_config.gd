@@ -262,6 +262,7 @@ func add_comp(comp_script: Script) -> void:
 	_component_map[comp_script] = new_node as NCSComponentBase
 	if not _active_component_scripts.has(comp_script):
 		_active_component_scripts.append(comp_script)
+	_callable_cache.erase(comp_script)
 
 	if new_node.has_method(&"_on_add_comp"):
 		new_node._on_add_comp()
@@ -282,6 +283,7 @@ func remove_comp(comp_script: Script) -> void:
 
 		_component_map.erase(comp_script)
 		_active_component_scripts.erase(comp_script)
+		_callable_cache.erase(comp_script)
 		target_comp.name = "__DELETED_" + target_comp.name
 		target_comp.queue_free()
 		NCS.mark_dirty(self, comp_script)
@@ -295,7 +297,9 @@ func get_callable(comp_script: Script, method_name: StringName) -> Callable:
 	if _callable_cache.has(comp_script):
 		var methods: Dictionary = _callable_cache[comp_script]
 		if methods.has(method_name):
-			return methods[method_name]
+			var cached: Callable = methods[method_name]
+			if cached.is_valid():
+				return cached
 	else:
 		_callable_cache[comp_script] = {}
 
