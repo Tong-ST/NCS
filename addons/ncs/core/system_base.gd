@@ -225,10 +225,10 @@ func _handle_incremental_departure(config_node: Object) -> void:
 func _remove_entity_at_index(idx: int) -> void:
 	_entities.remove_at(idx)
 	config_pool.remove_at(idx)
-	for pool_idx in _flat_data_pools.size():
-		_flat_data_pools[pool_idx].remove_at(idx)
-	for pool_idx in _flat_node_pools.size():
-		_flat_node_pools[pool_idx].remove_at(idx)
+	for pool in _flat_data_pools:
+		pool.remove_at(idx)
+	for pool in _flat_node_pools:
+		pool.remove_at(idx)
 
 
 ## Full re-query sweep — rebuilds all parallel arrays from NCS.active_entities.

@@ -7,6 +7,7 @@ const MASS_UPDATE_THRESHOLD: int = 500
 var active_entities: Array[EntityConfig] = []
 
 var _systems: Dictionary = {}
+var _systems_list: Array[NCSSystemBase] = []
 var _active_entities_map: Dictionary = {}
 var _script_to_systems: Dictionary = {}
 
@@ -152,20 +153,22 @@ func _apply_entity_registration(entity: EntityConfig) -> void:
 
 
 func _apply_entity_unregistration(entity: EntityConfig) -> void:
-	if _active_entities_map.has(entity):
-		var idx: int = _active_entities_map[entity]
-		var last_idx: int = active_entities.size() - 1
-		var last_entity: EntityConfig = active_entities[last_idx]
-		active_entities[idx] = last_entity
-		_active_entities_map[last_entity] = idx
-		active_entities.pop_back()
-		_active_entities_map.erase(entity)
+	if not _active_entities_map.has(entity):
+		return
+
+	var idx: int = _active_entities_map[entity]
+	var last_idx: int = active_entities.size() - 1
+	var last_entity: EntityConfig = active_entities[last_idx]
+	
+	active_entities[idx] = last_entity
+	_active_entities_map[last_entity] = idx
+	active_entities.pop_back()
+	_active_entities_map.erase(entity)
 
 	_dirty_entities.erase(entity)
 
-	for sys in _systems.values():
-		if sys.has_method(&"_handle_incremental_departure"):
-			sys._handle_incremental_departure(entity)
+	for sys in _systems_list:
+		sys._handle_incremental_departure(entity)
 
 # ==============================================================================
 # LIFECYCLE & SPAWN/DESPAWN HELPERS
@@ -177,10 +180,18 @@ func despawn(node_or_config: Node) -> void:
 		return
 
 	var target_node: Node = node_or_config
+	var config: EntityConfig = null
+
 	if node_or_config is EntityConfig:
 		target_node = node_or_config.entity if node_or_config.entity else node_or_config
+		config = node_or_config
+	elif target_node.get("config") is EntityConfig:
+		config = target_node.config
 
 	push_command(func():
+		if is_instance_valid(config):
+			_apply_entity_unregistration(config)
+			
 		if is_instance_valid(target_node):
 			target_node.queue_free()
 	)
@@ -230,6 +241,7 @@ func spawn(
 ## Registers a system into the world. Called automatically by NCSWorld.
 func register_system(system_name: String, system_instance: Node) -> void:
 	_systems[system_name] = system_instance
+	_systems_list.append(system_instance)
 	if system_instance.has_method(&"_update_query_filter"):
 		system_instance._update_query_filter()
 
@@ -249,6 +261,7 @@ func register_system(system_name: String, system_instance: Node) -> void:
 func unregister_system(system_name: String) -> void:
 	var system_instance = _systems.get(system_name)
 	if system_instance:
+		_systems_list.erase(system_instance)
 		for script in _script_to_systems.keys():
 			var sys_list: Array = _script_to_systems[script]
 			sys_list.erase(system_instance)
@@ -260,8 +273,9 @@ func unregister_system(system_name: String) -> void:
 
 ## Returns systems that care about the entity's current components/data OR specific changed scripts.
 func _get_candidate_systems_for(
-			entity: EntityConfig,
-			changed_scripts: Array = []) -> Array[NCSSystemBase]:
+		entity: EntityConfig,
+		changed_scripts: Array = []
+) -> Array[NCSSystemBase]:
 	if not is_instance_valid(entity):
 		return []
 
