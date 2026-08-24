@@ -3,7 +3,7 @@ extends SystemBase
 
 
 func setup_query() -> void:
-	with_all([CompMovement]) # filter entitie
+	with_all([CompMovement]) # filter entities
 	iterate_data([DataMovement, DataInput])  # caching data & filter all ent. must have these data.
 
 

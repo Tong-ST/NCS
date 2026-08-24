@@ -8,7 +8,6 @@
 [ext_resource type="Script" uid="uid://de35lmtvkng7k" path="res://ncs_components/comp_player.gd" id="6_3nkva"]
 [ext_resource type="Script" uid="uid://5gd7eowt31f7" path="res://ncs_components/comp_movement.gd" id="7_dkvjt"]
 [ext_resource type="Script" uid="uid://chjaq4g4jwye5" path="res://ncs_components/comp_health.gd" id="7_gg2rq"]
-[ext_resource type="Script" uid="uid://c17fu44cgwhlq" path="res://ncs_components/comp_input.gd" id="8_ewijn"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1yc37"]
 radius = 30.0
@@ -43,11 +42,6 @@ metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
 [node name="CompMovement" type="Node" parent="ComponentsHub" unique_id=839477585]
 script = ExtResource("7_dkvjt")
-require_data = true
-metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
-
-[node name="CompInput" type="Node" parent="ComponentsHub" unique_id=510378875]
-script = ExtResource("8_ewijn")
 require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 

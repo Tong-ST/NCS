@@ -3,7 +3,7 @@ extends SystemBase
 
 
 func setup_query() -> void:
-	with_all([CompInput]) # filter entities by components
+	with_all([DataInput]) # filter with just data.
 
 
 func ncs_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, _delta: float) -> void:

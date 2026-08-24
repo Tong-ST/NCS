@@ -6,7 +6,6 @@
 [ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="3_80f77"]
 [ext_resource type="Script" uid="uid://bd5qdwgeah7so" path="res://addons/ncs/core/components_hub.gd" id="4_qhlc3"]
 [ext_resource type="Script" uid="uid://5gd7eowt31f7" path="res://ncs_components/comp_movement.gd" id="5_b3gj3"]
-[ext_resource type="Script" uid="uid://c17fu44cgwhlq" path="res://ncs_components/comp_input.gd" id="6_cgx3m"]
 [ext_resource type="Script" uid="uid://fbak7uj16ldf" path="res://ncs_components/comp_enemy_ai.gd" id="7_pa6kk"]
 [ext_resource type="Script" uid="uid://chjaq4g4jwye5" path="res://ncs_components/comp_health.gd" id="9_cgx3m"]
 
@@ -35,11 +34,6 @@ shape = SubResource("CircleShape2D_1yc37")
 script = ExtResource("4_qhlc3")
 entity_node = NodePath("..")
 metadata/_custom_type_script = "uid://bd5qdwgeah7so"
-
-[node name="CompInput" type="Node" parent="ComponentsHub" unique_id=1497073893]
-script = ExtResource("6_cgx3m")
-require_data = true
-metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
 [node name="CompHealth" type="Node" parent="ComponentsHub" unique_id=1121043216]
 script = ExtResource("9_cgx3m")

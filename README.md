@@ -34,6 +34,7 @@ var velocity: Vector2 = Vector2.ZERO
 ```
 - Naming convention for ease of use and remember `DataName` for class_name, data_name.gd for template.
 
+
 ### 2. Component (Node)
 Components live in the scene tree under the `ComponentsHub` folder. They inherit from `ComponentBase` and handle localized, visual tasks (like playing a sound, triggering particles, or running a hit-flash color tween).
 
@@ -51,6 +52,7 @@ signal health_updated(current_hp: float)
 
 @export var sprite_2d: Sprite2D
 
+
 # Can also call from systems via config.call_method()
 func flash_red() -> void:
 	if is_instance_valid(sprite_2d):
@@ -65,6 +67,7 @@ func update_health() -> void:
 ```
 - Naming convention for ease of use and remember `CompComponent` for class_name, comp_component.gd for scripts.
 - Local Comp should focus on Read-Only from Data, And let system handle write to data.
+
 
 ### 3. System (Node)
 Systems are the "process" of your game architecture, Which will filter from components, to filtered arrays of entities, That you loop through and create game logic.
@@ -103,8 +106,11 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 			)
 		else:
 			move_data.velocity = move_data.velocity.move_toward(Vector2.ZERO, move_data.acceleration * delta)
-		ent.global_position += move_data.velocity * delta
+		# In real usecase Recommend to separate pure data calculation with scene-tree update.
+		ent.velocity = move_data.velocity
+		ent.move_and_slide()
 ```
+
 
 #### Runtime Component mutations via system.
 ```gdscript
@@ -119,19 +125,23 @@ if target_enemy_health <= 0:
 ```
 - Naming convention for ease of use and remember `SysSystem` for class_name, sys_system.gd for scripts.
 
+
 ### Query Filtering & Pre-fetched
 
 System queries are configured in `setup_query()` using method chaining. You can filter entities by their attached components and pre-fetch resources or scene nodes directly into process pools.
+
 
 #### Filtering Entities
 * `with_all([CompMove, CompInput])`: Entity **must have all** listed components/data.
 * `with_any([DataPoison, DataFreeze])`: Entity **must have at least one** of the listed components/data.
 * `with_not([CompDead, DataStun])`: Entity **must not have** any of the listed components/data.
 
+
 #### Pre-fetched Data & Nodes
 * `iterate_data([DataMove, DataInput])`: Populates `data_pools[n]` and all data must exist in entity, Act like `with_all()` filter for data.
 * `fetch_nodes([Sprite2D, AnimationPlayer])`: Populates `node_pools[n]` with references to optional internal sub-nodes (returns `null` if not found).
 * `config`: Built-in array providing direct access to each matched entity's `EntityConfig` without setup.
+
 
 #### Example
 ```gdscript
@@ -144,13 +154,11 @@ func setup_query() -> void:
     fetch_nodes([Sprite2D, AnimationPlayer])
 
 func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
-	var current_entities = entities as Array[CharacterBody2D] # Assigning CharacterBody2D if you need access to e.g. global_position, move_and_slide(), etc.
     var move_pool = data_pools[0] as Array[DataMovement]
     var sprite_pool = node_pools[0] as Array[Sprite2D]
     var anim_pool = node_pools[1] as Array[AnimationPlayer]
 
     for i in entities.size():
-		var ent = entities[i]
         var move_data = move_pool[i]
         var sprite = sprite_pool[i]
         var anim = anim_pool[i]
@@ -160,6 +168,7 @@ func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, de
             sprite.flip_h = move_data.velocity.x < 0
 ```
 - You can still do e.g. `ent.get_node_or_null("Sprite2D")`, `config[i].get_comp(CompMove), config[i].get_data(DataMove)` at process if you don't want pre-fetched, But make sure to safety check inside loop if you do dynamically fetch e.g. `if not move_data: continue`
+
 
 ### The layout on your game world
 To activate your systems and allow your entities to be tracked automatically, you use an NCSWorld node inside your main level scene.
@@ -181,6 +190,7 @@ Level_Main
 - In addons folder copy `ncs` to your godot project addons.
 - Enable plugin via Project>Plugin>NCS
 - Make sure `NCS` autoload enable via Project>Globals
+
 
 ## Recommendations
 - After you clone this project open Godot and import this project and to see full demo on how this plugin work.
