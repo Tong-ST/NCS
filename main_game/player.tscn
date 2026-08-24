@@ -32,8 +32,9 @@ shape = SubResource("CircleShape2D_1yc37")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=145551066]
 
-[node name="ComponentsHub" type="Node" parent="." unique_id=614655683]
+[node name="ComponentsHub" type="Node" parent="." unique_id=614655683 node_paths=PackedStringArray("entity_node")]
 script = ExtResource("5_daot8")
+entity_node = NodePath("..")
 metadata/_custom_type_script = "uid://bd5qdwgeah7so"
 
 [node name="CompPlayer" type="Node" parent="ComponentsHub" unique_id=1564120248]

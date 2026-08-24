@@ -27,7 +27,7 @@ func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, d
 		if poison.tick_timer >= poison.tick_interval:
 			poison.tick_timer -= poison.tick_interval
 			var new_hp = health.current_health - poison.damage_per_sec
-			config_pool[i].change_data(DataHealth, &"current_health", new_hp)
+			config[i].change_data(DataHealth, &"current_health", new_hp)
 
 		if poison.duration <= 0.0:
-			config_pool[i].remove_data(DataPoisonStatus)
+			config[i].remove_data(DataPoisonStatus)

@@ -10,7 +10,7 @@
 class_name ComponentsHub
 extends NCSBase
 
-## The physical body this hub's components operate on.
+## The Entity Node of this hub's components operate on.
 ## Auto-resolved to the scene owner if left blank in the inspector.
 @export var entity_node: Node
 

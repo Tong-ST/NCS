@@ -6,6 +6,8 @@ extends NCSBase
 
 ## Design-time blueprint resource. Set in the inspector. Never mutate at runtime.
 @export var base_config: NCSEntityDataSet
+## The Entity Node of this EntityConfig operate on.
+## Auto-resolved to the scene owner if left blank in the inspector.
 @export var entity_node: Node
 
 ## Per-entity isolated data copy created from base_config at spawn. Systems read/write here.
