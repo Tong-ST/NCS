@@ -75,18 +75,20 @@ extends SystemBase
 
 ## Query step filters and caches from components and data
 func setup_query() -> void:
-	with_all([CompMovement]).with_not([CompDead]) # filter for entities
+	with_all([CompMovement]).with_not([CompDead, DataStun]) # filter for entities, by components/data.
 	iterate_data([DataMovement, DataInput]) # caching data and all data must exist in entity.
 
 ## Iterated through all filtered entities.
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
+	# Assign CharacterBody2D, In-case you need specific access e.g. global_position, move_and_slide(), etc.
+	var current_entities = entities as Array[CharacterBody2D] 
 	var move_pool = data_pools[0] as Array[DataMovement] # allocated data pool.
 	var input_pool = data_pools[1] as Array[DataInput] # with index accordingly to iterate_data() above
 	
 	# Iterate through all entities
-	for i in entities.size():
+	for i in current_entities.size():
 		# allocate data for each entities
-		var ent = entities[i]
+		var ent = current_entities[i]
 		if not is_instance_valid(ent): continue
 
 		var move_data = move_pool[i]
@@ -107,14 +109,13 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 #### Runtime Component mutations via system.
 ```gdscript
 # Example your custom s_combat.gd system loop...
-var config = config_pool[i] # Get a config of each entity.
 
 if target_enemy_health <= 0:
-	config.add_comp(CompDead)
-	config.remove_comp(CompMovement)
+	config[i].add_comp(CompDead)
+	config[i].remove_comp(CompMovement)
 	
 	# Triggers a visual method in your local components.
-	config.call_method_deferred(CompHealth, &"flash_red")
+	config[i].call_method_deferred(CompHealth, &"flash_red")
 ```
 - Naming convention for ease of use and remember `SysSystem` for class_name, sys_system.gd for scripts.
 
@@ -130,7 +131,7 @@ System queries are configured in `setup_query()` using method chaining. You can 
 #### Pre-fetched Data & Nodes
 * `iterate_data([DataMove, DataInput])`: Populates `data_pools[n]` and all data must exist in entity, Act like `with_all()` filter for data.
 * `fetch_nodes([Sprite2D, AnimationPlayer])`: Populates `node_pools[n]` with references to optional internal sub-nodes (returns `null` if not found).
-* `config_pool`: Built-in array providing direct access to each matched entity's `EntityConfig` without setup.
+* `config`: Built-in array providing direct access to each matched entity's `EntityConfig` without setup.
 
 #### Example
 ```gdscript
@@ -153,12 +154,12 @@ func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, de
         var move_data = move_pool[i]
         var sprite = sprite_pool[i]
         var anim = anim_pool[i]
-        var config = config_pool[i] # Automatically accessible
+        var cfg = config[i] # Automatically accessible
 
         if move_data and sprite:
             sprite.flip_h = move_data.velocity.x < 0
 ```
-- You can still do e.g. `ent.get_node_or_null("Sprite2D")`, `config.get_comp(), config.get_data()` at process if you don't want pre-fetched, But make sure to safety check inside loop if you do dynamically fetch e.g. `if not move_data: continue`
+- You can still do e.g. `ent.get_node_or_null("Sprite2D")`, `config[i].get_comp(CompMove), config[i].get_data(DataMove)` at process if you don't want pre-fetched, But make sure to safety check inside loop if you do dynamically fetch e.g. `if not move_data: continue`
 
 ### The layout on your game world
 To activate your systems and allow your entities to be tracked automatically, you use an NCSWorld node inside your main level scene.
