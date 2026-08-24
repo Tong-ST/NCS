@@ -101,12 +101,15 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 		var current_input = input_data.movement_vector
 		if current_input != Vector2.ZERO:
 			move_data.velocity = move_data.velocity.move_toward(
-				current_input * move_data.max_speed, 
-				move_data.acceleration * delta
+					current_input * move_data.max_speed, 
+					move_data.acceleration * delta
 			)
 		else:
-			move_data.velocity = move_data.velocity.move_toward(Vector2.ZERO, move_data.acceleration * delta)
-		# In real usecase Recommend to separate pure data calculation with scene-tree update.
+			move_data.velocity = move_data.velocity.move_toward(
+					Vector2.ZERO,
+					move_data.acceleration * delta
+			)
+		# In real usecase Recommend to separate pure data calculation and scene-tree update.
 		ent.velocity = move_data.velocity
 		ent.move_and_slide()
 ```
@@ -162,7 +165,6 @@ func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, de
         var move_data = move_pool[i]
         var sprite = sprite_pool[i]
         var anim = anim_pool[i]
-        var cfg = config[i] # Automatically accessible
 
         if move_data and sprite:
             sprite.flip_h = move_data.velocity.x < 0
