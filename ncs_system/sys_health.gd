@@ -20,4 +20,4 @@ func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, _
 
 		if health_data.current_health <= 0:
 			# Change data and send signal to watch_data() in CompHealth.
-			config_pool[i].change_data(DataHealth, &"state", "DEAD")
+			config[i].change_data(DataHealth, &"state", "DEAD")

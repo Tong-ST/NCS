@@ -16,7 +16,7 @@ class_name SystemBase
 extends NCSBase
 
 ## Parallel array of EntityConfig nodes aligned with entities in this system.
-var config_pool: Array[EntityConfig] = []
+var config: Array[EntityConfig] = []
 
 ## Compiled list of all scripts (components & data) this system queries.
 var interest_scripts: Array[Script] = []
@@ -221,14 +221,14 @@ func _evaluate_single_entity(config_node: EntityConfig, changed_script: Script =
 
 	_ensure_pools_initialized()
 
-	var idx = config_pool.find(config_node)
+	var idx = config.find(config_node)
 	var is_match = _matches_query(config_node)
 
 	if is_match:
 		if idx == -1:
 			parent_body.set(&"config", config_node)
 			_entities.append(parent_body)
-			config_pool.append(config_node as EntityConfig)
+			config.append(config_node as EntityConfig)
 			for pool_idx in _data_targets.size():
 				_flat_data_pools[pool_idx].append(
 						(config_node as EntityConfig).get_data(_data_targets[pool_idx])
@@ -253,14 +253,14 @@ func _evaluate_single_entity(config_node: EntityConfig, changed_script: Script =
 
 ## Removal for a departing entity. Called by NCS.unregister_entity().
 func _handle_incremental_departure(config_node: Object) -> void:
-	var idx = config_pool.find(config_node)
+	var idx = config.find(config_node)
 	if idx != -1:
 		_remove_entity_at_index(idx)
 
 
 func _remove_entity_at_index(idx: int) -> void:
 	_entities.remove_at(idx)
-	config_pool.remove_at(idx)
+	config.remove_at(idx)
 	for pool in _flat_data_pools:
 		pool.remove_at(idx)
 	for pool in _flat_node_pools:
@@ -303,7 +303,7 @@ func _update_query_filter() -> void:
 				new_node_pools[pool_idx].append(_find_node_in_entity(parent_body, _node_targets[pool_idx]))
 
 	_entities = matching_bodies
-	config_pool = matching_configs
+	config = matching_configs
 	_flat_data_pools = new_flat_pools
 	_flat_node_pools = new_node_pools
 
