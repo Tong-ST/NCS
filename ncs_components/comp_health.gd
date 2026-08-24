@@ -1,5 +1,5 @@
 class_name CompHealth
-extends NCSComponentBase
+extends ComponentBase
 
 # You can still write logic on component script, But keep logic that need to...
 # interact with local node, e.g. Update UI, Emit VFX, Local specific, etc.
@@ -32,20 +32,25 @@ func take_damage(amount: float) -> void:
 		on_damaged.emit()
 
 
-# This will run once this component was remove from entity.
+# This will run once this component was add to entity at runtime, via config.add_comp()
+func _on_add_comp() -> void:
+	pass
+
+
+# This will run once this component was remove from entity, via config.remove_comp()
 func _on_remove_comp() -> void:
-	print('Health component was removed from ', entity.name)
+	print('Health component was removed from ', entity_node.name)
 
 
 func _on_state_changed(state: Variant) -> void:
 	if state == "DEAD":
 		# Safely despawn entity at the end of frame use NCS.despawn(target_node)
-		NCS.despawn(entity)
+		NCS.despawn(entity_node)
 
 
 func _on_posion_applied(_posion_data: NCSDataBase) -> void:
-	print(entity.name, " Get poison!")
+	print(entity_node.name, " Get poison!")
 
 
 func _on_posion_removed(_posion_data: NCSDataBase) -> void:
-	print("Poison was removed from ", entity.name)
+	print("Poison was removed from ", entity_node.name)

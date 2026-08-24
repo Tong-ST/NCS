@@ -1,6 +1,6 @@
 ## Base class for all NCS data resources (Data* naming convention).
 ## Extend this to define per-entity runtime data (e.g. DataHealth, DataMovement).
-## Instances live inside NCSEntityDataSet.data_sets and are duplicate per-entity at spawn.
+## Instances live inside NCSEntityDataSet.data_sets and are duplicated per-entity at spawn.
 class_name NCSDataBase
 extends Resource
 

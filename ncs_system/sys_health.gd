@@ -1,5 +1,5 @@
 class_name SysHealth
-extends NCSSystemBase
+extends SystemBase
 
 
 func setup_query() -> void:

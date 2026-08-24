@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="NCSEntityDataSet" format=3 uid="uid://d4mnm3blci3ky"]
+
+[ext_resource type="Script" uid="uid://cc42ojsffnknx" path="res://addons/ncs/templates/ncs_data_base.gd" id="1_xb54g"]
+[ext_resource type="Script" uid="uid://bcrp0alk1qht4" path="res://ncs_data/data_input.gd" id="2_lr3kf"]
+[ext_resource type="Script" uid="uid://x18cyu72de8c" path="res://ncs_data/data_health.gd" id="3_qe6nc"]
+[ext_resource type="Script" uid="uid://bdl22fmu0u6e5" path="res://ncs_data/data_movement.gd" id="4_oesor"]
+[ext_resource type="Script" uid="uid://cahdo7ajcu48f" path="res://addons/ncs/templates/ncs_entity_data_set.gd" id="5_x18ir"]
+
+[sub_resource type="Resource" id="Resource_gg2rq"]
+script = ExtResource("2_lr3kf")
+metadata/_custom_type_script = "uid://bcrp0alk1qht4"
+
+[sub_resource type="Resource" id="Resource_d214i"]
+script = ExtResource("3_qe6nc")
+max_health = 200.0
+current_health = 200.0
+metadata/_custom_type_script = "uid://x18cyu72de8c"
+
+[sub_resource type="Resource" id="Resource_3nkva"]
+script = ExtResource("4_oesor")
+max_speed = 350.0
+metadata/_custom_type_script = "uid://bdl22fmu0u6e5"
+
+[resource]
+script = ExtResource("5_x18ir")
+data_sets = Array[ExtResource("1_xb54g")]([SubResource("Resource_gg2rq"), SubResource("Resource_d214i"), SubResource("Resource_3nkva")])
+metadata/_custom_type_script = "uid://cahdo7ajcu48f"

@@ -1,2 +1,2 @@
 class_name CompEnemyAI
-extends NCSComponentBase
+extends ComponentBase

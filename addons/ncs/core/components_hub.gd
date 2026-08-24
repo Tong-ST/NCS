@@ -1,40 +1,49 @@
-## Central folder hub node for grouping NCSComponentBase children on an entity.
+## Central folder hub node for grouping ComponentBase children on an entity.
 ## Add this as a child of your entity root (e.g. CharacterBody2D), then place
 ## component nodes inside it. The hub auto-wires entity and config references
 ## to all child components on _ready.
 ##
-## Editor validation: the hub runs configuration warnings if a component declares
-## require_data=true but the matching Data* resource is absent from the EntityConfig data_sets.
+## Editor validation: checks if a component declares require_data=true
+## and validates that the matching Data* resource is present in EntityConfig.
 @tool
-class_name NCSComponentsHub
+@icon("res://addons/ncs/icons/diagram-project-solid-full.svg")
+class_name ComponentsHub
 extends NCSBase
 
 ## The physical body this hub's components operate on.
 ## Auto-resolved to the scene owner if left blank in the inspector.
-@export var entity: Node
+@export var entity_node: Node
 
 # Cached reference to the sibling EntityConfig node found at runtime.
 var config_node: EntityConfig
 
+
+# ==============================================================================
+# RUNTIME INITIALIZATION
+# ==============================================================================
 
 func _ready() -> void:
 	if Engine.is_editor_hint():
 		return
 
 	# Resolve entity from scene owner when not explicitly set in the inspector.
-	if not entity:
-		entity = owner
+	if not entity_node:
+		entity_node = owner
 
-	config_node = _find_config_node(get_parent())
+	config_node = _find_config_node(entity_node)
 
 	# Push entity and config references down to every child component automatically.
 	for child in get_children():
-		if child is NCSComponentBase:
-			child.entity = entity
+		if child is ComponentBase:
+			child.entity_node = entity_node
 			child.config = config_node
 			if child.has_method(&"_on_init_comp"):
 				child._on_init_comp()
 
+
+# ==============================================================================
+# EDITOR VALIDATION & WARNINGS
+# ==============================================================================
 
 func _enter_tree() -> void:
 	if Engine.is_editor_hint():
@@ -62,7 +71,6 @@ func _on_editor_context_changed() -> void:
 	update_configuration_warnings()
 
 
-## Fires on child drag-and-drop or reorder so the warning panel stays up to date.
 func _notification(what: int) -> void:
 	if not Engine.is_editor_hint():
 		return
@@ -73,17 +81,16 @@ func _notification(what: int) -> void:
 
 ## Editor validation: checks that every component with require_data=true has a matching
 ## Data* resource in the sibling EntityConfig's data_sets array.
-## Runs on the editor's 0.5-second heartbeat tick and on property edits.
 func _get_configuration_warnings() -> PackedStringArray:
 	var warnings = PackedStringArray()
 	if not Engine.is_editor_hint():
 		return warnings
 
-	var editor_config = _find_config_node(get_parent())
+	var editor_config = _find_config_node(entity_node)
 	if not editor_config:
 		return warnings
 
-	# Build a fast lookup list of data class names currently in the config array.
+	# Fast lookup list of data class names currently in the config array.
 	var available_data_classes: Array[String] = []
 	if editor_config.base_config:
 		var raw_data_sets = editor_config.base_config.get(&"data_sets")
@@ -102,27 +109,22 @@ func _get_configuration_warnings() -> PackedStringArray:
 		if "require_data" in child and child.get(&"require_data") == true:
 			var script = child.get_script()
 			if not script:
-				warnings.append(
-						"NCS Layout Error: Node [" + child.name + "]
-						has 'Require Data' enabled but does not have a script attached! 
-						All components require a type class script."
-				)
+				warnings.append("NCS Layout Error: Node [%s] has 'Require Data' enabled but does not have a script attached! All components require a type class script." % child.name)
 				continue
 
-			# Derive expected resource name: CompMovement -> DataMovement.
 			var script_class_name = script.get_global_name()
 			if not script_class_name.is_empty():
 				var base_identity = script_class_name.replace("Component", "")
-				var expected_data_class_1 = base_identity.replace("Comp", "Data")
-				if not available_data_classes.has(expected_data_class_1):
-					warnings.append(
-							"NCS Configuration Error: Component class [" + script_class_name + "]
-							explicitly requires a Data Resource named [" + expected_data_class_1 + "],
-							but it's missing from your EntityConfig array!"
-					)
+				var expected_data_class = base_identity.replace("Comp", "Data")
+				if not available_data_classes.has(expected_data_class):
+					warnings.append("NCS Configuration Error: Component class [%s] explicitly requires a Data Resource named [%s], but it's missing from your EntityConfig array!" % [script_class_name, expected_data_class])
 
 	return warnings
 
+
+# ==============================================================================
+# INTERNAL HELPERS
+# ==============================================================================
 
 ## Searches the immediate parent and its direct children for a sibling EntityConfig node.
 func _find_config_node(start_node: Node) -> EntityConfig:

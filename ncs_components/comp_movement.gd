@@ -1,2 +1,2 @@
 class_name CompMovement
-extends NCSComponentBase
+extends ComponentBase
