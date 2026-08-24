@@ -4,7 +4,7 @@
 ## And this example try simulate of object off-screen they still change position
 ## But only update physics/visual position when on-screen.
 class_name SysVisual
-extends NCSSystemBase
+extends SystemBase
 
 
 func setup_query() -> void:

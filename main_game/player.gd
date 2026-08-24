@@ -3,8 +3,8 @@ extends CharacterBody2D
 
 @onready var sprite_2d: Sprite2D = $Sprite2D
 @onready var entity_config: EntityConfig = $EntityConfig
-@onready var comp_player: CompPlayer = $NCSComponentsHub/CompPlayer
-@onready var comp_health: CompHealth = $NCSComponentsHub/CompHealth
+@onready var comp_player: CompPlayer = $ComponentsHub/CompPlayer
+@onready var comp_health: CompHealth = $ComponentsHub/CompHealth
 
 
 func _ready() -> void:

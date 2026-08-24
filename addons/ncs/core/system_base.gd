@@ -1,31 +1,42 @@
 ## Base class for all NCS systems. Extend this, override setup_query() to declare filters,
 ## then override ncs_process / ncs_physics_process to run per-frame logic on matched entities.
-# Quick setup:
-#   func setup_query() -> void:
-#       with_all([CompMovement]).with_not([CompDead])
-#       iterate_data([DataMovement])
-#
-#   func ncs_physics_process(entities, data_pools, delta):
-#       for i in entities.size():
-#           var move = data_pools[0][i] as DataMovement
-#           entities[i].velocity = move.direction * move.speed
-#           entities[i].move_and_slide()
-class_name NCSSystemBase
+##
+## Quick Example:
+##   func setup_query() -> void:
+##       with_all([CompMovement]).with_not([CompDead])
+##       iterate_data([DataMovement])
+##
+##   func ncs_physics_process(entities, data_pools, node_pools, delta):
+##       for i in entities.size():
+##           var move = data_pools[0][i] as DataMovement
+##           entities[i].velocity = move.direction * move.speed
+##           entities[i].move_and_slide()
+@icon("res://addons/ncs/icons/gears-solid-full.svg")
+class_name SystemBase
 extends NCSBase
 
+## Parallel array of EntityConfig nodes aligned with entities in this system.
 var config_pool: Array[EntityConfig] = []
+
+## Compiled list of all scripts (components & data) this system queries.
 var interest_scripts: Array[Script] = []
 
+# Internal parallel entity and pool arrays
 var _entities: Array[Node] = []
 var _flat_data_pools: Array[Array] = []
 var _node_targets: Array = []
 var _flat_node_pools: Array[Array] = []
 
+# Internal query filter definitions
 var _all_filters: Array[Script] = []
 var _any_filters: Array[Script] = []
 var _not_filters: Array[Script] = []
 var _data_targets: Array[Script] = []
 
+
+# ==============================================================================
+# BUILT-IN VIRTUAL METHODS
+# ==============================================================================
 
 func _ready() -> void:
 	setup_query()
@@ -40,6 +51,7 @@ func _process(delta: float) -> void:
 		ncs_process(_entities, _flat_data_pools, _flat_node_pools, delta)
 		NCS.set_updating_state(false)
 
+
 func _physics_process(delta: float) -> void:
 	if not _entities.is_empty():
 		NCS.set_updating_state(true)
@@ -47,8 +59,17 @@ func _physics_process(delta: float) -> void:
 		NCS.set_updating_state(false)
 
 
+# ==============================================================================
+# VIRTUAL SYSTEM AUTHOR OVERRIDES
+# ==============================================================================
+
+## Override to declare query filters and data pre-fetch targets. Called once on _ready.
+func setup_query() -> void:
+	pass
+
+
 ## Override for render-tick logic (visuals, UI, camera sync).
-## entities[i] and data_pools[n][i] are always index-aligned.
+## entities[i], data_pools[n][i], and node_pools[n][i] are always index-aligned.
 func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
 	pass
 
@@ -59,49 +80,63 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, node_pools: A
 	pass
 
 
-## Override to declare query filters and data pre-fetch targets. Called once on _ready.
-func setup_query() -> void:
-	pass
-
+# ==============================================================================
+# PUBLIC QUERY BUILDER API (CHAINABLE)
+# ==============================================================================
 
 ## Entity must have ALL listed component types to match this system.
 ## Returns self for chaining: with_all([CompMove]).with_not([CompDead])
-func with_all(type_scripts: Array[Script]) -> NCSSystemBase:
+func with_all(type_scripts: Array[Script]) -> SystemBase:
 	_all_filters = type_scripts
 	return self
 
 
-## Entity must have any listed component types to match this system.
+## Entity must have AT LEAST ONE of the listed component types to match this system.
 ## Returns self for chaining: with_any([CompPoison, CompFreeze]).with_not([CompDead])
-func with_any(type_scripts: Array[Script]) -> NCSSystemBase:
+func with_any(type_scripts: Array[Script]) -> SystemBase:
 	_any_filters = type_scripts
 	return self
 
 
 ## Entity must have NONE of the listed component types to match.
-func with_not(type_scripts: Array[Script]) -> NCSSystemBase:
+func with_not(type_scripts: Array[Script]) -> SystemBase:
 	_not_filters = type_scripts
 	return self
 
 
-## Pre-fetch data into data_pools and Entity must have all data required to exist in system.
+## Pre-fetches data into data_pools and requires entity to possess all listed data types.
 ## Usage: iterate_data([DataMovement, DataHealth]) -> data_pools[0] = DataMovement, [1] = DataHealth
-func iterate_data(data_classes: Array[Script]) -> NCSSystemBase:
+func iterate_data(data_classes: Array[Script]) -> SystemBase:
 	_data_targets = data_classes
 	return self
 
 
-## Pre-fetch Nodes (e.g., Sprite2D, AnimationPlayer) into node_pools.
+## Pre-fetches child Nodes (e.g. Sprite2D, AnimationPlayer) into node_pools.
 ## Usage: fetch_nodes([Sprite2D, AnimationPlayer])
-func fetch_nodes(node_classes: Array) -> NCSSystemBase:
+func fetch_nodes(node_classes: Array) -> SystemBase:
 	_node_targets = node_classes
 	return self
 
+
+# ==============================================================================
+# PUBLIC UTILITIES
+# ==============================================================================
 
 ## Helper to push structural mutation commands directly to NCS command buffer.
 func push_command(command: Callable) -> void:
 	NCS.push_command(command)
 
+
+## Triggers a single-entity re-evaluation when internal system state changes.
+func signal_query_changed() -> void:
+	NCS.mark_dirty(
+		NCS.active_entities[0] if not NCS.active_entities.is_empty() else null
+	)
+
+
+# ==============================================================================
+# PRIVATE QUERY EVALUATION & ARRAY SYNCHRONIZATION
+# ==============================================================================
 
 ## Returns true if the entity passes all filters and has all iterated data blocks.
 func _matches_query(config_node: Object) -> bool:
@@ -112,7 +147,7 @@ func _matches_query(config_node: Object) -> bool:
 	if not cfg.is_inside_tree():
 		return false
 
-	var parent_body = cfg.get_parent()
+	var parent_body = cfg.entity_node
 	if not is_instance_valid(parent_body):
 		return false
 
@@ -142,16 +177,18 @@ func _matches_query(config_node: Object) -> bool:
 
 ## Helper: Checks if entity possesses either a Component Node or a Data Resource.
 func _entity_has_type(cfg: EntityConfig, type_script: Script) -> bool:
-	if not type_script: return false
+	if not type_script:
+		return false
 	return cfg.has_comp(type_script) or cfg.has_data(type_script)
 
 
-## Compiles all scripts this system cares about.
+## Compiles all unique scripts this system cares about.
 func _compile_interest_scripts() -> void:
 	var unique_set: Dictionary = {}
 	for list in [_all_filters, _any_filters, _not_filters, _data_targets]:
 		for script in list:
-			if script: unique_set[script] = true
+			if script:
+				unique_set[script] = true
 
 	interest_scripts.clear()
 	interest_scripts.assign(unique_set.keys())
@@ -171,15 +208,14 @@ func _ensure_pools_initialized() -> void:
 
 
 ## Re-evaluates one entity after its components or data changed. Called by NCS deferred remap.
-## Handles: newly matches (append), already matched (refresh data), no longer matches (remove).
-func _evaluate_single_entity(config_node: Object, changed_script: Script = null) -> void:
+func _evaluate_single_entity(config_node: EntityConfig, changed_script: Script = null) -> void:
 	if not is_instance_valid(config_node) or not (config_node is EntityConfig):
 		return
 
 	if changed_script and not interest_scripts.has(changed_script):
 		return
 
-	var parent_body = config_node.get_parent()
+	var parent_body = config_node.entity_node
 	if not is_instance_valid(parent_body):
 		return
 
@@ -251,7 +287,7 @@ func _update_query_filter() -> void:
 		if not is_instance_valid(config_node):
 			continue
 
-		var parent_body = config_node.get_parent()
+		var parent_body = config_node.entity_node
 		if not is_instance_valid(parent_body):
 			continue
 
@@ -272,20 +308,7 @@ func _update_query_filter() -> void:
 	_flat_node_pools = new_node_pools
 
 
-## Triggers a single-entity re-evaluation when internal system state changes.
-func signal_query_changed() -> void:
-	NCS.mark_dirty(
-		NCS.active_entities[0] if not NCS.active_entities.is_empty() else null
-	)
-
-
-## One-off data fetch outside the main loop.
-## Prefer data fetching inside ncs_process e.g. var health_pool = data_pools[0] as Array[DataHealth]
-func _find_data_by_script(ent: EntityConfig, target_script: Script) -> NCSDataBase:
-	return ent.get_data(target_script)
-
-
-## Helper: Locates node instance on parent_body (first direct child match, then recursive)
+## Helper: Locates node instance on parent_body (first direct child match, then recursive).
 func _find_node_in_entity(parent_body: Node, target_type: Variant) -> Node:
 	if not is_instance_valid(parent_body):
 		return null

@@ -1,5 +1,5 @@
 class_name SysMovement
-extends NCSSystemBase
+extends SystemBase
 
 
 func setup_query() -> void:

@@ -1,5 +1,5 @@
 class_name CompPlayer
-extends NCSComponentBase
+extends ComponentBase
 
 var input_data: DataInput
 var health_data: DataHealth
@@ -17,7 +17,7 @@ func _ready() -> void:
 # with entity and config references.
 func _on_init_comp() -> void:
 	input_data = config.get_data(DataInput)
-	print(entity.name, " Is ready!, use WASD/Arrow keys to move")
+	print(entity_node.name, " Is ready!, use WASD/Arrow keys to move")
 
 	health_data = config.get_data(DataHealth)
 	if config.has_data(DataHealth):

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://wc4knsp52liy" path="res://main_game/player.gd" id="1_slu23"]
 [ext_resource type="Script" uid="uid://fn1jf75ey4vw" path="res://addons/ncs/core/entity_config.gd" id="2_xiktl"]
-[ext_resource type="Resource" uid="uid://d4mnm3blci3ky" path="res://main_game/player_data.tres" id="3_b5qb4"]
+[ext_resource type="Resource" uid="uid://d4mnm3blci3ky" path="res://ncs_data/player_data_sets.tres" id="3_b5qb4"]
 [ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="4_n1lqc"]
 [ext_resource type="Script" uid="uid://bd5qdwgeah7so" path="res://addons/ncs/core/components_hub.gd" id="5_daot8"]
 [ext_resource type="Script" uid="uid://de35lmtvkng7k" path="res://ncs_components/comp_player.gd" id="6_3nkva"]
@@ -16,9 +16,10 @@ radius = 30.0
 [node name="Player" type="CharacterBody2D" unique_id=1562561095 groups=["player"]]
 script = ExtResource("1_slu23")
 
-[node name="EntityConfig" type="Node" parent="." unique_id=428631012]
+[node name="EntityConfig" type="Node" parent="." unique_id=428631012 node_paths=PackedStringArray("entity_node")]
 script = ExtResource("2_xiktl")
 base_config = ExtResource("3_b5qb4")
+entity_node = NodePath("..")
 metadata/_custom_type_script = "uid://fn1jf75ey4vw"
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=54292582]
@@ -29,28 +30,27 @@ texture = ExtResource("4_n1lqc")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1469912647]
 shape = SubResource("CircleShape2D_1yc37")
 
-[node name="NCSComponentsHub" type="Node" parent="." unique_id=614655683 node_paths=PackedStringArray("entity")]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=145551066]
+
+[node name="ComponentsHub" type="Node" parent="." unique_id=614655683]
 script = ExtResource("5_daot8")
-entity = NodePath("..")
 metadata/_custom_type_script = "uid://bd5qdwgeah7so"
 
-[node name="CompPlayer" type="Node" parent="NCSComponentsHub" unique_id=1564120248]
+[node name="CompPlayer" type="Node" parent="ComponentsHub" unique_id=1564120248]
 script = ExtResource("6_3nkva")
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
-[node name="CompMovement" type="Node" parent="NCSComponentsHub" unique_id=839477585]
+[node name="CompMovement" type="Node" parent="ComponentsHub" unique_id=839477585]
 script = ExtResource("7_dkvjt")
 require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
-[node name="CompInput" type="Node" parent="NCSComponentsHub" unique_id=510378875]
+[node name="CompInput" type="Node" parent="ComponentsHub" unique_id=510378875]
 script = ExtResource("8_ewijn")
 require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
-[node name="CompHealth" type="Node" parent="NCSComponentsHub" unique_id=148448412]
+[node name="CompHealth" type="Node" parent="ComponentsHub" unique_id=148448412]
 script = ExtResource("7_gg2rq")
 require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
-
-[node name="Camera2D" type="Camera2D" parent="." unique_id=145551066]

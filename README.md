@@ -4,8 +4,8 @@
 Data-Oriented design bridge for Godot. This plugin are NOT try to be Pure ECS framework, But aim to make ECS workflow in godot with less friction and encourage user to build good architect with hybrid approach.
 
 ## Core
-- Entity: Normal godot reuseable scene e.g. Player, Enemy, etc.
-- Data: Pure variable container untilize godot Resource, without any logic.
+- Entity: Normal godot reuseable scene e.g. Player, CharacterBody2D, etc.
+- Data: Pure variable container for data resource, without any logic.
 - Components: A Tag for query by system and reuseable logics focus on local scene.
 - System: Isolate node that process system-wide logic which need to share across the your game world.
 
@@ -13,11 +13,11 @@ Data-Oriented design bridge for Godot. This plugin are NOT try to be Pure ECS fr
 ## How this work
 ### The Ideal scene tree layout
 ```text
-Enemy (Entity can be Char2d, Node, etc.)
+Enemy (Entity can be CharacterBody2D, Node3D, etc.)
 |-- EntityConfig (Data container)
 |-- Sprite2D, etc.
-|-- NCSComponentsHub (Hub for all comp.)
-	|-- CompMovement (Every comp need a script with/without logic)
+|-- ComponentsHub (Hub for all comp.)
+	|-- CompMovement (Every comp need a script and class_name with/without logic)
 	|-- CompInput
 ```
 
@@ -35,7 +35,7 @@ var velocity: Vector2 = Vector2.ZERO
 - Naming convention for ease of use and remember `DataName` for class_name, data_name.gd for template.
 
 ### 2. Component (Node)
-Components live in the scene tree under the `NCSComponentsHub` folder. They inherit from `NCSComponentBase` and handle localized, visual tasks (like playing a sound, triggering particles, or running a hit-flash color tween).
+Components live in the scene tree under the `ComponentsHub` folder. They inherit from `ComponentBase` and handle localized, visual tasks (like playing a sound, triggering particles, or running a hit-flash color tween).
 
 ```gdscript
 # You can put logics in component with Native godot style.
@@ -45,7 +45,7 @@ Components live in the scene tree under the `NCSComponentsHub` folder. They inhe
 # Make habit of Read-only from DataName to avoid conflict with SysSystem. 
 
 class_name CompHealth
-extends NCSComponentBase
+extends ComponentBase
 
 signal health_updated(current_hp: float)
 
@@ -64,20 +64,21 @@ func update_health() -> void:
 	health_updated.emit(health_data.current_health)
 ```
 - Naming convention for ease of use and remember `CompComponent` for class_name, comp_component.gd for scripts.
+- Local Comp should focus on Read-Only from Data, And let system handle write to data.
 
 ### 3. System (Node)
 Systems are the "process" of your game architecture, Which will filter from components, to filtered arrays of entities, That you loop through and create game logic.
 
 ```gdscript
 class_name SysMovement
-extends NCSSystemBase
+extends SystemBase
 
-## Step 1: Query step filters and caches from components and data
+## Query step filters and caches from components and data
 func setup_query() -> void:
 	with_all([CompMovement]).with_not([CompDead]) # filter for entities
 	iterate_data([DataMovement, DataInput]) # caching data and all data must exist in entity.
 
-## Step 2: Process the linear data stream sequentially
+## Iterated through all filtered entities.
 func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float) -> void:
 	var move_pool = data_pools[0] as Array[DataMovement] # allocated data pool.
 	var input_pool = data_pools[1] as Array[DataInput] # with index accordingly to iterate_data() above
@@ -113,7 +114,7 @@ if target_enemy_health <= 0:
 	config.remove_comp(CompMovement)
 	
 	# Triggers a visual method in your local components.
-	config.call_method(CompHealth, &"flash_red")
+	config.call_method_deferred(CompHealth, &"flash_red")
 ```
 - Naming convention for ease of use and remember `SysSystem` for class_name, sys_system.gd for scripts.
 
@@ -122,27 +123,27 @@ if target_enemy_health <= 0:
 System queries are configured in `setup_query()` using method chaining. You can filter entities by their attached components and pre-fetch resources or scene nodes directly into process pools.
 
 #### Filtering Entities
-* `with_all([CompMove, CompInput])`: Entity **must have all** listed components.
-* `with_any([CompPoison, CompFreeze])`: Entity **must have at least one** of the listed components.
-* `with_not([CompDead])`: Entity **must not have** any of the listed components.
+* `with_all([CompMove, CompInput])`: Entity **must have all** listed components/data.
+* `with_any([DataPoison, DataFreeze])`: Entity **must have at least one** of the listed components/data.
+* `with_not([CompDead, DataStun])`: Entity **must not have** any of the listed components/data.
 
 #### Pre-fetched Data & Nodes
-* `iterate_data([DataMove, DataInput])`: Populates `data_pools[n]` and all data must exist in entity.
+* `iterate_data([DataMove, DataInput])`: Populates `data_pools[n]` and all data must exist in entity, Act like `with_all()` filter for data.
 * `fetch_nodes([Sprite2D, AnimationPlayer])`: Populates `node_pools[n]` with references to optional internal sub-nodes (returns `null` if not found).
 * `config_pool`: Built-in array providing direct access to each matched entity's `EntityConfig` without setup.
 
 #### Example
 ```gdscript
 class_name SysRender
-extends NCSSystemBase
+extends SystemBase
 
 func setup_query() -> void:
-    with_all([CompMovement]).with_any([CompPoison, CompFreeze]).with_not([CompDead])
+    with_all([CompMovement]).with_any([DataPoison, DataFreeze]).with_not([CompDead, DataStun])
     iterate_data([DataMovement])
     fetch_nodes([Sprite2D, AnimationPlayer])
 
 func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
-	var current_entities = entities as Array[CharacterBody2D]
+	var current_entities = entities as Array[CharacterBody2D] # Assigning CharacterBody2D if you need access to e.g. global_position, move_and_slide(), etc.
     var move_pool = data_pools[0] as Array[DataMovement]
     var sprite_pool = node_pools[0] as Array[Sprite2D]
     var anim_pool = node_pools[1] as Array[AnimationPlayer]
@@ -157,7 +158,7 @@ func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, de
         if move_data and sprite:
             sprite.flip_h = move_data.velocity.x < 0
 ```
-- You can still do e.g. `ent.get_node_or_null("Sprite2D")` at process if you don't want pre-fetched.
+- You can still do e.g. `ent.get_node_or_null("Sprite2D")`, `config.get_comp(), config.get_data()` at process if you don't want pre-fetched, But make sure to safety check inside loop if you do dynamically fetch e.g. `if not move_data: continue`
 
 ### The layout on your game world
 To activate your systems and allow your entities to be tracked automatically, you use an NCSWorld node inside your main level scene.
@@ -180,11 +181,11 @@ Level_Main
 - Enable plugin via Project>Plugin>NCS
 - Make sure `NCS` autoload enable via Project>Globals
 
-## Recommendation
+## Recommendations
 - After you clone this project open Godot and import this project and to see full demo on how this plugin work.
 - You may not expect to gain huge performance boost from this plugin, Just unified architecture it is.
 
 
-### Credit
+### Credits & Contibute
 - This project inspired by [GECS](https://github.com/csprance/gecs) awesome ECS framework for godot
 - Currently develop and maintain by me (GoodyWolf), If interest to contibute contact me at goodywolf101@gmail.com

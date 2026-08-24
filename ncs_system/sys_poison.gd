@@ -1,5 +1,5 @@
 class_name SysPoison
-extends NCSSystemBase
+extends SystemBase
 
 
 func setup_query() -> void:

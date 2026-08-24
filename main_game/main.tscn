@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://dtcdyejtk5tte" path="res://ncs_system/sys_input.gd" id="2_qofrp"]
 [ext_resource type="Script" uid="uid://bjse0r78t1isb" path="res://ncs_system/sys_enemy_ai.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://cdjdifkshhe0h" path="res://addons/ncs/core/ncs_world.gd" id="3_lquwl"]
+[ext_resource type="Script" uid="uid://c0y46lat7jj6i" path="res://addons/ncs/core/systems_folder.gd" id="3_sayuc"]
 [ext_resource type="Script" uid="uid://ckc1tfcgccqis" path="res://ncs_system/sys_movement.gd" id="5_7mycd"]
 [ext_resource type="Script" uid="uid://c881o8prnc4sy" path="res://ncs_system/sys_visual.gd" id="6_vis01"]
 [ext_resource type="Script" uid="uid://dujjf8rblw47w" path="res://ncs_system/sys_health.gd" id="8_d214i"]
@@ -19,7 +20,9 @@ script = ExtResource("1_xvufe")
 script = ExtResource("3_lquwl")
 metadata/_custom_type_script = "uid://cdjdifkshhe0h"
 
-[node name="CoreLoops" type="Node" parent="NCSWorld" unique_id=1229781815]
+[node name="CoreLoops" type="Node" parent="NCSWorld" unique_id=1347318745]
+script = ExtResource("3_sayuc")
+metadata/_custom_type_script = "uid://c0y46lat7jj6i"
 
 [node name="SysInput" type="Node" parent="NCSWorld/CoreLoops" unique_id=1787844853]
 script = ExtResource("2_qofrp")
@@ -30,7 +33,9 @@ script = ExtResource("5_7mycd")
 [node name="SysVisual" type="Node" parent="NCSWorld/CoreLoops" unique_id=892314561]
 script = ExtResource("6_vis01")
 
-[node name="GameplaySystems" type="Node" parent="NCSWorld" unique_id=1640213077]
+[node name="GameplaySystems" type="Node" parent="NCSWorld" unique_id=144024365]
+script = ExtResource("3_sayuc")
+metadata/_custom_type_script = "uid://c0y46lat7jj6i"
 
 [node name="SysEnemyAI" type="Node" parent="NCSWorld/GameplaySystems" unique_id=540796171]
 script = ExtResource("3_h2yge")
