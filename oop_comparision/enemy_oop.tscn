@@ -7,6 +7,7 @@
 [ext_resource type="Script" uid="uid://bo5dimpulo4vc" path="res://oop_comparision/movement_oop.gd" id="5_7g2n3"]
 [ext_resource type="Script" uid="uid://dh1jd0j6jpmmj" path="res://oop_comparision/health_oop.gd" id="6_xp3d8"]
 [ext_resource type="Script" uid="uid://mon5kikkshe6" path="res://oop_comparision/visual_oop.gd" id="7_vis01"]
+[ext_resource type="Script" uid="uid://cy1cdtqe63y8x" path="res://oop_comparision/status_effect_oop.gd" id="8_stat0"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1yc37"]
 radius = 20.0
@@ -31,9 +32,10 @@ script = ExtResource("4_yjegb")
 actor = NodePath("../..")
 input_comp = NodePath("../InputOOP")
 
-[node name="InputOOP" type="Node" parent="Components" unique_id=411934081 node_paths=PackedStringArray("health_comp")]
+[node name="InputOOP" type="Node" parent="Components" unique_id=411934081 node_paths=PackedStringArray("health_comp", "status_effect_comp")]
 script = ExtResource("3_ed0q7")
 health_comp = NodePath("../HealthOOP")
+status_effect_comp = NodePath("../StatusEffectOOP")
 
 [node name="MovementOOP" type="Node" parent="Components" unique_id=1872130734 node_paths=PackedStringArray("actor", "input_comp")]
 script = ExtResource("5_7g2n3")
@@ -43,6 +45,11 @@ input_comp = NodePath("../InputOOP")
 [node name="HealthOOP" type="Node" parent="Components" unique_id=1357518366 node_paths=PackedStringArray("actor")]
 script = ExtResource("6_xp3d8")
 actor = NodePath("../..")
+
+[node name="StatusEffectOOP" type="Node" parent="Components" unique_id=1984729101 node_paths=PackedStringArray("actor", "health_comp")]
+script = ExtResource("8_stat0")
+actor = NodePath("../..")
+health_comp = NodePath("../HealthOOP")
 
 [node name="VisualOOP" type="Node" parent="Components" unique_id=1648291023 node_paths=PackedStringArray("actor")]
 script = ExtResource("7_vis01")

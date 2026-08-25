@@ -194,6 +194,11 @@ Level_Main
 - Make sure `NCS` autoload enable via Project>Globals
 
 
+## Use with AI Agents
+- If you're develop a game with AI agents you can add [SKILL.md](.agents/skills/ncs/SKILL.md) to your AI agents.
+- SKILL.md also act as developer cheatsheet, You can get overview of this project workflow there.
+
+
 ## Recommendations
 - After you clone this project open Godot and import this project and to see full demo on how this plugin work.
 - You may not expect to gain huge performance boost from this plugin, Just unified architecture it is.

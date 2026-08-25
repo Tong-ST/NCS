@@ -21,7 +21,8 @@ func ncs_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, 
 		if deal_damage:
 			# Recommend to use call_method_deferred for safely defer action to end of frame.
 			# More command e.g. add_comp, remove_comp, add_data, remove_data, etc.
-			config[i].call_method_deferred(CompHealth, &"take_damage", [20])
+			# If want to pass multiple args use Array[args] e.g. [20, status, ...]
+			config[i].call_method_deferred(CompHealth, &"take_damage", 20)
 
 		# Add data at runtime
 		if add_posion:

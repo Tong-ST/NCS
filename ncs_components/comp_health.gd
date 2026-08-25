@@ -30,7 +30,7 @@ func take_damage(amount: float) -> void:
 	# Use change data will also send signal to watch_data().
 	var new_health = health_data.current_health - amount
 	config.change_data(DataHealth, &"current_health", new_health)
-	# Use change_data() may heavy than doing just heath_data.current_health = new_health
+	# Use change_data() will heavy than doing just heath_data.current_health = new_health
 	# Recommend to use on event-base property and avoid every-frame use.
 
 	# send godot native signal.

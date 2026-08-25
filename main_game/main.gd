@@ -68,7 +68,6 @@ func _on_oop_btn_pressed() -> void:
 			var enemy = enemy_scene.instantiate() as EnemyOOP
 			enemy.global_position = spawn_pos
 			add_child(enemy)
-			enemy.health_oop.take_damage(0)
 			total_oop_count += 1
 			ent_changed.emit()
 
