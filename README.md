@@ -189,9 +189,10 @@ Level_Main
 
 ## Installation
 - Clone this git or download zip.
-- In addons folder copy `ncs` to your godot project addons.
-- Enable plugin via Project>Plugin>NCS
-- Make sure `NCS` autoload enable via Project>Globals
+- In addons folder copy `ncs` or Download from [Release](https://github.com/Tong-ST/NCS/releases)
+- Put it into your godot project addons/ folder
+- Enable plugin via Project->Plugin->NCS
+- Make sure `NCS` autoload enable via Project->Globals
 
 
 ## Use with AI Agents
