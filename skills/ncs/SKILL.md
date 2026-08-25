@@ -1,5 +1,5 @@
 ---
-name: ncs-framework-guide
+name: ncs
 description: Comprehensive architecture guide, design patterns, rules, and cheatsheet for building games with the NCS (Node-based Component System) framework in Godot 4.
 ---
 

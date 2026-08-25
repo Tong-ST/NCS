@@ -19,6 +19,7 @@ var _data_map: Dictionary = {}
 var _component_map: Dictionary = {}
 var _active_component_scripts: Array[Script] = []
 var _callable_cache: Dictionary = {}
+var _type_set: Dictionary = {}
 
 # Internal lifecycle and watcher tables
 var _is_registered: bool = false
@@ -73,8 +74,8 @@ func get_data(data_script: Script) -> NCSDataBase:
 		data_block = _data_map.get(data_script, null) as NCSDataBase
 
 	if not is_instance_valid(data_block):
-		var entity_name = entity_node.name
-		var scene_path = entity_node.scene_file_path if entity_node.scene_file_path else "Runtime Spawned Entity"
+		var entity_name = entity_node.name if entity_node else name
+		var scene_path = entity_node.scene_file_path if entity_node and entity_node.scene_file_path else "Runtime Spawned Entity"
 		var class_str = data_script.get_global_name() if not data_script.get_global_name().is_empty() else "UnnamedScript"
 		push_error("NCS Error: Entity '%s' is missing data block -> [%s]. Check scene: [%s]" % [entity_name, class_str, scene_path])
 		return null
@@ -94,13 +95,20 @@ func get_comp(comp_script: Script) -> ComponentBase:
 		comp = _component_map.get(comp_script, null) as ComponentBase
 
 	if not is_instance_valid(comp):
-		var entity_name = entity_node.name
-		var scene_path = entity_node.scene_file_path if entity_node.scene_file_path else "Runtime Spawned Entity"
+		var entity_name = entity_node.name if entity_node else name
+		var scene_path = entity_node.scene_file_path if entity_node and entity_node.scene_file_path else "Runtime Spawned Entity"
 		var class_str = comp_script.get_global_name() if not comp_script.get_global_name().is_empty() else "UnnamedScript"
 		push_warning("NCS Warning: Entity '%s' requested missing component -> [%s]. Check hub layout: [%s]" % [entity_name, class_str, scene_path])
 		return null
 
 	return comp
+
+
+## Returns true if this entity possesses either a Component Node or a Data Resource of the given type in O(1).
+func has_type(type_script: Script) -> bool:
+	if not type_script:
+		return false
+	return _type_set.has(type_script)
 
 
 ## Returns true if this entity currently has the given data resource type.
@@ -164,6 +172,7 @@ func get_callable(comp_script: Script, method_name: StringName) -> Callable:
 # ==============================================================================
 
 ## Safely updates a field on an existing data resource in one line. Returns true if successful.
+## Zero-allocation fast path when no watchers are registered on this entity.
 ## Usage: config.change_data(DataMovement, &"max_speed", 300.0)
 func change_data(data_script: Script, property_name: StringName, new_value: Variant) -> bool:
 	var data_block: NCSDataBase = _data_map.get(data_script, null)
@@ -175,12 +184,14 @@ func change_data(data_script: Script, property_name: StringName, new_value: Vari
 
 	data_block.set(property_name, new_value)
 
-	var watchers_for_data: Dictionary = _data_watchers.get(data_script, {})
-	var callbacks: Array = watchers_for_data.get(property_name, [])
-	
-	for callback: Callable in callbacks:
-		if callback.is_valid():
-			callback.call(new_value)
+	if not _data_watchers.is_empty():
+		var watchers_for_data = _data_watchers.get(data_script)
+		if watchers_for_data != null:
+			var callbacks = watchers_for_data.get(property_name)
+			if callbacks != null:
+				for callback in callbacks:
+					if (callback as Callable).is_valid():
+						(callback as Callable).call(new_value)
 	return true
 
 
@@ -245,6 +256,7 @@ func add_comp(comp_script: Script) -> void:
 	_component_map[comp_script] = new_node as ComponentBase
 	if not _active_component_scripts.has(comp_script):
 		_active_component_scripts.append(comp_script)
+	_type_set[comp_script] = true
 	_callable_cache.erase(comp_script)
 
 	if new_node.has_method(&"_on_add_comp"):
@@ -266,6 +278,7 @@ func remove_comp(comp_script: Script) -> void:
 
 		_component_map.erase(comp_script)
 		_active_component_scripts.erase(comp_script)
+		_type_set.erase(comp_script)
 		_callable_cache.erase(comp_script)
 		target_comp.name = "__DELETED_" + target_comp.name
 		target_comp.queue_free()
@@ -284,6 +297,7 @@ func add_data(data_script: Script) -> void:
 		if data_array is Array:
 			data_array.append(new_data_instance)
 		_data_map[data_script] = new_data_instance
+		_type_set[data_script] = true
 
 		if _data_added_watchers.has(data_script):
 			for callback in _data_added_watchers[data_script]:
@@ -302,6 +316,7 @@ func remove_data(data_script: Script) -> void:
 	var res = _data_map.get(data_script, null)
 	if res:
 		_data_map.erase(data_script)
+		_type_set.erase(data_script)
 		var data_array = runtime_config.get(&"data_sets")
 		if data_array is Array:
 			data_array.erase(res)
@@ -348,8 +363,11 @@ func call_method_deferred(
 # PRIVATE CACHE REBUILDS & HELPERS
 # ==============================================================================
 
-## Rebuilds _data_map from runtime_config.data_sets. Called after spawn/data mutations.
+## Rebuilds _data_map and syncs _type_set from runtime_config.data_sets.
 func _rebuild_data_cache() -> void:
+	# Clear previous data keys from _type_set
+	for old_script in _data_map:
+		_type_set.erase(old_script)
 	_data_map.clear()
 
 	if not runtime_config:
@@ -359,11 +377,16 @@ func _rebuild_data_cache() -> void:
 	if data_array is Array:
 		for res in data_array:
 			if is_instance_valid(res) and res.get_script():
-				_data_map[res.get_script()] = res
+				var script = res.get_script()
+				_data_map[script] = res
+				_type_set[script] = true
 
 
-## Rebuilds _component_map by scanning the entity tree.
+## Rebuilds _component_map and syncs _type_set by scanning the entity tree.
 func _rebuild_component_cache() -> void:
+	# Clear previous component keys from _type_set
+	for old_script in _component_map:
+		_type_set.erase(old_script)
 	_component_map.clear()
 	_active_component_scripts.clear()
 	_callable_cache.clear()
@@ -379,6 +402,7 @@ func _rebuild_component_cache() -> void:
 		if script:
 			_component_map[script] = child as ComponentBase
 			_active_component_scripts.append(script)
+			_type_set[script] = true
 
 		if child is ComponentsHub or child.name == "ComponentsHub":
 			_components_hub_cache = child as ComponentsHub
@@ -391,6 +415,7 @@ func _rebuild_component_cache() -> void:
 					_component_map[sub_script] = sub_child as ComponentBase
 					if not _active_component_scripts.has(sub_script):
 						_active_component_scripts.append(sub_script)
+					_type_set[sub_script] = true
 
 
 ## Returns the ComponentsHub node. Uses cached ref; falls back to tree scan on miss.

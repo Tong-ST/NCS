@@ -23,6 +23,12 @@ var _pending_registrations: Array[EntityConfig] = []
 var _pending_unregistrations: Array[Variant] = []
 var _despawn_queue: Array[Node] = []
 
+# Typed spawn queue (zero closure allocations)
+var _spawn_scenes: Array[PackedScene] = []
+var _spawn_parents: Array[Node] = []
+var _spawn_positions: Array[Variant] = []
+var _spawn_callbacks: Array[Callable] = []
+
 # Typed callable queue (zero reflection & zero closure allocations)
 var _deferred_callables: Array[Callable] = []
 var _deferred_args: Array[Variant] = []
@@ -50,7 +56,7 @@ func _physics_process(_delta: float) -> void:
 # PUBLIC SPAWN & DESPAWN API
 # ==============================================================================
 
-## Safely instantiates and adds a 2D/3D entity to the scene tree.
+## Safely instantiates and adds a 2D/3D entity to the scene tree via zero-allocation typed queue.
 func spawn(
 		scene: PackedScene,
 		parent: Node,
@@ -60,29 +66,11 @@ func spawn(
 	if not scene or not is_instance_valid(parent):
 		return
 
-	push_command(func():
-		if not is_instance_valid(parent):
-			return
-
-		var instance = scene.instantiate()
-
-		if position_or_transform != null:
-			if instance is Node3D:
-				if position_or_transform is Vector3:
-					instance.global_position = position_or_transform
-				elif position_or_transform is Transform3D:
-					instance.global_transform = position_or_transform
-			elif instance is Node2D:
-				if position_or_transform is Vector2:
-					instance.global_position = position_or_transform
-				elif position_or_transform is Transform2D:
-					instance.global_transform = position_or_transform
-
-		parent.add_child(instance)
-
-		if setup_callback.is_valid():
-			setup_callback.call(instance)
-	)
+	_spawn_scenes.append(scene)
+	_spawn_parents.append(parent)
+	_spawn_positions.append(position_or_transform)
+	_spawn_callbacks.append(setup_callback)
+	_schedule_flush()
 
 
 ## Queues an entity or node for despawn at next flush.
@@ -235,6 +223,38 @@ func flush() -> void:
 					callable.call(args)
 
 	# 2. Process structural commands (e.g. spawn lambdas)
+	if not _spawn_scenes.is_empty():
+		var scenes = _spawn_scenes
+		var parents = _spawn_parents
+		var positions = _spawn_positions
+		var callbacks = _spawn_callbacks
+		_spawn_scenes = []
+		_spawn_parents = []
+		_spawn_positions = []
+		_spawn_callbacks = []
+		for i in scenes.size():
+			var parent = parents[i]
+			if not is_instance_valid(parent):
+				continue
+			var instance = scenes[i].instantiate()
+			var pos = positions[i]
+			if pos != null:
+				if instance is Node2D:
+					if pos is Vector2:
+						instance.global_position = pos
+					elif pos is Transform2D:
+						instance.global_transform = pos
+				elif instance is Node3D:
+					if pos is Vector3:
+						instance.global_position = pos
+					elif pos is Transform3D:
+						instance.global_transform = pos
+			parent.add_child(instance)
+			var cb = callbacks[i]
+			if cb.is_valid():
+				cb.call(instance)
+
+	# 3. Process generic commands
 	if not _command_queue.is_empty():
 		var commands = _command_queue
 		_command_queue = []

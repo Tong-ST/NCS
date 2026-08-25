@@ -63,11 +63,6 @@ func _physics_process(delta: float) -> void:
 # VIRTUAL SYSTEM AUTHOR OVERRIDES
 # ==============================================================================
 
-## Override to declare query filters and data pre-fetch targets. Called once on _ready.
-func setup_query() -> void:
-	pass
-
-
 ## Override for render-tick logic (visuals, UI, camera sync).
 ## entities[i], data_pools[n][i], and node_pools[n][i] are always index-aligned.
 func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
@@ -77,6 +72,11 @@ func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, de
 ## Override for physics-tick logic (movement, collision, velocity).
 ## Runs at the fixed physics rate, not the render rate.
 func ncs_physics_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
+	pass
+
+
+## Override to declare query filters and data pre-fetch targets. Called once on _ready.
+func setup_query() -> void:
 	pass
 
 
@@ -151,35 +151,30 @@ func _matches_query(config_node: Object) -> bool:
 	if not is_instance_valid(parent_body):
 		return false
 
+	var types: Dictionary = cfg._type_set
+
 	for not_script in _not_filters:
-		if _entity_has_type(cfg, not_script):
+		if types.has(not_script):
 			return false
 
 	for req_script in _all_filters:
-		if not _entity_has_type(cfg, req_script):
+		if not types.has(req_script):
 			return false
 
 	if not _any_filters.is_empty():
 		var has_any_match: bool = false
 		for any_script in _any_filters:
-			if _entity_has_type(cfg, any_script):
+			if types.has(any_script):
 				has_any_match = true
 				break
 		if not has_any_match:
 			return false
 
 	for data_script in _data_targets:
-		if not _entity_has_type(cfg, data_script):
+		if not types.has(data_script):
 			return false
 
 	return true
-
-
-## Helper: Checks if entity possesses either a Component Node or a Data Resource.
-func _entity_has_type(cfg: EntityConfig, type_script: Script) -> bool:
-	if not type_script:
-		return false
-	return cfg.has_comp(type_script) or cfg.has_data(type_script)
 
 
 ## Compiles all unique scripts this system cares about.
@@ -270,9 +265,6 @@ func _remove_entity_at_index(idx: int) -> void:
 ## Full re-query sweep — rebuilds all parallel arrays from NCS.active_entities.
 ## Called on system registration and after batch operations.
 func _update_query_filter() -> void:
-	setup_query()
-	_compile_interest_scripts()
-
 	var matching_bodies: Array[Node] = []
 	var matching_configs: Array[EntityConfig] = []
 	var new_flat_pools: Array[Array] = []
@@ -308,7 +300,7 @@ func _update_query_filter() -> void:
 	_flat_node_pools = new_node_pools
 
 
-## Helper: Locates node instance on parent_body (first direct child match, then recursive).
+## Helper: Locates node instance on parent_body (first direct child match, then 2nd level).
 func _find_node_in_entity(parent_body: Node, target_type: Variant) -> Node:
 	if not is_instance_valid(parent_body):
 		return null
@@ -317,8 +309,9 @@ func _find_node_in_entity(parent_body: Node, target_type: Variant) -> Node:
 		if is_instance_of(child, target_type):
 			return child
 
-	for child in parent_body.find_children("*", "", true, false):
-		if is_instance_of(child, target_type):
-			return child
+	for child in parent_body.get_children():
+		for sub_child in child.get_children():
+			if is_instance_of(sub_child, target_type):
+				return sub_child
 
 	return null
