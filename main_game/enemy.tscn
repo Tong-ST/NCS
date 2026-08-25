@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://5gd7eowt31f7" path="res://ncs_components/comp_movement.gd" id="5_b3gj3"]
 [ext_resource type="Script" uid="uid://fbak7uj16ldf" path="res://ncs_components/comp_enemy_ai.gd" id="7_pa6kk"]
 [ext_resource type="Script" uid="uid://chjaq4g4jwye5" path="res://ncs_components/comp_health.gd" id="9_cgx3m"]
+[ext_resource type="Script" uid="uid://cqaux4eli1g1d" path="res://ncs_components/comp_status_effect.gd" id="9_pa6kk"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1yc37"]
 radius = 20.0
@@ -49,3 +50,7 @@ metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 script = ExtResource("5_b3gj3")
 require_data = true
 metadata/_custom_type_script = "uid://5gd7eowt31f7"
+
+[node name="CompStatusEffect" type="Node" parent="ComponentsHub" unique_id=396766770]
+script = ExtResource("9_pa6kk")
+metadata/_custom_type_script = "uid://cqaux4eli1g1d"

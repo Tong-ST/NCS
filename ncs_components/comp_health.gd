@@ -7,17 +7,16 @@ extends ComponentBase
 signal on_damaged
 
 var health_data: DataHealth
+var ent_name: String
 
 
 func _on_init_comp() -> void:
 	health_data = config.get_data(DataHealth)
 	# NCS Observer pattern for event-based call.
 	config.watch_data(DataHealth, &"state", _on_state_changed)
-	config.watch_data_lifecycle(
-			DataPoisonStatus,
-			_on_posion_applied,
-			_on_posion_removed,
-	)
+	config.watch_data(DataHealth, &"current_health", _on_health_changed)
+
+	ent_name = entity_node.get_script().get_global_name()
 
 
 # Example on create custom logic bind to this components
@@ -25,32 +24,26 @@ func take_damage(amount: float) -> void:
 	if not health_data:
 		health_data = config.get_data(DataHealth)
 	
-	# This just for example, Recommend comp method to be Read-only to avoid conflict.
-	# Write to data as below should be in system.
-	if health_data:
-		health_data.current_health -= amount
-		on_damaged.emit()
+	# This below just for example, Recommend comp method to be Read-only to avoid conflict.
+	# Write-data should consider to be in system, But it's flexible and Up-to-you.
+
+	# Use change data will also send signal to watch_data().
+	var new_health = health_data.current_health - amount
+	config.change_data(DataHealth, &"current_health", new_health)
+	# Use change_data() may heavy than doing just heath_data.current_health = new_health
+	# Recommend to use on event-base property and avoid every-frame use.
+
+	# send godot native signal.
+	on_damaged.emit()
 
 
-# This will run once this component was add to entity at runtime, via config.add_comp()
-func _on_add_comp() -> void:
-	pass
-
-
-# This will run once this component was remove from entity, via config.remove_comp()
-func _on_remove_comp() -> void:
-	print('Health component was removed from ', entity_node.name)
-
-
-func _on_state_changed(state: Variant) -> void:
+func _on_state_changed(state: String) -> void:
 	if state == "DEAD":
 		# Safely despawn entity at the end of frame use NCS.despawn(target_node)
 		NCS.despawn(entity_node)
 
 
-func _on_posion_applied(_posion_data: NCSDataBase) -> void:
-	print(entity_node.name, " Get poison!")
-
-
-func _on_posion_removed(_posion_data: NCSDataBase) -> void:
-	print("Poison was removed from ", entity_node.name)
+# In real usecase this watcher pattern can be useful for e.g. UpdateUI
+# It might be live in CompUI and use to signal on related data changes, It up-to-you.
+func _on_health_changed(current_health: int) -> void:
+	print(ent_name, " HP: ", int(health_data.max_health), "/", current_health)

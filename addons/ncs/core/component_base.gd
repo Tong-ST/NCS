@@ -2,7 +2,7 @@
 ## Attach subclasses (e.g. CompHealth, CompMovement) as child nodes inside an ComponentsHub.
 ##
 ## Components can be pure tag-nodes with no script logic (filters) or contain local entity logic.
-@icon("res://addons/ncs/icons/puzzle-piece-solid-full.svg")
+@icon("res://addons/ncs/icons/cube-solid-full.svg")
 class_name ComponentBase
 extends NCSBase
 

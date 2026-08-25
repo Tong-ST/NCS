@@ -166,8 +166,8 @@ func get_callable(comp_script: Script, method_name: StringName) -> Callable:
 ## Safely updates a field on an existing data resource in one line. Returns true if successful.
 ## Usage: config.change_data(DataMovement, &"max_speed", 300.0)
 func change_data(data_script: Script, property_name: StringName, new_value: Variant) -> bool:
-	var data_block = get_data(data_script)
-	if not is_instance_valid(data_block) or not (property_name in data_block):
+	var data_block: NCSDataBase = _data_map.get(data_script, null)
+	if not is_instance_valid(data_block):
 		return false
 
 	if data_block.get(property_name) == new_value:
@@ -175,12 +175,12 @@ func change_data(data_script: Script, property_name: StringName, new_value: Vari
 
 	data_block.set(property_name, new_value)
 
-	# Route change only to components watching this specific property
-	if _data_watchers.has(data_script) and _data_watchers[data_script].has(property_name):
-		for callback in _data_watchers[data_script][property_name]:
-			if callback.is_valid():
-				callback.call(new_value)
-
+	var watchers_for_data: Dictionary = _data_watchers.get(data_script, {})
+	var callbacks: Array = watchers_for_data.get(property_name, [])
+	
+	for callback: Callable in callbacks:
+		if callback.is_valid():
+			callback.call(new_value)
 	return true
 
 
