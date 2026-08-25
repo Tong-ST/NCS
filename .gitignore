@@ -3,3 +3,5 @@
 /android/
 /addons/godot_vim
 .godot-vimrc
+.vscode/
+*.tmp

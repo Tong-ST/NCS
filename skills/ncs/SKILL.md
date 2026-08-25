@@ -9,7 +9,7 @@ The **NCS (Node-based Component System)** framework is a hybrid architectural pa
 
 ---
 
-## 1. The Core Architecture & Mental Model (The 5 Pillars)
+## 1. The Core Architecture & Mental Model
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐

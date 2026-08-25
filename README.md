@@ -195,7 +195,7 @@ Level_Main
 
 
 ## Use with AI Agents
-- If you're develop a game with AI agents you can add [SKILL.md](.agents/skills/ncs/SKILL.md) to your AI agents.
+- If you're develop a game with AI agents you can add [SKILL.md](skills/ncs/SKILL.md) to your AI agents.
 - SKILL.md also act as developer cheatsheet, You can get overview of this project workflow there.
 
 
