@@ -6,13 +6,16 @@ func setup_query() -> void:
 	with_all([DataInput]) # filter with just data.
 
 
-func ncs_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, _delta: float) -> void:
-	var current_entities = entities as Array[CharacterBody2D]
-
+func ncs_physics_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, _delta: float) -> void:
 	var deal_damage = Input.is_action_just_pressed("ui_accept")
-	var add_posion = Input.is_action_just_pressed("ui_end")
+	var add_poison = Input.is_action_just_pressed("ui_end")
 	var add_test = Input.is_action_just_pressed("ui_page_up")
 	var remove_test = Input.is_action_just_pressed("ui_page_down")
+
+	if not (deal_damage or add_poison or add_test or remove_test):
+			return
+
+	var current_entities = entities as Array[CharacterBody2D]
 
 	# Iterate and prepare data for each entity.
 	for i in current_entities.size():
@@ -27,7 +30,7 @@ func ncs_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, 
 			config[i].call_method_deferred(CompHealth, &"take_damage", 20)
 
 		# Add data at runtime
-		if add_posion:
+		if add_poison:
 			config[i].add_data(DataPoisonStatus)
 
 		if add_test:

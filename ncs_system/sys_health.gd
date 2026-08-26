@@ -7,7 +7,7 @@ func setup_query() -> void:
 	iterate_data([DataHealth])  # caching data & filter all ent. must have these data.
 
 
-func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, _delta: float) -> void:
+func ncs_physics_process(entities: Array[Node], data_pools: Array, _node_pools: Array, _delta: float) -> void:
 	var current_entities = entities as Array[CharacterBody2D]
 	var health_pool = data_pools[0] as Array[DataHealth] # allocate data for current frame use
 

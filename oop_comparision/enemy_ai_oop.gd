@@ -9,7 +9,7 @@ var choose_time_target: float = 0.0
 var is_idling: bool = false
 
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not is_instance_valid(actor) or not is_instance_valid(input_comp): 
 		return
 		

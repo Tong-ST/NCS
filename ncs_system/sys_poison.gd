@@ -9,7 +9,7 @@ func setup_query() -> void:
 	iterate_data([DataPoisonStatus, DataHealth]) # must have DataPoisonStatus, DataHealth.
 
 
-func ncs_process(entities: Array[Node], data_pools: Array, _node_pools: Array, delta: float) -> void:
+func ncs_physics_process(entities: Array[Node], data_pools: Array, _node_pools: Array, delta: float) -> void:
 	var poison_pool = data_pools[0] as Array[DataPoisonStatus]
 
 	# Iterate backwards so removing data doesn't disrupt index positioning

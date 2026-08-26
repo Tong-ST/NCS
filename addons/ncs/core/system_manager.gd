@@ -23,16 +23,13 @@ var _pending_registrations: Array[EntityConfig] = []
 var _pending_registrations_set: Dictionary = {}
 var _pending_unregistrations: Array[Variant] = []
 var _pending_unregistrations_set: Dictionary = {}
+
+# Typed spawn/despawn queue
+var _spawn_queue: Array[Dictionary] = []
 var _despawn_queue: Array[Node] = []
 var _despawn_set: Dictionary = {}
 
-# Typed spawn queue (zero closure allocations)
-var _spawn_scenes: Array[PackedScene] = []
-var _spawn_parents: Array[Node] = []
-var _spawn_positions: Array[Variant] = []
-var _spawn_callbacks: Array[Callable] = []
-
-# Typed callable queue (zero reflection & zero closure allocations)
+# Typed callable queue
 var _deferred_callables: Array[Callable] = []
 var _deferred_args: Array[Variant] = []
 
@@ -60,6 +57,7 @@ func _physics_process(_delta: float) -> void:
 # ==============================================================================
 
 ## Safely instantiates and adds a 2D/3D entity to the scene tree via zero-allocation typed queue.
+## Usage: NCS.spawn(enemy_scene, self, player.global_position)
 func spawn(
 		scene: PackedScene,
 		parent: Node,
@@ -69,10 +67,12 @@ func spawn(
 	if not scene or not is_instance_valid(parent):
 		return
 
-	_spawn_scenes.append(scene)
-	_spawn_parents.append(parent)
-	_spawn_positions.append(position_or_transform)
-	_spawn_callbacks.append(setup_callback)
+	_spawn_queue.append({
+		"scene": scene,
+		"parent": parent,
+		"position": position_or_transform,
+		"callback": setup_callback
+	})
 	_schedule_flush()
 
 
@@ -230,35 +230,30 @@ func flush() -> void:
 				else:
 					callable.call(args)
 
-	# Process typed spawn queue (zero closure allocations)
-	if not _spawn_scenes.is_empty():
-		var scenes = _spawn_scenes
-		var parents = _spawn_parents
-		var positions = _spawn_positions
-		var callbacks = _spawn_callbacks
-		_spawn_scenes = []
-		_spawn_parents = []
-		_spawn_positions = []
-		_spawn_callbacks = []
-		for i in scenes.size():
-			var parent = parents[i]
-			if not is_instance_valid(parent):
+	# Process typed spawn queue
+	if not _spawn_queue.is_empty():
+		var current_spawns = _spawn_queue
+		_spawn_queue = []
+		
+		for spawn_data in current_spawns:
+			var parent = spawn_data["parent"]
+			if not is_instance_valid(parent): 
 				continue
-			var instance = scenes[i].instantiate()
-			var pos = positions[i]
+				
+			var instance = spawn_data["scene"].instantiate()
+			var pos = spawn_data["position"]
+			
 			if pos != null:
 				if instance is Node2D:
-					if pos is Vector2:
-						instance.global_position = pos
-					elif pos is Transform2D:
-						instance.global_transform = pos
+					if pos is Vector2: instance.global_position = pos
+					elif pos is Transform2D: instance.global_transform = pos
 				elif instance is Node3D:
-					if pos is Vector3:
-						instance.global_position = pos
-					elif pos is Transform3D:
-						instance.global_transform = pos
+					if pos is Vector3: instance.global_position = pos
+					elif pos is Transform3D: instance.global_transform = pos
+					
 			parent.add_child(instance)
-			var cb = callbacks[i]
+			
+			var cb = spawn_data["callback"]
 			if cb.is_valid():
 				cb.call(instance)
 
@@ -326,62 +321,63 @@ func flush() -> void:
 
 	# Finalize Batch vs Incremental updates
 	if is_batch:
-		var candidate_systems: Dictionary = {}
-		var has_specific_candidates: bool = false
-
-		# Collect affected candidate systems from dirty entities
-		if not _dirty_entities.is_empty():
-			for entity in _dirty_entities.keys():
-				var changed_scripts: Array = _dirty_entities[entity]
-				if not changed_scripts.is_empty():
-					for script in changed_scripts:
-						if _script_to_systems.has(script):
-							has_specific_candidates = true
-							for sys in _script_to_systems[script]:
-								candidate_systems[sys] = true
-				elif is_instance_valid(entity):
-					var sys_list = _get_candidate_systems_for(entity)
-					if not sys_list.is_empty():
-						has_specific_candidates = true
-						for sys in sys_list:
-							candidate_systems[sys] = true
-
-		# Collect candidate systems from batch spawns / registrations
-		if not regs.is_empty():
-			for entity in regs:
-				if is_instance_valid(entity):
-					var sys_list = _get_candidate_systems_for(entity)
-					if not sys_list.is_empty():
-						has_specific_candidates = true
-						for sys in sys_list:
-							candidate_systems[sys] = true
-		_dirty_entities.clear()
-
-		# Re-query ONLY candidate systems if resolved; otherwise fallback to full remap
-		if has_specific_candidates and not candidate_systems.is_empty():
-			for sys in candidate_systems.keys():
-				if is_instance_valid(sys) and sys.has_method(&"_update_query_filter"):
-					sys._update_query_filter()
-		else:
-			_remap_all_system_queries()
-
-	elif not _dirty_entities.is_empty():
-		var dirty_snapshot = _dirty_entities
-		_dirty_entities = {}
-		for entity in dirty_snapshot.keys():
-			if is_instance_valid(entity):
-				var changed_scripts: Array = dirty_snapshot[entity]
-				var candidates = _get_candidate_systems_for(entity, changed_scripts)
-				for system in candidates:
-					if system.has_method(&"_evaluate_single_entity"):
-						system._evaluate_single_entity(entity)
+		_process_batch_update(regs)
+	else:
+		_process_incremental_update()
 
 
 # ==============================================================================
 # PRIVATE REGISTRY & DISPATCH HELPERS
 # ==============================================================================
 
-## Adds entity to active_config in O(1).
+## Handles mass entity mutations cleanly by identifying affected system candidates.
+func _process_batch_update(new_registrations: Array[EntityConfig]) -> void:
+	var candidate_systems: Dictionary = {}
+	var has_specific_candidates: bool = false
+
+	for entity in _dirty_entities.keys():
+		var changed_scripts: Array = _dirty_entities[entity]
+		
+		for script in changed_scripts:
+			if script and _script_to_systems.has(script):
+				has_specific_candidates = true
+				for sys in _script_to_systems[script]:
+					candidate_systems[sys] = true
+
+	for entity in new_registrations:
+		if is_instance_valid(entity):
+			var sys_list = _get_candidate_systems_for(entity)
+			if not sys_list.is_empty():
+				has_specific_candidates = true
+				for sys in sys_list:
+					candidate_systems[sys] = true
+
+	_dirty_entities.clear()
+
+	if has_specific_candidates and not candidate_systems.is_empty():
+		for sys in candidate_systems.keys():
+			if is_instance_valid(sys) and sys.has_method(&"_update_query_filter"):
+				sys._update_query_filter()
+	else:
+		_remap_all_system_queries()
+
+
+## Handles small-scale entity modifications.
+func _process_incremental_update() -> void:
+	var dirty_snapshot = _dirty_entities
+	_dirty_entities = {}
+	
+	for entity in dirty_snapshot.keys():
+		if is_instance_valid(entity):
+			var changed_scripts: Array = dirty_snapshot[entity]
+			var candidates = _get_candidate_systems_for(entity, changed_scripts)
+			
+			for system in candidates:
+				if system.has_method(&"_evaluate_single_entity"):
+					system._evaluate_single_entity(entity)
+
+
+## Adds entity to active_config.
 func _register_to_active(entity: Variant) -> void:
 	if not is_instance_valid(entity) or not (entity is EntityConfig) or _active_config_map.has(entity):
 		return
@@ -391,7 +387,7 @@ func _register_to_active(entity: Variant) -> void:
 	active_config.append(cfg)
 
 
-## Removes entity from active_config via O(1) swap-and-pop.
+## Removes entity from active_config
 func _unregister_from_active(entity: Variant) -> void:
 	if not is_instance_valid(entity) or not (entity is EntityConfig) or not _active_config_map.has(entity):
 		return

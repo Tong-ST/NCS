@@ -15,6 +15,22 @@ var current_duration: float = 0.0
 var tick_timer: float = 0.0
 
 
+func _physics_process(delta: float) -> void:
+	if not is_poisoned:
+		return
+
+	current_duration -= delta
+	tick_timer += delta
+
+	if tick_timer >= tick_interval:
+		tick_timer -= tick_interval
+		if is_instance_valid(health_comp):
+			health_comp.take_damage(damage_per_sec)
+
+	if current_duration <= 0.0:
+		remove_poison()
+
+
 func apply_poison() -> void:
 	if not is_poisoned:
 		is_poisoned = true
@@ -35,19 +51,3 @@ func remove_poison() -> void:
 		var actor_name = actor.get_script().get_global_name() if is_instance_valid(actor) and actor.get_script() else "EnemyOOP"
 		await get_tree().create_timer(1).timeout
 		print("Poison was removed from ", actor_name)
-
-
-func _process(delta: float) -> void:
-	if not is_poisoned:
-		return
-
-	current_duration -= delta
-	tick_timer += delta
-
-	if tick_timer >= tick_interval:
-		tick_timer -= tick_interval
-		if is_instance_valid(health_comp):
-			health_comp.take_damage(damage_per_sec)
-
-	if current_duration <= 0.0:
-		remove_poison()
