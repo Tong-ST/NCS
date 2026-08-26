@@ -10,21 +10,6 @@ extends Resource
 @export var data_sets: Array[NCSDataBase] = []
 
 
-## Creates a shallow-per-element duplicate of data_sets.
-## Each NCSDataBase element is individually duplicated so resources are not shared.
-func duplicate_runtime() -> NCSEntityDataSet:
-	var copy = NCSEntityDataSet.new()
-	var new_sets: Array[NCSDataBase] = []
-	var count = data_sets.size()
-	new_sets.resize(count)
-	for i in count:
-		var res = data_sets[i]
-		if is_instance_valid(res):
-			new_sets[i] = res.duplicate() as NCSDataBase
-	copy.data_sets = new_sets
-	return copy
-
-
 ## Finds the first data block matching the given Script type inside data_sets.
 func find_data_by_class(target_class: Script) -> NCSDataBase:
 	if not target_class:

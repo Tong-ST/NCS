@@ -13,9 +13,7 @@ extends NCSBase
 ## The Entity Node of this hub's components operate on.
 ## Auto-resolved to the scene owner if left blank in the inspector.
 @export var entity_node: Node
-
-# Cached reference to the sibling EntityConfig node found at runtime.
-var config_node: EntityConfig
+@export var config_node: EntityConfig
 
 
 # ==============================================================================
@@ -29,8 +27,9 @@ func _ready() -> void:
 	# Resolve entity from scene owner when not explicitly set in the inspector.
 	if not entity_node:
 		entity_node = owner
-
-	config_node = _find_config_node(entity_node)
+	
+	if not config_node:
+		config_node = _find_config_node(entity_node)
 
 	# Push entity and config references down to every child component automatically.
 	for child in get_children():
@@ -86,7 +85,7 @@ func _get_configuration_warnings() -> PackedStringArray:
 	if not Engine.is_editor_hint():
 		return warnings
 
-	var editor_config = _find_config_node(entity_node)
+	var editor_config = config_node
 	if not editor_config:
 		return warnings
 
@@ -130,9 +129,6 @@ func _get_configuration_warnings() -> PackedStringArray:
 func _find_config_node(start_node: Node) -> EntityConfig:
 	if start_node == null:
 		return null
-
-	if start_node is EntityConfig:
-		return start_node as EntityConfig
 
 	for child in start_node.get_children():
 		if child is EntityConfig:

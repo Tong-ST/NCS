@@ -39,10 +39,7 @@ var _data_targets: Array[Script] = []
 # ==============================================================================
 
 func _ready() -> void:
-	setup_query()
-	_compile_interest_scripts()
 	_ensure_pools_initialized()
-	_update_query_filter.call_deferred()
 
 
 func _process(delta: float) -> void:
@@ -265,6 +262,9 @@ func _remove_entity_at_index(idx: int) -> void:
 ## Full re-query sweep — rebuilds all parallel arrays from NCS.active_entities.
 ## Called on system registration and after batch operations.
 func _update_query_filter() -> void:
+	var start = Time.get_ticks_msec()
+	setup_query()
+	_compile_interest_scripts()
 	var matching_bodies: Array[Node] = []
 	var matching_configs: Array[EntityConfig] = []
 	var new_flat_pools: Array[Array] = []
@@ -284,7 +284,7 @@ func _update_query_filter() -> void:
 			continue
 
 		if _matches_query(config_node):
-			parent_body.set(&"config", config_node)
+			#parent_body.set(&"config", config_node)
 			matching_bodies.append(parent_body)
 			matching_configs.append(config_node)
 
@@ -298,6 +298,9 @@ func _update_query_filter() -> void:
 	config = matching_configs
 	_flat_data_pools = new_flat_pools
 	_flat_node_pools = new_node_pools
+
+	var timer = Time.get_ticks_msec() - start
+	print(get_script().get_global_name(), " timer: ", timer)
 
 
 ## Helper: Locates node instance on parent_body (first direct child match, then 2nd level).

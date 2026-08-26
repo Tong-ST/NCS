@@ -36,10 +36,9 @@ func _enter_tree() -> void:
 	if not entity_node:
 		entity_node = owner
 	if base_config and not runtime_config:
-		if base_config.has_method(&"duplicate_runtime"):
-			runtime_config = base_config.duplicate_runtime()
-		else:
-			runtime_config = base_config.duplicate(true) as NCSEntityDataSet
+		runtime_config = base_config.duplicate(true)
+
+	_components_hub_cache = _get_components_hub()
 
 	_rebuild_data_cache()
 	_rebuild_component_cache()
@@ -191,7 +190,7 @@ func change_data(data_script: Script, property_name: StringName, new_value: Vari
 			if callbacks != null:
 				for callback in callbacks:
 					if (callback as Callable).is_valid():
-						(callback as Callable).call(new_value)
+						callback.call(new_value)
 	return true
 
 
@@ -365,7 +364,7 @@ func call_method_deferred(
 
 ## Rebuilds _data_map and syncs _type_set from runtime_config.data_sets.
 func _rebuild_data_cache() -> void:
-	# Clear previous data keys from _type_set
+	# Clear previous data cache
 	for old_script in _data_map:
 		_type_set.erase(old_script)
 	_data_map.clear()
@@ -384,7 +383,7 @@ func _rebuild_data_cache() -> void:
 
 ## Rebuilds _component_map and syncs _type_set by scanning the entity tree.
 func _rebuild_component_cache() -> void:
-	# Clear previous component keys from _type_set
+	# Clear previous cached
 	for old_script in _component_map:
 		_type_set.erase(old_script)
 	_component_map.clear()
@@ -392,30 +391,22 @@ func _rebuild_component_cache() -> void:
 	_callable_cache.clear()
 
 	if not entity_node:
+		entity_node = owner
 		return
 
-	for child in entity_node.get_children():
-		if child.name.begins_with(&"__DELETED_"):
+	if not is_instance_valid(_components_hub_cache):
+		_components_hub_cache = _get_components_hub()
+
+	for comp in _components_hub_cache.get_children():
+		if comp.name.begins_with(&"__DELETED_"):
 			continue
 
-		var script = child.get_script()
-		if script:
-			_component_map[script] = child as ComponentBase
-			_active_component_scripts.append(script)
-			_type_set[script] = true
-
-		if child is ComponentsHub or child.name == "ComponentsHub":
-			_components_hub_cache = child as ComponentsHub
-			for sub_child in child.get_children():
-				if sub_child.name.begins_with(&"__DELETED_"):
-					continue
-
-				var sub_script = sub_child.get_script()
-				if sub_script:
-					_component_map[sub_script] = sub_child as ComponentBase
-					if not _active_component_scripts.has(sub_script):
-						_active_component_scripts.append(sub_script)
-					_type_set[sub_script] = true
+		var comp_script = comp.get_script()
+		if comp_script:
+			_component_map[comp_script] = comp as ComponentBase
+			if not _active_component_scripts.has(comp_script):
+				_active_component_scripts.append(comp_script)
+			_type_set[comp_script] = true
 
 
 ## Returns the ComponentsHub node. Uses cached ref; falls back to tree scan on miss.
@@ -426,8 +417,9 @@ func _get_components_hub() -> ComponentsHub:
 	if not entity_node:
 		return null
 
-	for child in entity_node.get_children():
+	var children := entity_node.get_children()
+	for i in range(children.size() - 1, -1, -1):
+		var child: Node = children[i]
 		if child is ComponentsHub:
-			_components_hub_cache = child
-			return _components_hub_cache
+			return child
 	return null
