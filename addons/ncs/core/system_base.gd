@@ -135,7 +135,7 @@ func signal_query_changed() -> void:
 # PRIVATE QUERY EVALUATION & ARRAY SYNCHRONIZATION
 # ==============================================================================
 
-## Returns true if the entity passes all filters and has all iterated data blocks in a single unified C++ hash loop.
+## Returns true if the entity passes all filters and has all iterated data blocks.
 func _matches_query(config_node: Object) -> bool:
 	if not is_instance_valid(config_node) or not (config_node is EntityConfig):
 		return false
@@ -170,7 +170,7 @@ func _matches_query(config_node: Object) -> bool:
 	return true
 
 
-## Compiles all unique scripts this system cares about and pre-merges required types for single-loop validation.
+## Compiles all unique scripts this system cares about.
 func _compile_interest_scripts() -> void:
 	var req_set: Dictionary = {}
 	for script in _all_filters:
@@ -272,8 +272,8 @@ func _update_query_filter() -> void:
 		_compile_interest_scripts()
 		_is_query_init = true
 
-	var matching_bodies: Array[Node] = []
 	var matching_configs: Array[EntityConfig] = []
+	var matching_bodies: Array[Node] = []
 	var new_data_pools: Array[Array] = []
 	var new_node_pools: Array[Array] = []
 
@@ -282,6 +282,7 @@ func _update_query_filter() -> void:
 	for t in _node_targets.size():
 		new_node_pools.append([])
 
+	var start_time = Time.get_ticks_msec()
 	for config_node in NCS.active_config:
 		if not is_instance_valid(config_node):
 			continue
@@ -295,18 +296,26 @@ func _update_query_filter() -> void:
 			matching_configs.append(config_node)
 
 			for pool_idx in _data_targets.size():
-				new_data_pools[pool_idx].append(config_node._data_map.get(_data_targets[pool_idx]))
+				new_data_pools[pool_idx].append(
+						config_node._data_map.get(_data_targets[pool_idx])
+				)
 
 			for pool_idx in _node_targets.size():
-				new_node_pools[pool_idx].append(_find_node_in_entity(parent_body, _node_targets[pool_idx]))
+				new_node_pools[pool_idx].append(
+						_find_node_in_entity(parent_body, _node_targets[pool_idx])
+				)
 
-	_entities = matching_bodies
 	config = matching_configs
+	_entities = matching_bodies
 	_flat_data_pools = new_data_pools
 	_flat_node_pools = new_node_pools
 
+	var timer = Time.get_ticks_msec() - start_time
+	print(get_script().get_global_name(), " ms: ", timer)
 
-## Helper: Locates node instance on parent_body (first direct child match, then recursive).
+
+## Helper: Locates node instance on parent_body
+## (first direct child match, then recursive).
 func _find_node_in_entity(parent_body: Node, target_type: Variant) -> Node:
 	if not is_instance_valid(parent_body):
 		return null

@@ -237,19 +237,18 @@ func add_comp(comp_script: Script) -> void:
 	if not comp_script or _component_map.has(comp_script):
 		return
 
-	var hub = _get_components_hub()
-	if not hub:
-		return
+	if not _components_hub_cache:
+		_components_hub_cache = _get_components_hub()
 
 	var new_node = comp_script.new() as Node
 	if not new_node:
 		return
 
 	var class_str = comp_script.get_global_name()
-	new_node.name = class_str if not class_str.is_empty() else "CompNew"
-	hub.add_child(new_node)
+	new_node.name = class_str if not class_str.is_empty() else "CompEmpty"
+	_components_hub_cache.add_child(new_node)
 	if new_node is ComponentBase:
-		new_node.entity_node = hub.entity_node
+		new_node.entity_node = entity_node
 		new_node.config = self
 
 	_component_map[comp_script] = new_node as ComponentBase

@@ -31,9 +31,10 @@ texture = ExtResource("3_80f77")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1469912647]
 shape = SubResource("CircleShape2D_1yc37")
 
-[node name="ComponentsHub" type="Node" parent="." unique_id=1420797890 node_paths=PackedStringArray("entity_node")]
+[node name="ComponentsHub" type="Node" parent="." unique_id=1420797890 node_paths=PackedStringArray("entity_node", "config_node")]
 script = ExtResource("4_qhlc3")
 entity_node = NodePath("..")
+config_node = NodePath("../EntityConfig")
 metadata/_custom_type_script = "uid://bd5qdwgeah7so"
 
 [node name="CompHealth" type="Node" parent="ComponentsHub" unique_id=1121043216]

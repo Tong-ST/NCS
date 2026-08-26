@@ -11,6 +11,8 @@ func ncs_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, 
 
 	var deal_damage = Input.is_action_just_pressed("ui_accept")
 	var add_posion = Input.is_action_just_pressed("ui_end")
+	var add_test = Input.is_action_just_pressed("ui_page_up")
+	var remove_test = Input.is_action_just_pressed("ui_page_down")
 
 	# Iterate and prepare data for each entity.
 	for i in current_entities.size():
@@ -27,3 +29,9 @@ func ncs_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, 
 		# Add data at runtime
 		if add_posion:
 			config[i].add_data(DataPoisonStatus)
+
+		if add_test:
+			config[i].add_comp(CompTest)
+
+		if remove_test:
+			config[i].remove_comp(CompTest)

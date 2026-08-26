@@ -42,8 +42,8 @@ Components live in the scene tree under the `ComponentsHub` folder. They inherit
 # You can put logics in component with Native godot style.
 # Make sure there focus on local scene.
 # Avoid run process loop inside each comp.
-# Avoid Write to DataName that may use in system,
-# Make habit of Read-only from DataName to avoid conflict with SysSystem. 
+# Avoid Write to Data that may use in system,
+# Make habit of Read-only from Data to avoid conflict with SysSystem. 
 
 class_name CompHealth
 extends ComponentBase
@@ -117,7 +117,7 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 
 #### Runtime Component mutations via system.
 ```gdscript
-# Example your custom s_combat.gd system loop...
+# Example your custom sys_combat.gd system loop...
 
 if target_enemy_health <= 0:
 	config[i].add_comp(CompDead)
