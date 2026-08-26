@@ -35,10 +35,10 @@ func _on_ncs_btn_pressed() -> void:
 	var enemy_scene = preload("uid://cvael67uegn6h")
 	var player = get_tree().get_first_node_in_group(&"player") as Player
 
-	for i in range(1):
+	for i in range(200):
 		await get_tree().process_frame
 		
-		for j in range(500):
+		for j in range(10):
 			var spawn_pos = player.global_position if player else Vector2.ZERO
 			
 			# Safely spawn new entity to world use:
