@@ -8,12 +8,12 @@ extends Node
 const MASS_UPDATE_THRESHOLD: int = 50
 
 ## Master list of every active EntityConfig in the world.
-var active_entities: Array[EntityConfig] = []
+var active_config: Array[EntityConfig] = []
 
 # Internal system registries
 var _systems: Dictionary = {}
 var _systems_list: Array[SystemBase] = []
-var _active_entities_map: Dictionary = {}
+var _active_config_map: Dictionary = {}
 var _script_to_systems: Dictionary = {}
 
 # Internal command buffer & flush queues
@@ -333,34 +333,34 @@ func flush() -> void:
 # PRIVATE REGISTRY & DISPATCH HELPERS
 # ==============================================================================
 
-## Adds entity to active_entities in O(1).
+## Adds entity to active_config in O(1).
 func _register_to_active(entity: Variant) -> void:
-	if not is_instance_valid(entity) or not (entity is EntityConfig) or _active_entities_map.has(entity):
+	if not is_instance_valid(entity) or not (entity is EntityConfig) or _active_config_map.has(entity):
 		return
 	var cfg = entity as EntityConfig
 	cfg._is_registered = true
-	_active_entities_map[cfg] = active_entities.size()
-	active_entities.append(cfg)
+	_active_config_map[cfg] = active_config.size()
+	active_config.append(cfg)
 
 
-## Removes entity from active_entities via O(1) swap-and-pop.
+## Removes entity from active_config via O(1) swap-and-pop.
 func _unregister_from_active(entity: Variant) -> void:
-	if not is_instance_valid(entity) or not (entity is EntityConfig) or not _active_entities_map.has(entity):
+	if not is_instance_valid(entity) or not (entity is EntityConfig) or not _active_config_map.has(entity):
 		return
 	var cfg = entity as EntityConfig
 	cfg._is_registered = false
-	var idx: int = _active_entities_map[cfg]
-	var last_idx: int = active_entities.size() - 1
-	var last_entity: EntityConfig = active_entities[last_idx]
-	active_entities[idx] = last_entity
-	_active_entities_map[last_entity] = idx
-	active_entities.pop_back()
-	_active_entities_map.erase(cfg)
+	var idx: int = _active_config_map[cfg]
+	var last_idx: int = active_config.size() - 1
+	var last_entity: EntityConfig = active_config[last_idx]
+	active_config[idx] = last_entity
+	_active_config_map[last_entity] = idx
+	active_config.pop_back()
+	_active_config_map.erase(cfg)
 	_dirty_entities.erase(cfg)
 
 
 func _apply_entity_registration(entity: Variant) -> void:
-	if not is_instance_valid(entity) or not (entity is EntityConfig) or _active_entities_map.has(entity):
+	if not is_instance_valid(entity) or not (entity is EntityConfig) or _active_config_map.has(entity):
 		return
 
 	_register_to_active(entity)

@@ -32,15 +32,15 @@ var _all_filters: Array[Script] = []
 var _any_filters: Array[Script] = []
 var _not_filters: Array[Script] = []
 var _data_targets: Array[Script] = []
+var _required_types: Array[Script] = []
+
+# First query initialized
+var _is_query_init: bool = false
 
 
 # ==============================================================================
 # BUILT-IN VIRTUAL METHODS
 # ==============================================================================
-
-func _ready() -> void:
-	_ensure_pools_initialized()
-
 
 func _process(delta: float) -> void:
 	if not _entities.is_empty():
@@ -127,7 +127,7 @@ func push_command(command: Callable) -> void:
 ## Triggers a single-entity re-evaluation when internal system state changes.
 func signal_query_changed() -> void:
 	NCS.mark_dirty(
-		NCS.active_entities[0] if not NCS.active_entities.is_empty() else null
+		NCS.active_config[0] if not NCS.active_config.is_empty() else null
 	)
 
 
@@ -135,7 +135,7 @@ func signal_query_changed() -> void:
 # PRIVATE QUERY EVALUATION & ARRAY SYNCHRONIZATION
 # ==============================================================================
 
-## Returns true if the entity passes all filters and has all iterated data blocks.
+## Returns true if the entity passes all filters and has all iterated data blocks in a single unified C++ hash loop.
 func _matches_query(config_node: Object) -> bool:
 	if not is_instance_valid(config_node) or not (config_node is EntityConfig):
 		return false
@@ -154,7 +154,7 @@ func _matches_query(config_node: Object) -> bool:
 		if types.has(not_script):
 			return false
 
-	for req_script in _all_filters:
+	for req_script in _required_types:
 		if not types.has(req_script):
 			return false
 
@@ -167,15 +167,21 @@ func _matches_query(config_node: Object) -> bool:
 		if not has_any_match:
 			return false
 
-	for data_script in _data_targets:
-		if not types.has(data_script):
-			return false
-
 	return true
 
 
-## Compiles all unique scripts this system cares about.
+## Compiles all unique scripts this system cares about and pre-merges required types for single-loop validation.
 func _compile_interest_scripts() -> void:
+	var req_set: Dictionary = {}
+	for script in _all_filters:
+		if script:
+			req_set[script] = true
+	for script in _data_targets:
+		if script:
+			req_set[script] = true
+	_required_types.clear()
+	_required_types.assign(req_set.keys())
+
 	var unique_set: Dictionary = {}
 	for list in [_all_filters, _any_filters, _not_filters, _data_targets]:
 		for script in list:
@@ -218,12 +224,11 @@ func _evaluate_single_entity(config_node: EntityConfig, changed_script: Script =
 
 	if is_match:
 		if idx == -1:
-			parent_body.set(&"config", config_node)
 			_entities.append(parent_body)
 			config.append(config_node as EntityConfig)
 			for pool_idx in _data_targets.size():
 				_flat_data_pools[pool_idx].append(
-						(config_node as EntityConfig).get_data(_data_targets[pool_idx])
+						config_node._data_map.get(_data_targets[pool_idx])
 				)
 			for pool_idx in _node_targets.size():
 				_flat_node_pools[pool_idx].append(
@@ -232,7 +237,7 @@ func _evaluate_single_entity(config_node: EntityConfig, changed_script: Script =
 		else:
 			for pool_idx in _data_targets.size():
 				_flat_data_pools[pool_idx][idx] = (
-						(config_node as EntityConfig).get_data(_data_targets[pool_idx])
+						config_node._data_map.get(_data_targets[pool_idx])
 				)
 			for pool_idx in _node_targets.size():
 				_flat_node_pools[pool_idx][idx] = (
@@ -259,23 +264,25 @@ func _remove_entity_at_index(idx: int) -> void:
 		pool.remove_at(idx)
 
 
-## Full re-query sweep — rebuilds all parallel arrays from NCS.active_entities.
+## Full re-query sweep — rebuilds all parallel arrays from NCS.active_config.
 ## Called on system registration and after batch operations.
 func _update_query_filter() -> void:
-	var start = Time.get_ticks_msec()
-	setup_query()
-	_compile_interest_scripts()
+	if not _is_query_init:
+		setup_query()
+		_compile_interest_scripts()
+		_is_query_init = true
+
 	var matching_bodies: Array[Node] = []
 	var matching_configs: Array[EntityConfig] = []
-	var new_flat_pools: Array[Array] = []
+	var new_data_pools: Array[Array] = []
 	var new_node_pools: Array[Array] = []
 
 	for t in _data_targets.size():
-		new_flat_pools.append([])
+		new_data_pools.append([])
 	for t in _node_targets.size():
 		new_node_pools.append([])
 
-	for config_node in NCS.active_entities:
+	for config_node in NCS.active_config:
 		if not is_instance_valid(config_node):
 			continue
 
@@ -284,26 +291,22 @@ func _update_query_filter() -> void:
 			continue
 
 		if _matches_query(config_node):
-			#parent_body.set(&"config", config_node)
 			matching_bodies.append(parent_body)
 			matching_configs.append(config_node)
 
 			for pool_idx in _data_targets.size():
-				new_flat_pools[pool_idx].append(config_node.get_data(_data_targets[pool_idx]))
+				new_data_pools[pool_idx].append(config_node._data_map.get(_data_targets[pool_idx]))
 
 			for pool_idx in _node_targets.size():
 				new_node_pools[pool_idx].append(_find_node_in_entity(parent_body, _node_targets[pool_idx]))
 
 	_entities = matching_bodies
 	config = matching_configs
-	_flat_data_pools = new_flat_pools
+	_flat_data_pools = new_data_pools
 	_flat_node_pools = new_node_pools
 
-	var timer = Time.get_ticks_msec() - start
-	print(get_script().get_global_name(), " timer: ", timer)
 
-
-## Helper: Locates node instance on parent_body (first direct child match, then 2nd level).
+## Helper: Locates node instance on parent_body (first direct child match, then recursive).
 func _find_node_in_entity(parent_body: Node, target_type: Variant) -> Node:
 	if not is_instance_valid(parent_body):
 		return null
@@ -312,9 +315,8 @@ func _find_node_in_entity(parent_body: Node, target_type: Variant) -> Node:
 		if is_instance_of(child, target_type):
 			return child
 
-	for child in parent_body.get_children():
-		for sub_child in child.get_children():
-			if is_instance_of(sub_child, target_type):
-				return sub_child
+	for child in parent_body.find_children("*", "", true, false):
+		if is_instance_of(child, target_type):
+			return child
 
 	return null
