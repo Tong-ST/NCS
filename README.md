@@ -11,12 +11,12 @@ Data-Oriented design bridge for Godot. This plugin are NOT try to be Pure ECS fr
 
 
 ## How this work
-### The Ideal scene tree layout
+### Example scene tree layout
 ```text
 Enemy (Entity can be CharacterBody2D, Node3D, etc.)
 |-- EntityConfig (Data container)
 |-- Sprite2D, etc.
-|-- ComponentsHub (Hub for all comp.)
+|-- ComponentsHub (Hub for all comp., Recommend to be last child node)
 	|-- CompMovement (Every comp need a script and class_name with/without logic)
 	|-- CompInput
 ```
@@ -52,7 +52,6 @@ signal health_updated(current_hp: float)
 
 @export var sprite_2d: Sprite2D
 
-
 # Can also call from systems via config.call_method()
 func flash_red() -> void:
 	if is_instance_valid(sprite_2d):
@@ -68,6 +67,33 @@ func update_health() -> void:
 - Naming convention for ease of use and remember `CompComponent` for class_name, comp_component.gd for scripts.
 - Local Comp should focus on Read-Only from Data, And let system handle write to data.
 
+#### Data watcher pattern, For tracking event-based data changes.
+```gdscript
+class_name CompStatusTracking
+extends ComponentBase
+
+func _on_init_comp() -> void:
+	# NCS watcher pattern for event-based call.
+	config.watch_data_lifecycle(
+			DataPoisonStatus,
+			_on_posion_added,
+			_on_posion_removed,
+	)
+	# config.watch_data_added(), watch_data_removed() also available separately.
+
+	# Watcher for data changes, This will trigger via config.change_data() call on system or comp.
+	config.watch_data(DataHealth, &"state", _on_state_changed)
+
+func _on_posion_added(_posion_data: NCSDataBase) -> void:
+	print(entity_node.name, " Get poison!")
+
+func _on_posion_removed(_posion_data: NCSDataBase) -> void:
+	print("Poison was removed from ", entity_node.name)
+
+func _on_state_chaged(state):
+	if state == "DEAD"
+		NCS.despawn(entity_node)
+```
 
 ### 3. System (Node)
 Systems are the "process" of your game architecture, Which will filter from components, to filtered arrays of entities, That you loop through and create game logic.

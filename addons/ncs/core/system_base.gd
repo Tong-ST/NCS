@@ -267,6 +267,7 @@ func _remove_entity_at_index(idx: int) -> void:
 ## Full re-query sweep — rebuilds all parallel arrays from NCS.active_config.
 ## Called on system registration and after batch operations.
 func _update_query_filter() -> void:
+	var start = Time.get_ticks_msec()
 	if not _is_query_init:
 		setup_query()
 		_compile_interest_scripts()
@@ -282,7 +283,6 @@ func _update_query_filter() -> void:
 	for t in _node_targets.size():
 		new_node_pools.append([])
 
-	var start_time = Time.get_ticks_msec()
 	for config_node in NCS.active_config:
 		if not is_instance_valid(config_node):
 			continue
@@ -310,8 +310,8 @@ func _update_query_filter() -> void:
 	_flat_data_pools = new_data_pools
 	_flat_node_pools = new_node_pools
 
-	var timer = Time.get_ticks_msec() - start_time
-	print(get_script().get_global_name(), " ms: ", timer)
+	var timer = Time.get_ticks_msec() - start
+	print(get_script().get_global_name(), " timer ms: ", timer)
 
 
 ## Helper: Locates node instance on parent_body

@@ -20,8 +20,11 @@ var _script_to_systems: Dictionary = {}
 var _command_queue: Array[Callable] = []
 var _dirty_entities: Dictionary = {}
 var _pending_registrations: Array[EntityConfig] = []
+var _pending_registrations_set: Dictionary = {}
 var _pending_unregistrations: Array[Variant] = []
+var _pending_unregistrations_set: Dictionary = {}
 var _despawn_queue: Array[Node] = []
+var _despawn_set: Dictionary = {}
 
 # Typed spawn queue (zero closure allocations)
 var _spawn_scenes: Array[PackedScene] = []
@@ -83,8 +86,10 @@ func despawn(node_or_config: Variant) -> void:
 		config._is_registered = false
 
 	if node_or_config is Node:
-		_despawn_queue.append(node_or_config as Node)
-		_schedule_flush()
+		if not _despawn_set.has(node_or_config):
+			_despawn_set[node_or_config] = true
+			_despawn_queue.append(node_or_config as Node)
+			_schedule_flush()
 
 
 # ==============================================================================
@@ -136,7 +141,8 @@ func mark_dirty(entity: Variant, changed_script: Script = null) -> void:
 func register_entity(entity: Variant) -> void:
 	if not is_instance_valid(entity) or not (entity is EntityConfig):
 		return
-	if not _pending_registrations.has(entity):
+	if not _pending_registrations_set.has(entity):
+		_pending_registrations_set[entity] = true
 		_pending_registrations.append(entity as EntityConfig)
 		_schedule_flush()
 
@@ -148,7 +154,8 @@ func unregister_entity(entity: Variant) -> void:
 	var cfg = entity as EntityConfig
 	if not cfg._is_registered:
 		return
-	if not _pending_unregistrations.has(cfg):
+	if not _pending_unregistrations_set.has(cfg):
+		_pending_unregistrations_set[cfg] = true
 		_pending_unregistrations.append(cfg)
 		_schedule_flush()
 
@@ -202,10 +209,11 @@ func set_updating_state(state: bool) -> void:
 
 ## Flushes queued operations. Auto-detects whether to run Batch Re-query (>= threshold)
 ## or Incremental Single-Entity evaluations (< threshold).
+## Selectively re-evaluates ONLY systems affected by the modified scripts.
 func flush() -> void:
 	_flush_scheduled = false
 
-	# 1. Process deferred callables
+	# Process deferred callables
 	if not _deferred_callables.is_empty():
 		var callables = _deferred_callables
 		var args_list = _deferred_args
@@ -222,7 +230,7 @@ func flush() -> void:
 				else:
 					callable.call(args)
 
-	# 2. Process structural commands (e.g. spawn lambdas)
+	# Process typed spawn queue (zero closure allocations)
 	if not _spawn_scenes.is_empty():
 		var scenes = _spawn_scenes
 		var parents = _spawn_parents
@@ -254,7 +262,7 @@ func flush() -> void:
 			if cb.is_valid():
 				cb.call(instance)
 
-	# 3. Process generic commands
+	# Process generic commands
 	if not _command_queue.is_empty():
 		var commands = _command_queue
 		_command_queue = []
@@ -275,9 +283,10 @@ func flush() -> void:
 	var is_batch: bool = total_changes >= MASS_UPDATE_THRESHOLD
 
 	# Process despawn queue
-	if not _despawn_queue.is_empty():
-		var despawns = _despawn_queue
-		_despawn_queue = []
+	var despawns: Array[Node] = _despawn_queue
+	_despawn_queue = []
+	_despawn_set.clear()
+	if not despawns.is_empty():
 		for target_node in despawns:
 			if not is_instance_valid(target_node):
 				continue
@@ -292,9 +301,10 @@ func flush() -> void:
 				free_target.queue_free()
 
 	# Process unregistrations
-	if not _pending_unregistrations.is_empty():
-		var unregs = _pending_unregistrations
-		_pending_unregistrations = []
+	var unregs: Array[Variant] = _pending_unregistrations
+	_pending_unregistrations = []
+	_pending_unregistrations_set.clear()
+	if not unregs.is_empty():
 		for entity in unregs:
 			if is_instance_valid(entity):
 				if is_batch:
@@ -303,9 +313,10 @@ func flush() -> void:
 					_apply_entity_unregistration(entity)
 
 	# Process registrations
-	if not _pending_registrations.is_empty():
-		var regs = _pending_registrations
-		_pending_registrations = []
+	var regs: Array[EntityConfig] = _pending_registrations
+	_pending_registrations = []
+	_pending_registrations_set.clear()
+	if not regs.is_empty():
 		for entity in regs:
 			if is_instance_valid(entity):
 				if is_batch:
@@ -315,8 +326,45 @@ func flush() -> void:
 
 	# Finalize Batch vs Incremental updates
 	if is_batch:
+		var candidate_systems: Dictionary = {}
+		var has_specific_candidates: bool = false
+
+		# Collect affected candidate systems from dirty entities
+		if not _dirty_entities.is_empty():
+			for entity in _dirty_entities.keys():
+				var changed_scripts: Array = _dirty_entities[entity]
+				if not changed_scripts.is_empty():
+					for script in changed_scripts:
+						if _script_to_systems.has(script):
+							has_specific_candidates = true
+							for sys in _script_to_systems[script]:
+								candidate_systems[sys] = true
+				elif is_instance_valid(entity):
+					var sys_list = _get_candidate_systems_for(entity)
+					if not sys_list.is_empty():
+						has_specific_candidates = true
+						for sys in sys_list:
+							candidate_systems[sys] = true
+
+		# Collect candidate systems from batch spawns / registrations
+		if not regs.is_empty():
+			for entity in regs:
+				if is_instance_valid(entity):
+					var sys_list = _get_candidate_systems_for(entity)
+					if not sys_list.is_empty():
+						has_specific_candidates = true
+						for sys in sys_list:
+							candidate_systems[sys] = true
 		_dirty_entities.clear()
-		_remap_all_system_queries()
+
+		# Re-query ONLY candidate systems if resolved; otherwise fallback to full remap
+		if has_specific_candidates and not candidate_systems.is_empty():
+			for sys in candidate_systems.keys():
+				if is_instance_valid(sys) and sys.has_method(&"_update_query_filter"):
+					sys._update_query_filter()
+		else:
+			_remap_all_system_queries()
+
 	elif not _dirty_entities.is_empty():
 		var dirty_snapshot = _dirty_entities
 		_dirty_entities = {}
@@ -410,6 +458,7 @@ func _extract_free_target(node_or_config: Variant) -> Node:
 
 
 ## Returns systems interested in the entity's components/data or changed scripts.
+## When changed_scripts is provided, ONLY returns systems interested in those specific changes.
 func _get_candidate_systems_for(
 		entity: Variant,
 		changed_scripts: Array = []
@@ -418,16 +467,22 @@ func _get_candidate_systems_for(
 		return []
 
 	var candidates: Dictionary = {}
-	var all_scripts: Array[Script] = []
 
+	if not changed_scripts.is_empty():
+		for script in changed_scripts:
+			if script and _script_to_systems.has(script):
+				for sys in _script_to_systems[script]:
+					candidates[sys] = true
+
+		var result: Array[SystemBase] = []
+		result.assign(candidates.keys())
+		return result
+
+	var all_scripts: Array[Script] = []
 	if entity.has_method(&"get_component_scripts"):
 		all_scripts.append_array(entity.get_component_scripts())
 	if entity.has_method(&"get_data_scripts"):
 		all_scripts.append_array(entity.get_data_scripts())
-
-	for script in changed_scripts:
-		if script and not all_scripts.has(script):
-			all_scripts.append(script)
 
 	for script in all_scripts:
 		if _script_to_systems.has(script):
