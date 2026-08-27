@@ -1,12 +1,12 @@
 # NCS
 ### Node-based Component System for Godot
 
-Data-Oriented design bridge for Godot. This plugin are NOT try to be Pure ECS framework, But aim to make ECS workflow in godot with less friction and encourage user to build good architect with hybrid approach.
+Data-Oriented design bridge for Godot. This plugin are NOT try to be Pure ECS framework, But aim to make ECS workflow in Godot with less friction and encourage user to build good architect with hybrid approach.
 
 ## Core
-- Entity: Normal godot reuseable scene e.g. Player, CharacterBody2D, etc.
+- Entity: Normal godot reusable scene e.g. Player, CharacterBody2D, etc.
 - Data: Pure variable container for data resource, without any logic.
-- Components: A Tag for query by system and reuseable logics focus on local scene.
+- Components: A Tag for query by system and reusable logic focus on local scene.
 - System: Isolate node that process system-wide logic which need to share across the your game world.
 
 
@@ -40,11 +40,9 @@ Components live in the scene tree under the `ComponentsHub` folder. They inherit
 
 ```gdscript
 # You can put logics in component with Native godot style.
-# Make sure there focus on local scene.
+# Make sure it focus on local scene.
 # Avoid run process loop inside each comp.
-# Avoid Write to Data that may use in system,
-# Make habit of Read-only from Data to avoid conflict with SysSystem. 
-
+# Make habit of Read-only from Data to avoid conflict with SysSystem.
 class_name CompHealth
 extends ComponentBase
 
@@ -135,9 +133,9 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, delta: float)
 					Vector2.ZERO,
 					move_data.acceleration * delta
 			)
-		# In real usecase Recommend to separate pure data calculation and scene-tree update.
 		ent.velocity = move_data.velocity
 		ent.move_and_slide()
+		# In real use-case Recommend to separate pure data calculation and scene-tree update.
 ```
 
 
@@ -170,7 +168,6 @@ NCS.remove_system(SysMovement)
 ### Query Filtering & Pre-fetched
 
 System queries are configured in `setup_query()` using method chaining. You can filter entities by their attached components and pre-fetch resources or scene nodes directly into process pools.
-
 
 #### Filtering Entities
 * `with_all([CompMove, CompInput])`: Entity **must have all** listed components/data.
@@ -243,6 +240,6 @@ Level_Main
 - You may not expect to gain huge performance boost from this plugin, Just unified architecture it is.
 
 
-### Credits & Contibute
+### Credits & Contribute
 - This project inspired by [GECS](https://github.com/csprance/gecs) awesome ECS framework for godot
-- Currently develop and maintain by me (GoodyWolf), If interest to contibute contact me at goodywolf101@gmail.com
+- Currently develop and maintain by me (GoodyWolf), If interest to contribute contact me at goodywolf101@gmail.com
