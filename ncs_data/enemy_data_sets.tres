@@ -16,15 +16,15 @@ metadata/_custom_type_script = "uid://bdl22fmu0u6e5"
 script = ExtResource("3_6i0w3")
 metadata/_custom_type_script = "uid://cv42ydpp65ire"
 
-[sub_resource type="Resource" id="Resource_b3gj3"]
+[sub_resource type="Resource" id="Resource_cgx3m"]
 script = ExtResource("4_loytb")
 metadata/_custom_type_script = "uid://bcrp0alk1qht4"
 
-[sub_resource type="Resource" id="Resource_rrsjy"]
+[sub_resource type="Resource" id="Resource_pa6kk"]
 script = ExtResource("5_f7esm")
 metadata/_custom_type_script = "uid://x18cyu72de8c"
 
 [resource]
 script = ExtResource("6_w6ttl")
-data_sets = Array[ExtResource("1_ps6mg")]([SubResource("Resource_ctvm8"), SubResource("Resource_gg2rq"), SubResource("Resource_b3gj3"), SubResource("Resource_rrsjy")])
+data_sets = Array[ExtResource("1_ps6mg")]([SubResource("Resource_ctvm8"), SubResource("Resource_gg2rq"), SubResource("Resource_cgx3m"), SubResource("Resource_pa6kk")])
 metadata/_custom_type_script = "uid://cahdo7ajcu48f"

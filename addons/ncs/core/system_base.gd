@@ -249,7 +249,7 @@ func _evaluate_single_entity(config_node: EntityConfig, changed_script: Script =
 
 
 ## Removal for a departing entity. Called by NCS.unregister_entity().
-func _handle_incremental_departure(config_node: Object) -> void:
+func _handle_incremental_departure(config_node: EntityConfig) -> void:
 	var idx = config.find(config_node)
 	if idx != -1:
 		_remove_entity_at_index(idx)
@@ -267,6 +267,7 @@ func _remove_entity_at_index(idx: int) -> void:
 ## Full re-query sweep — rebuilds all parallel arrays from NCS.active_config.
 ## Called on system registration and after batch operations.
 func _update_query_filter() -> void:
+	var start = Time.get_ticks_msec()
 	if not _is_query_init:
 		setup_query()
 		_compile_interest_scripts()

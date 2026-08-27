@@ -21,13 +21,8 @@ var _command_queue: Array[Callable] = []
 var _dirty_entities: Dictionary = {}
 var _pending_registrations: Array[EntityConfig] = []
 var _pending_registrations_set: Dictionary = {}
-var _pending_unregistrations: Array[Variant] = []
+var _pending_unregistrations: Array[EntityConfig] = []
 var _pending_unregistrations_set: Dictionary = {}
-
-# Typed spawn/despawn queue
-var _spawn_queue: Array[Dictionary] = []
-var _despawn_queue: Array[Node] = []
-var _despawn_set: Dictionary = {}
 
 # Typed callable queue
 var _deferred_callables: Array[Callable] = []
@@ -57,7 +52,7 @@ func _physics_process(_delta: float) -> void:
 # ==============================================================================
 
 ## Safely instantiates and adds a 2D/3D entity to the scene tree via zero-allocation typed queue.
-## Usage: NCS.spawn(enemy_scene, self, player.global_position)
+## Usage: NCS.spawn(enemy_scene, self, player.global_position, func(enemy):...)
 func spawn(
 		scene: PackedScene,
 		parent: Node,
@@ -67,29 +62,42 @@ func spawn(
 	if not scene or not is_instance_valid(parent):
 		return
 
-	_spawn_queue.append({
-		"scene": scene,
-		"parent": parent,
-		"position": position_or_transform,
-		"callback": setup_callback
-	})
-	_schedule_flush()
+	push_command(func():
+		if not is_instance_valid(parent):
+			return
+			
+		var instance = scene.instantiate()
+		
+		if position_or_transform != null:
+			if instance is Node2D:
+				if position_or_transform is Vector2: instance.global_position = position_or_transform
+				elif position_or_transform is Transform2D: instance.global_transform = position_or_transform
+			elif instance is Node3D:
+				if position_or_transform is Vector3: instance.global_position = position_or_transform
+				elif position_or_transform is Transform3D: instance.global_transform = position_or_transform
+				
+		parent.add_child(instance)
+		
+		if setup_callback.is_valid():
+			setup_callback.call(instance)
+	)
 
 
-## Queues an entity or node for despawn at next flush.
+## Queues an entity or node for safe despawn via the command buffer.
 func despawn(node_or_config: Variant) -> void:
 	if not is_instance_valid(node_or_config):
 		return
 
 	var config: EntityConfig = _extract_config(node_or_config)
+	var free_target: Node = _extract_free_target(node_or_config)
+	
 	if is_instance_valid(config):
 		config._is_registered = false
-
-	if node_or_config is Node:
-		if not _despawn_set.has(node_or_config):
-			_despawn_set[node_or_config] = true
-			_despawn_queue.append(node_or_config as Node)
-			_schedule_flush()
+		push_command(func():
+			unregister_entity(config)
+			if is_instance_valid(free_target) and not free_target.is_queued_for_deletion():
+				free_target.queue_free()
+		)
 
 
 # ==============================================================================
@@ -123,13 +131,13 @@ func push_method_call(config: Variant, comp_script: Script, method_name: StringN
 
 
 ## Marks an entity as dirty for re-evaluation during flush.
-func mark_dirty(entity: Variant, changed_script: Script = null) -> void:
-	if not is_instance_valid(entity):
+func mark_dirty(config: EntityConfig, changed_script: Script = null) -> void:
+	if not is_instance_valid(config):
 		return
-	if not _dirty_entities.has(entity):
-		_dirty_entities[entity] = []
-	if changed_script and not _dirty_entities[entity].has(changed_script):
-		_dirty_entities[entity].append(changed_script)
+	if not _dirty_entities.has(config):
+		_dirty_entities[config] = []
+	if changed_script and not _dirty_entities[config].has(changed_script):
+		_dirty_entities[config].append(changed_script)
 	_schedule_flush()
 
 
@@ -138,26 +146,36 @@ func mark_dirty(entity: Variant, changed_script: Script = null) -> void:
 # ==============================================================================
 
 ## Registers an entity for evaluation during flush.
-func register_entity(entity: Variant) -> void:
-	if not is_instance_valid(entity) or not (entity is EntityConfig):
+func register_entity(config: EntityConfig) -> void:
+	if not is_instance_valid(config) or not (config is EntityConfig):
 		return
-	if not _pending_registrations_set.has(entity):
-		_pending_registrations_set[entity] = true
-		_pending_registrations.append(entity as EntityConfig)
+	if not _pending_registrations_set.has(config):
+		_pending_registrations_set[config] = true
+		_pending_registrations.append(config as EntityConfig)
 		_schedule_flush()
 
 
 ## Unregisters an entity during flush.
-func unregister_entity(entity: Variant) -> void:
-	if not is_instance_valid(entity) or not (entity is EntityConfig):
+func unregister_entity(config: EntityConfig) -> void:
+	if not (config is EntityConfig):
 		return
-	var cfg = entity as EntityConfig
-	if not cfg._is_registered:
-		return
-	if not _pending_unregistrations_set.has(cfg):
-		_pending_unregistrations_set[cfg] = true
-		_pending_unregistrations.append(cfg)
+	if not _pending_unregistrations_set.has(config):
+		_pending_unregistrations_set[config] = true
+		_pending_unregistrations.append(config)
 		_schedule_flush()
+
+
+## Immediately unregisters an entity from the NCS.
+## Crucial for native queue_free() safety, as deferred unregistration 
+func unregister_entity_sync(config: EntityConfig) -> void:
+	if not is_instance_valid(config):
+		return
+
+	if _pending_unregistrations_set.has(config):
+		_pending_unregistrations_set.erase(config)
+		_pending_unregistrations.erase(config)
+
+	_apply_entity_unregistration(config)
 
 
 ## Registers a system instance into the world.
@@ -230,33 +248,6 @@ func flush() -> void:
 				else:
 					callable.call(args)
 
-	# Process typed spawn queue
-	if not _spawn_queue.is_empty():
-		var current_spawns = _spawn_queue
-		_spawn_queue = []
-		
-		for spawn_data in current_spawns:
-			var parent = spawn_data["parent"]
-			if not is_instance_valid(parent): 
-				continue
-				
-			var instance = spawn_data["scene"].instantiate()
-			var pos = spawn_data["position"]
-			
-			if pos != null:
-				if instance is Node2D:
-					if pos is Vector2: instance.global_position = pos
-					elif pos is Transform2D: instance.global_transform = pos
-				elif instance is Node3D:
-					if pos is Vector3: instance.global_position = pos
-					elif pos is Transform3D: instance.global_transform = pos
-					
-			parent.add_child(instance)
-			
-			var cb = spawn_data["callback"]
-			if cb.is_valid():
-				cb.call(instance)
-
 	# Process generic commands
 	if not _command_queue.is_empty():
 		var commands = _command_queue
@@ -266,62 +257,40 @@ func flush() -> void:
 				cmd.call()
 
 	var total_changes: int = (
-			_despawn_queue.size()
 			+ _pending_unregistrations.size()
 			+ _pending_registrations.size()
 			+ _dirty_entities.size()
 	)
-
 	if total_changes == 0:
 		return
-
 	var is_batch: bool = total_changes >= MASS_UPDATE_THRESHOLD
 
-	# Process despawn queue
-	var despawns: Array[Node] = _despawn_queue
-	_despawn_queue = []
-	_despawn_set.clear()
-	if not despawns.is_empty():
-		for target_node in despawns:
-			if not is_instance_valid(target_node):
-				continue
-			var config: EntityConfig = _extract_config(target_node)
-			var free_target: Node = _extract_free_target(target_node)
-			if is_instance_valid(config):
-				if is_batch:
-					_unregister_from_active(config)
-				else:
-					_apply_entity_unregistration(config)
-			if is_instance_valid(free_target):
-				free_target.queue_free()
-
 	# Process unregistrations
-	var unregs: Array[Variant] = _pending_unregistrations
+	var unregs: Array[EntityConfig] = _pending_unregistrations
 	_pending_unregistrations = []
 	_pending_unregistrations_set.clear()
 	if not unregs.is_empty():
-		for entity in unregs:
-			if is_instance_valid(entity):
-				if is_batch:
-					_unregister_from_active(entity)
-				else:
-					_apply_entity_unregistration(entity)
+		for config in unregs:
+			if is_batch:
+				_unregister_from_active(config)
+			else:
+				_apply_entity_unregistration(config)
 
 	# Process registrations
 	var regs: Array[EntityConfig] = _pending_registrations
 	_pending_registrations = []
 	_pending_registrations_set.clear()
 	if not regs.is_empty():
-		for entity in regs:
-			if is_instance_valid(entity):
+		for config in regs:
+			if is_instance_valid(config):
 				if is_batch:
-					_register_to_active(entity)
+					_register_to_active(config)
 				else:
-					_apply_entity_registration(entity)
+					_apply_entity_registration(config)
 
 	# Finalize Batch vs Incremental updates
 	if is_batch:
-		_process_batch_update(regs)
+		_process_batch_update(regs, unregs)
 	else:
 		_process_incremental_update()
 
@@ -331,22 +300,32 @@ func flush() -> void:
 # ==============================================================================
 
 ## Handles mass entity mutations cleanly by identifying affected system candidates.
-func _process_batch_update(new_registrations: Array[EntityConfig]) -> void:
+func _process_batch_update(
+		new_registrations: Array[EntityConfig],
+		unregistrations: Array[EntityConfig] = []
+) -> void:
 	var candidate_systems: Dictionary = {}
 	var has_specific_candidates: bool = false
 
-	for entity in _dirty_entities.keys():
-		var changed_scripts: Array = _dirty_entities[entity]
-		
+	for config in _dirty_entities.keys():
+		var changed_scripts: Array = _dirty_entities[config]
 		for script in changed_scripts:
 			if script and _script_to_systems.has(script):
 				has_specific_candidates = true
 				for sys in _script_to_systems[script]:
 					candidate_systems[sys] = true
 
-	for entity in new_registrations:
-		if is_instance_valid(entity):
-			var sys_list = _get_candidate_systems_for(entity)
+	for config in new_registrations:
+		if is_instance_valid(config):
+			var sys_list = _get_candidate_systems_for(config)
+			if not sys_list.is_empty():
+				has_specific_candidates = true
+				for sys in sys_list:
+					candidate_systems[sys] = true
+
+	for config in unregistrations:
+		if is_instance_valid(config):
+			var sys_list = _get_candidate_systems_for(config)
 			if not sys_list.is_empty():
 				has_specific_candidates = true
 				for sys in sys_list:
@@ -367,65 +346,69 @@ func _process_incremental_update() -> void:
 	var dirty_snapshot = _dirty_entities
 	_dirty_entities = {}
 	
-	for entity in dirty_snapshot.keys():
-		if is_instance_valid(entity):
-			var changed_scripts: Array = dirty_snapshot[entity]
-			var candidates = _get_candidate_systems_for(entity, changed_scripts)
+	for config in dirty_snapshot.keys():
+		if is_instance_valid(config):
+			var changed_scripts: Array = dirty_snapshot[config]
+			var candidates = _get_candidate_systems_for(config, changed_scripts)
 			
 			for system in candidates:
 				if system.has_method(&"_evaluate_single_entity"):
-					system._evaluate_single_entity(entity)
+					system._evaluate_single_entity(config)
 
 
 ## Adds entity to active_config.
-func _register_to_active(entity: Variant) -> void:
-	if not is_instance_valid(entity) or not (entity is EntityConfig) or _active_config_map.has(entity):
+func _register_to_active(config: EntityConfig) -> void:
+	if not is_instance_valid(config) or not (config is EntityConfig) or _active_config_map.has(config):
 		return
-	var cfg = entity as EntityConfig
+	var cfg = config as EntityConfig
 	cfg._is_registered = true
 	_active_config_map[cfg] = active_config.size()
 	active_config.append(cfg)
 
 
-## Removes entity from active_config
-func _unregister_from_active(entity: Variant) -> void:
-	if not is_instance_valid(entity) or not (entity is EntityConfig) or not _active_config_map.has(entity):
-		return
-	var cfg = entity as EntityConfig
-	cfg._is_registered = false
-	var idx: int = _active_config_map[cfg]
-	var last_idx: int = active_config.size() - 1
-	var last_entity: EntityConfig = active_config[last_idx]
-	active_config[idx] = last_entity
-	_active_config_map[last_entity] = idx
-	active_config.pop_back()
-	_active_config_map.erase(cfg)
-	_dirty_entities.erase(cfg)
-
-
-func _apply_entity_registration(entity: Variant) -> void:
-	if not is_instance_valid(entity) or not (entity is EntityConfig) or _active_config_map.has(entity):
+func _apply_entity_registration(config: EntityConfig) -> void:
+	if not is_instance_valid(config) or not (config is EntityConfig) or _active_config_map.has(config):
 		return
 
-	_register_to_active(entity)
+	_register_to_active(config)
 
-	var candidates = _get_candidate_systems_for(entity)
+	var candidates = _get_candidate_systems_for(config)
 	if candidates.is_empty():
 		for sys in _systems.values():
 			if sys.has_method(&"_evaluate_single_entity"):
-				sys._evaluate_single_entity(entity)
+				sys._evaluate_single_entity(config)
 	else:
 		for system in candidates:
 			if system.has_method(&"_evaluate_single_entity"):
-				system._evaluate_single_entity(entity)
+				system._evaluate_single_entity(config)
 
 
-func _apply_entity_unregistration(entity: Variant) -> void:
-	if not is_instance_valid(entity) or not (entity is EntityConfig):
+## Removes entity from active_config
+func _unregister_from_active(config: EntityConfig) -> void:
+	if not _active_config_map.has(config):
 		return
-	_unregister_from_active(entity)
+
+	if is_instance_valid(config) and config is EntityConfig:
+		(config as EntityConfig)._is_registered = false
+
+	var idx: int = _active_config_map[config]
+	var last_idx: int = active_config.size() - 1
+	var last_entity: EntityConfig = active_config[last_idx]
+	
+	active_config[idx] = last_entity
+	_active_config_map[last_entity] = idx
+	active_config.pop_back()
+	
+	_active_config_map.erase(config)
+	_dirty_entities.erase(config)
+
+
+func _apply_entity_unregistration(config: EntityConfig) -> void:
+	if not _active_config_map.has(config):
+		return
+	_unregister_from_active(config)
 	for sys in _systems_list:
-		sys._handle_incremental_departure(entity)
+		sys._handle_incremental_departure(config)
 
 
 ## Extracts EntityConfig node from any node hierarchy or property binding.
@@ -433,15 +416,15 @@ func _extract_config(node_or_config: Variant) -> EntityConfig:
 	if not is_instance_valid(node_or_config):
 		return null
 	if node_or_config is EntityConfig:
-		return node_or_config as EntityConfig
+		return node_or_config
 	if "entity_config" in node_or_config and node_or_config.entity_config is EntityConfig:
-		return node_or_config.entity_config as EntityConfig
+		return node_or_config.entity_config
 	if "config" in node_or_config and node_or_config.config is EntityConfig:
-		return node_or_config.config as EntityConfig
+		return node_or_config.config
 	if node_or_config is Node:
 		for child in (node_or_config as Node).get_children():
 			if child is EntityConfig:
-				return child as EntityConfig
+				return child
 	return null
 
 
@@ -456,10 +439,10 @@ func _extract_free_target(node_or_config: Variant) -> Node:
 ## Returns systems interested in the entity's components/data or changed scripts.
 ## When changed_scripts is provided, ONLY returns systems interested in those specific changes.
 func _get_candidate_systems_for(
-		entity: Variant,
+		config: EntityConfig,
 		changed_scripts: Array = []
 ) -> Array[SystemBase]:
-	if not is_instance_valid(entity) or not (entity is EntityConfig):
+	if not is_instance_valid(config) or not (config is EntityConfig):
 		return []
 
 	var candidates: Dictionary = {}
@@ -475,10 +458,10 @@ func _get_candidate_systems_for(
 		return result
 
 	var all_scripts: Array[Script] = []
-	if entity.has_method(&"get_component_scripts"):
-		all_scripts.append_array(entity.get_component_scripts())
-	if entity.has_method(&"get_data_scripts"):
-		all_scripts.append_array(entity.get_data_scripts())
+	if config.has_method(&"get_component_scripts"):
+		all_scripts.append_array(config.get_component_scripts())
+	if config.has_method(&"get_data_scripts"):
+		all_scripts.append_array(config.get_data_scripts())
 
 	for script in all_scripts:
 		if _script_to_systems.has(script):

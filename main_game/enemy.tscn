@@ -44,7 +44,6 @@ metadata/_custom_type_script = "uid://chjaq4g4jwye5"
 
 [node name="CompEnemyAI" type="Node" parent="ComponentsHub" unique_id=913011947]
 script = ExtResource("7_pa6kk")
-require_data = true
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
 [node name="CompMovement" type="Node" parent="ComponentsHub" unique_id=679268832]

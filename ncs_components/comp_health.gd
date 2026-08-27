@@ -39,8 +39,12 @@ func take_damage(amount: float) -> void:
 
 func _on_state_changed(state: String) -> void:
 	if state == "DEAD":
-		# Safely despawn entity at the end of frame use NCS.despawn(target_node)
-		NCS.despawn(entity_node)
+		# Safely despawn entity at the end of current_frame via command-buffer.
+		NCS.despawn(config) # NCS.depawn(target_node) also work if call somewhere else e.g. on Player
+
+		# Native queue_free() work fine, it will trigger immediately
+		# Instead of use end of current_frame.
+		#entity_node.queue_free() 
 
 
 # In real usecase this watcher pattern can be useful for e.g. UpdateUI

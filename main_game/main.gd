@@ -37,16 +37,20 @@ func _on_ncs_btn_pressed() -> void:
 
 	for i in range(200):
 		await get_tree().process_frame
-		
 		for j in range(10):
 			var spawn_pos = player.global_position if player else Vector2.ZERO
-			
-			# Safely spawn new entity to world use:
+			# Spawn new entity to world, Defered instancing at end-of-frame.
 			# NCS.spawn(scene, parent_node, position, custom_setup if needed)
 			NCS.spawn(enemy_scene, get_parent(), spawn_pos,
 				func(enemy_node: Enemy):
 					enemy_node.sprite_2d.modulate = Color.WHITE
 			)
+			
+			# Using normal instantiate work fine, It will spawn immediatly at current_frame.
+			# And auto-register node with EntityConfig to NCSWorld
+#			var enemy = enemy_scene.instantiate() as Enemy
+#			enemy.global_position = spawn_pos
+#			add_child(enemy)
 
 			total_ncs_count += 1
 			ent_changed.emit()
@@ -62,7 +66,6 @@ func _on_oop_btn_pressed() -> void:
 
 	for i in range(200):
 		await get_tree().process_frame
-		
 		for j in range(10):
 			var spawn_pos = player.global_position if player else Vector2.ZERO
 			var enemy = enemy_scene.instantiate() as EnemyOOP

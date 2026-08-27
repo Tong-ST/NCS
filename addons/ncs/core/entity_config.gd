@@ -32,7 +32,7 @@ var _data_removed_watchers: Dictionary = {}
 # BUILT-IN VIRTUAL METHODS
 # ==============================================================================
 
-func _enter_tree() -> void:
+func _ready() -> void:
 	if not entity_node:
 		entity_node = owner
 	if base_config and not runtime_config:
@@ -43,14 +43,15 @@ func _enter_tree() -> void:
 	_rebuild_data_cache()
 	_rebuild_component_cache()
 
-	_is_registered = true
 	NCS.register_entity(self)
 
 
 func _exit_tree() -> void:
 	if _is_registered:
 		_is_registered = false
-		NCS.unregister_entity(self)
+		if is_instance_valid(NCS):
+			NCS.unregister_entity_sync(self)
+
 
 
 # ==============================================================================
