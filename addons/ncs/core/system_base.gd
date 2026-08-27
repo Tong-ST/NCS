@@ -42,6 +42,25 @@ var _is_query_init: bool = false
 # BUILT-IN VIRTUAL METHODS
 # ==============================================================================
 
+func _enter_tree() -> void:
+	var sys_script = get_script()
+	if not sys_script:
+		return
+	name = sys_script.get_global_name()
+	if NCS.has_system(sys_script):
+		push_warning("NCS: Duplicate node '%s' detected. Freeing." % name)
+		queue_free()
+		return
+
+	NCS.register_system(self)
+	print("NCS: System Registered -> ", name)
+
+
+func _exit_tree() -> void:
+	NCS.unregister_system(self)
+	print("NCS: Unregistered system -> ", name)
+
+
 func _process(delta: float) -> void:
 	if not _entities.is_empty():
 		NCS.set_updating_state(true)
@@ -326,3 +345,21 @@ func _find_node_in_entity(parent_body: Node, target_type: Variant) -> Node:
 			return child
 
 	return null
+
+
+## Ensures queries are compiled on registration
+func _initialize_query_if_needed() -> void:
+	if not _is_query_init:
+		setup_query()
+		_compile_interest_scripts()
+		_is_query_init = true
+
+
+## Resets entity and data pools when unregistered to prevent memory leaks.
+func _clear_system_state() -> void:
+	_entities.clear()
+	config.clear()
+	for pool in _flat_data_pools:
+		pool.clear()
+	for pool in _flat_node_pools:
+		pool.clear()

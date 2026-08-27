@@ -154,6 +154,18 @@ if target_enemy_health <= 0:
 ```
 - Naming convention for ease of use and remember `SysSystem` for class_name, sys_system.gd for scripts.
 
+#### Add/remove System at runtime.
+```gdscript
+# Add SysMovement to $NCSWorld Core Folder at index 2
+NCS.add_system(SysMovement, $NCSWorld/CoreFolder, 2)
+
+# Add to NCSWorld node at last child
+NCS.add_system(SysMovement) # duplicate system will be ignored accept only one system with same script.
+
+# Remove selected system from NCSWorld
+NCS.remove_system(SysMovement)
+```
+- You'll need to prepare e.g. sys_movement.gd with class_name `SysMovement`, No need to create scene or node, Just a script with class_name.
 
 ### Query Filtering & Pre-fetched
 
@@ -178,22 +190,22 @@ class_name SysRender
 extends SystemBase
 
 func setup_query() -> void:
-    with_all([CompMovement]).with_any([DataPoison, DataFreeze]).with_not([CompDead, DataStun])
-    iterate_data([DataMovement])
-    fetch_nodes([Sprite2D, AnimationPlayer])
+	with_all([CompMovement]).with_any([DataPoison, DataFreeze]).with_not([CompDead, DataStun])
+	iterate_data([DataMovement])
+	fetch_nodes([Sprite2D, AnimationPlayer])
 
 func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
-    var move_pool = data_pools[0] as Array[DataMovement]
-    var sprite_pool = node_pools[0] as Array[Sprite2D]
-    var anim_pool = node_pools[1] as Array[AnimationPlayer]
+	var move_pool = data_pools[0] as Array[DataMovement]
+	var sprite_pool = node_pools[0] as Array[Sprite2D]
+	var anim_pool = node_pools[1] as Array[AnimationPlayer]
 
-    for i in entities.size():
-        var move_data = move_pool[i]
-        var sprite = sprite_pool[i]
-        var anim = anim_pool[i]
+	for i in entities.size():
+		var move_data = move_pool[i]
+		var sprite = sprite_pool[i]
+		var anim = anim_pool[i]
 
-        if move_data and sprite:
-            sprite.flip_h = move_data.velocity.x < 0
+		if move_data and sprite:
+			sprite.flip_h = move_data.velocity.x < 0
 ```
 - You can still do e.g. `ent.get_node_or_null("Sprite2D")`, `config[i].get_comp(CompMove), config[i].get_data(DataMove)` at process if you don't want pre-fetched, But make sure to safety check inside loop if you do dynamically fetch e.g. `if not move_data: continue`
 

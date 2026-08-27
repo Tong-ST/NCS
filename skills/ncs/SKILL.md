@@ -307,7 +307,19 @@ config.remove_comp(CompMovement)
 ```
 
 ---
+#### Add/remove System at runtime/via code.
+```gdscript
+# Add SysMovement to $NCSWorld Core Folder at index 2
+NCS.add_system(SysMovement, $NCSWorld/CoreFolder, 2)
 
+# Add to NCSWorld node at last child
+NCS.add_system(SysMovement) # Duplicate system will be ignored.
+
+# Remove selected system from NCSWorld
+NCS.remove_system(SysMovement)
+```
+- You'll need to prepare e.g. sys_movement.gd with class_name `SysMovement`, No need to create scene or node, Just a script with class_name.
+---
 ## 5. Architectural Rules & Best Practices for AI Agents
 
 > [!IMPORTANT]
@@ -348,6 +360,8 @@ config.remove_comp(CompMovement)
 | `NCS` | `despawn(node_or_config)` | Safely unregisters and frees an entity at frame end. |
 | `NCS` | `push_command(callable)` | Pushes a lambda/command to the deferred frame buffer. |
 | `NCS` | `mark_dirty(entity, script)` | Queues single entity for deferred candidate re-evaluation. |
+| `NCS` | `add_system(SystemBase)` | Adds a system at runtime. |
+| `NCS` | `remove_system(SystemBase)` | Removes a system at runtime. |
 | `EntityConfig` | `get_data(Script)` | Returns runtime data block in $O(1)$. |
 | `EntityConfig` | `get_comp(Script)` | Returns component node in $O(1)$. |
 | `EntityConfig` | `has_data(Script)` | Returns true if data type is present. |
@@ -371,5 +385,4 @@ config.remove_comp(CompMovement)
 | `ComponentBase` | `config: EntityConfig` | Auto-wired sibling EntityConfig node. |
 | `ComponentBase` | `require_data: bool` | Enables editor configuration warnings if Data* is missing. |
 | `ComponentsHub` | `entity_node: Node` | Physical body of the entity this hub operates on. |
-| `NCSWorld` | `_register_systems_in_hierarchy` | Recursively discovers and registers all `SystemBase` children. |
 | `SystemsFolder` | `(Grouping Node)` | Organizational folder for grouping `SystemBase` nodes in `NCSWorld`. |

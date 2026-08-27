@@ -24,9 +24,14 @@ func _process(_delta: float) -> void:
 	perf_counter.text = "FPS: %d\nProcess: %.2f ms\nPhysics Process: %.2f ms\nObjects: %d" % [fps, process_time, physics_time, object_count]
 
 
-func _on_ent_changed() -> void:
-	ncs_ent_count.text = str("NCS Enemies: ", total_ncs_count)
-	oop_ent_count.text = str("OOP Enemies: ", total_oop_count)
+# Add/remove System add runtime.
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("NP+"):
+		# Add new system to NCSWorld folder GameplaySystems at index 2
+		NCS.add_system(SysTest, $NCSWorld/GameplaySystems, 2) 
+	if event.is_action_pressed("NP-"):
+		# Remove system at runtime.
+		NCS.remove_system(SysTest)
 
 
 func _on_ncs_btn_pressed() -> void:
@@ -75,3 +80,8 @@ func _on_oop_btn_pressed() -> void:
 			ent_changed.emit()
 
 	%OOPBtn.disabled = false
+
+
+func _on_ent_changed() -> void:
+	ncs_ent_count.text = str("NCS Enemies: ", total_ncs_count)
+	oop_ent_count.text = str("OOP Enemies: ", total_oop_count)

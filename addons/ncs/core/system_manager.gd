@@ -7,6 +7,9 @@ extends Node
 ## Otherwise, incremental single-entity evaluation is used.
 const MASS_UPDATE_THRESHOLD: int = 50
 
+## Main world reference automatically tracked by active NCSWorld nodes
+var current_world: Node = null
+
 ## Master list of every active EntityConfig in the world.
 var active_config: Array[EntityConfig] = []
 
@@ -15,6 +18,7 @@ var _systems: Dictionary = {}
 var _systems_list: Array[SystemBase] = []
 var _active_config_map: Dictionary = {}
 var _script_to_systems: Dictionary = {}
+var _systems_by_script: Dictionary = {}
 
 # Internal command buffer & flush queues
 var _command_queue: Array[Callable] = []
@@ -178,38 +182,77 @@ func unregister_entity_sync(config: EntityConfig) -> void:
 	_apply_entity_unregistration(config)
 
 
-## Registers a system instance into the world.
-func register_system(system_name: String, system_instance: Node) -> void:
-	_systems[system_name] = system_instance
-	_systems_list.append(system_instance)
-	if system_instance.has_method(&"_update_query_filter"):
-		system_instance._update_query_filter()
+## Adds a system class (e.g., NCS.add_system(SysMovement, $NCSWorld/SystemsFolder))
+func add_system(sys_script: Script, parent: Node = null, target_index: int = -1) -> SystemBase:
+	if _systems_by_script.has(sys_script):
+		push_warning("NCS: System '%s' is already active." % sys_script.resource_path.get_file())
+		return _systems_by_script[sys_script]
 
-	var scripts_to_index: Array = []
-	if "interest_scripts" in system_instance:
-		scripts_to_index.append_array(system_instance.interest_scripts)
+	var sys_instance: SystemBase = sys_script.new() as SystemBase
+	var target_parent = parent if is_instance_valid(parent) else (current_world if is_instance_valid(current_world) else self)
+	target_parent.add_child(sys_instance) # Triggers _enter_tree auto-registration
+	
+	if target_index >= 0:
+		target_parent.move_child(sys_instance, target_index)
+	
+	return sys_instance
 
-	for script in scripts_to_index:
+
+## Removes a system class e.g., NCS.remove_system(SysMovement)
+func remove_system(sys_script: Script) -> void:
+	if _systems_by_script.has(sys_script):
+		_systems_by_script[sys_script].queue_free() # Triggers _exit_tree auto-unregistration
+
+
+## Registers a system instance into the world and immediately queries matching entities.
+func register_system(system: SystemBase) -> void:
+	var sys_script = system.get_script()
+	if _systems_by_script.has(sys_script):
+		return
+
+	_systems_by_script[sys_script] = system
+	_systems_list.append(system)
+
+	system._initialize_query_if_needed()
+
+	for script in system.interest_scripts:
 		if not _script_to_systems.has(script):
 			_script_to_systems[script] = []
+		_script_to_systems[script].append(system)
 
-		var sys_list: Array = _script_to_systems[script]
-		if not sys_list.has(system_instance):
-			sys_list.append(system_instance)
+	system._update_query_filter()
+	_invalidate_all_entity_caches()
 
 
-## Unregisters a system from the world.
-func unregister_system(system_name: String) -> void:
-	var system_instance = _systems.get(system_name)
-	if system_instance:
-		_systems_list.erase(system_instance)
-		for script in _script_to_systems.keys():
-			var sys_list: Array = _script_to_systems[script]
-			sys_list.erase(system_instance)
-			if sys_list.is_empty():
-				_script_to_systems.erase(script)
+## Unregisters a system and clears its internal object references.
+func unregister_system(system: SystemBase) -> void:
+	var sys_script = system.get_script()
+	if not _systems_by_script.has(sys_script):
+		return
 
-	_systems.erase(system_name)
+	_systems_by_script.erase(sys_script)
+	_systems_list.erase(system)
+
+	for script in _script_to_systems.keys():
+		_script_to_systems[script].erase(system)
+		if _script_to_systems[script].is_empty():
+			_script_to_systems.erase(script)
+
+	system._clear_system_state()
+	_invalidate_all_entity_caches()
+
+
+## Returns true if a system instance or system class is already registered in the world.
+func has_system(sys_script: Script) -> bool:
+	return _systems_by_script.has(sys_script)
+
+
+## Helper to resolve standard system names
+func _resolve_system_name(system_instance: Node) -> String:
+	var sys_name = system_instance.get_script().get_global_name()
+	if sys_name.is_empty():
+		sys_name = system_instance.name
+	return sys_name
 
 
 ## Returns a live system instance by name, or null.
@@ -479,6 +522,13 @@ func _remap_all_system_queries() -> void:
 		var system = _systems[system_name]
 		if system.has_method(&"_update_query_filter"):
 			system._update_query_filter()
+
+
+## Invalidates candidate system caches on all active EntityConfigs when system list changes
+func _invalidate_all_entity_caches() -> void:
+	for config in active_config:
+		if is_instance_valid(config) and "is_system_cache_dirty" in config:
+			config.is_system_cache_dirty = true
 
 
 func _schedule_flush() -> void:
