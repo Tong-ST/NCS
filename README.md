@@ -222,6 +222,29 @@ func ncs_process(entities: Array[Node], delta: float) -> void:
 
 - You can still do e.g. `ent.get_node_or_null("Sprite2D")`, `config[i].get_comp(CompMove), config[i].get_data(DataMove)` at process if you don't want pre-fetched, But make sure to safety check inside loop if you do dynamically fetch e.g. `if not move_data: continue`
 
+### Serialization & Save Systems helper (`NCSSerializer`)
+
+The `NCSSerializer` static helper allows you to serialize and deserialize an entity's runtime data blocks (`NCSDataBase`) to and from JSON-compatible Dictionaries. It keeps data persistence of your `EntityConfig`.
+
+#### Serializing an Entity Data
+
+```gdscript
+# Convert all runtime data blocks attached to an EntityConfig into a Dictionary
+var entity_data: Dictionary = NCSSerializer.serialize_entity(entity_config)
+
+# Store along with your game's save dictionary
+var save_record = {
+    "save_id": save_comp.save_id,
+    "scene_path": entity_node.scene_file_path,
+    "ncs_data": entity_data
+}
+
+# Restore data blocks onto an existing entity's EntityConfig
+NCSSerializer.deserialize_entity(entity_config, save_record["ncs_data"])
+```
+
+- See examples of how to implement save system with helper [SysSaveManager](ncs_system/sys_savemanager.gd) and [CompSaveable](ncs_components/comp_saveable.gd)
+
 ### The layout on your game world
 
 To activate your systems and allow your entities to be tracked automatically, you use an NCSWorld node inside your main level scene.

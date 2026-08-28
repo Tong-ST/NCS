@@ -311,6 +311,18 @@ config.add_comp(CompDead)
 config.remove_comp(CompMovement)
 ```
 
+### F. Entity Serialization (`NCSSerializer`)
+
+Convert runtime data blocks to JSON-ready Dictionaries and restore them back onto `EntityConfig`.
+
+```gdscript
+# 1. Serialize all runtime data blocks of an entity
+var saved_dict: Dictionary = NCSSerializer.serialize_entity(config)
+
+# 2. Restore saved properties back to matching data blocks on an entity
+NCSSerializer.deserialize_entity(config, saved_dict)
+```
+
 ---
 #### Add/remove System at runtime/via code.
 ```gdscript
@@ -391,3 +403,5 @@ NCS.remove_system(SysMovement)
 | `ComponentBase` | `require_data: bool` | Enables editor configuration warnings if Data* is missing. |
 | `ComponentsHub` | `entity_node: Node` | Physical body of the entity this hub operates on. |
 | `SystemsFolder` | `(Grouping Node)` | Organizational folder for grouping `SystemBase` nodes in `NCSWorld`. |
+| `NCSSerializer` | `serialize_entity(config, include_non_exported)` | Serializes all runtime `NCSDataBase` properties into a Dictionary. |
+| `NCSSerializer` | `deserialize_entity(config, dict)` | Restores properties from a Dictionary onto matching `NCSDataBase` instances. |

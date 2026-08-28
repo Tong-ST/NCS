@@ -1,6 +1,11 @@
 class_name Player
 extends CharacterBody2D
 
+# Non-NCS variable to save/load with CompSaveable example.
+var score: int = 0
+
+var _timer: float = 0.0
+
 @onready var sprite_2d: Sprite2D = $Sprite2D
 @onready var entity_config: EntityConfig = $EntityConfig
 @onready var comp_player: CompPlayer = $ComponentsHub/CompPlayer
@@ -15,9 +20,14 @@ func _ready() -> void:
 	print("Current Speed: ", movement_data.max_speed)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	comp_player.get_player_input()
 
+	_timer += delta
+	if _timer >= 5.0:
+		_timer = 0
+		score += 100
+		print("Player score: ", score)
 
 func _on_damaged() -> void:
 	if not is_instance_valid(sprite_2d):
