@@ -7,7 +7,7 @@ extends Node
 func _process(_delta: float) -> void:
 	if not is_instance_valid(actor):
 		return
-	
+
 	var viewport = actor.get_viewport()
 	if not viewport:
 		return

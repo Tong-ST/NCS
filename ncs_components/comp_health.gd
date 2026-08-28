@@ -23,7 +23,7 @@ func _on_init_comp() -> void:
 func take_damage(amount: float) -> void:
 	if not health_data:
 		health_data = config.get_data(DataHealth)
-	
+
 	# This below just for example, Recommend comp method to be Read-only to avoid conflict.
 	# Write-data should consider to be in system, But it's flexible and Up-to-you.
 
@@ -40,11 +40,11 @@ func take_damage(amount: float) -> void:
 func _on_state_changed(state: String) -> void:
 	if state == "DEAD":
 		# Safely despawn entity at the end of current_frame via command-buffer.
-		NCS.despawn(config) # NCS.depawn(target_node) also work if call somewhere else e.g. on Player
+		NCS.despawn(entity_node) # NCS.depawn(target_node or entity_config)
 
 		# Native queue_free() work fine, it will trigger immediately
 		# Instead of use end of current_frame.
-		#entity_node.queue_free() 
+		#entity_node.queue_free()
 
 
 # In real usecase this watcher pattern can be useful for e.g. UpdateUI

@@ -4,6 +4,7 @@
 class_name NCSDataBase
 extends Resource
 
+
 ## Returns the script class name of this data block (e.g. "DataHealth").
 ## Used internally for editor validation and debug logging.
 func get_class_identifier() -> String:

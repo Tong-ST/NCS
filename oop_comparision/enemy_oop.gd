@@ -19,7 +19,7 @@ func _ready() -> void:
 
 
 func _on_damaged() -> void:
-	if not is_instance_valid(sprite_2d): 
+	if not is_instance_valid(sprite_2d):
 		return
 
 	var original_color = sprite_2d.modulate

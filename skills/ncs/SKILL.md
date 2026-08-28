@@ -191,18 +191,21 @@ func setup_query() -> void:
 
 
 ## Main physics tick: Runs at fixed physics rate
-func ncs_physics_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
-	var body_pool = entities as Array[CharacterBody2D]
+func ncs_physics_process(entities: Array[Node], delta: float) -> void:
+	var frame_entities = entities as Array[CharacterBody2D] # Cast for direct access to CharacterBody2D methods if needed
+	# Pre-assign data pools for zero-allocation access, faster than cast inside the loop
 	var move_pool = data_pools[0] as Array[DataMovement]
 	var input_pool = data_pools[1] as Array[DataInput]
+	var sprite_pool = node_pools[0] as Array[Sprite2D] # Optional, if fetch_nodes() was called
 
-	for i in body_pool.size():
-		var ent = body_pool[i]
+	for i in frame_entities.size():
+		var ent = frame_entities[i]
 		if not is_instance_valid(ent):
 			continue
 
 		var move_data = move_pool[i]
 		var input_data = input_pool[i]
+		var sprite_node = sprite_pool[i]
 
 		# Direct zero-allocation calculation
 		var input_dir = input_data.movement_vector
@@ -216,6 +219,8 @@ func ncs_physics_process(entities: Array[Node], data_pools: Array, node_pools: A
 				Vector2.ZERO,
 				move_data.acceleration * delta
 			)
+		if sprite_node:
+			sprite_node.flip_h = move_data.velocity.x < 0.0
 
 		# Store position in data (separated from render transform)
 		move_data.next_global_pos += move_data.velocity * delta

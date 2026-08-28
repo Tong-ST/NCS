@@ -10,9 +10,9 @@ var is_idling: bool = false
 
 
 func _physics_process(delta: float) -> void:
-	if not is_instance_valid(actor) or not is_instance_valid(input_comp): 
+	if not is_instance_valid(actor) or not is_instance_valid(input_comp):
 		return
-		
+
 	if not actor.is_aggressive:
 		input_comp.movement_vector = Vector2.ZERO
 		return
@@ -22,7 +22,7 @@ func _physics_process(delta: float) -> void:
 	if state_timer >= choose_time_target:
 		state_timer = 0.0
 		choose_time_target = randf_range(1.5, 3.5)
-		
+
 		if randf() > 0.5:
 			is_idling = true
 			input_comp.movement_vector = Vector2.ZERO

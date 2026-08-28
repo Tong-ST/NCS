@@ -75,9 +75,17 @@ func get_data(data_script: Script) -> NCSDataBase:
 
 	if not is_instance_valid(data_block):
 		var entity_name = entity_node.name if entity_node else name
-		var scene_path = entity_node.scene_file_path if entity_node and entity_node.scene_file_path else "Runtime Spawned Entity"
-		var class_str = data_script.get_global_name() if not data_script.get_global_name().is_empty() else "UnnamedScript"
-		push_error("NCS Error: Entity '%s' is missing data block -> [%s]. Check scene: [%s]" % [entity_name, class_str, scene_path])
+		var scene_path = (entity_node.scene_file_path
+				if entity_node and entity_node.scene_file_path
+				else "Runtime Spawned Entity"
+		)
+		var class_str = (data_script.get_global_name()
+				if not data_script.get_global_name().is_empty()
+				else "UnnamedScript"
+		)
+		push_error("NCS Error: Entity '%s' is missing data block -> [%s]. Check scene: [%s]"
+				% [entity_name, class_str, scene_path]
+		)
 		return null
 
 	return data_block
@@ -96,15 +104,24 @@ func get_comp(comp_script: Script) -> ComponentBase:
 
 	if not is_instance_valid(comp):
 		var entity_name = entity_node.name if entity_node else name
-		var scene_path = entity_node.scene_file_path if entity_node and entity_node.scene_file_path else "Runtime Spawned Entity"
-		var class_str = comp_script.get_global_name() if not comp_script.get_global_name().is_empty() else "UnnamedScript"
-		push_warning("NCS Warning: Entity '%s' requested missing component -> [%s]. Check hub layout: [%s]" % [entity_name, class_str, scene_path])
+		var scene_path = (entity_node.scene_file_path
+				if entity_node and entity_node.scene_file_path
+				else "Runtime Spawned Entity"
+		)
+		var class_str = (comp_script.get_global_name()
+				if not comp_script.get_global_name().is_empty()
+				else "UnnamedScript"
+		)
+		push_warning( "NCS Warning: Entity '%s' missing component -> [%s]. Check hub layout: [%s]"
+				% [entity_name, class_str, scene_path]
+		)
 		return null
 
 	return comp
 
 
-## Returns true if this entity possesses either a Component Node or a Data Resource of the given type in O(1).
+## Returns true if this entity possesses either a Component Node
+## or a Data Resource of the given type in O(1).
 func has_type(type_script: Script) -> bool:
 	if not type_script:
 		return false

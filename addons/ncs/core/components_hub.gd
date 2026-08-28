@@ -27,7 +27,7 @@ func _ready() -> void:
 	# Resolve entity from scene owner when not explicitly set in the inspector.
 	if not entity_node:
 		entity_node = owner
-	
+
 	if not config_node:
 		config_node = _find_config_node(entity_node)
 
@@ -108,7 +108,10 @@ func _get_configuration_warnings() -> PackedStringArray:
 		if "require_data" in child and child.get(&"require_data") == true:
 			var script = child.get_script()
 			if not script:
-				warnings.append("NCS Layout Error: Node [%s] has 'Require Data' enabled but does not have a script attached! All components require a type class script." % child.name)
+				warnings.append(
+						"NCS Layout Error: Node [%s] has 'Require Data' enabled but does not have a script attached!
+						All components require a type class script." % child.name
+				)
 				continue
 
 			var script_class_name = script.get_global_name()
@@ -116,7 +119,10 @@ func _get_configuration_warnings() -> PackedStringArray:
 				var base_identity = script_class_name.replace("Component", "")
 				var expected_data_class = base_identity.replace("Comp", "Data")
 				if not available_data_classes.has(expected_data_class):
-					warnings.append("NCS Configuration Error: Component class [%s] explicitly requires a Data Resource named [%s], but it's missing from your EntityConfig array!" % [script_class_name, expected_data_class])
+					warnings.append(
+							"NCS Configuration Error: Component class [%s] explicitly requires a Data Resource named [%s],
+							but it's missing from your EntityConfig array!" % [script_class_name, expected_data_class]
+					)
 
 	return warnings
 

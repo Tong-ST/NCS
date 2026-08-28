@@ -7,14 +7,13 @@ func setup_query() -> void:
 	iterate_data([DataEnemyAI, DataInput]) # caching data & filter all ent. must have these data.
 
 
-func ncs_physics_process(entities: Array[Node], data_pools: Array, _node_pools: Array, delta: float) -> void:
-	var current_entities = entities as Array[CharacterBody2D]
+func ncs_physics_process(entities: Array[Node], delta: float) -> void:
 	var enemy_ai_pool = data_pools[0] as Array[DataEnemyAI] # allocate data for current frame use
 	var input_pool = data_pools[1] as Array[DataInput] # same index as iterate_data abrove
 
 	# Iterate and prepare data for each entity.
-	for i in current_entities.size():
-		var ent = current_entities[i]
+	for i in entities.size():
+		var ent = entities[i]
 		if not is_instance_valid(ent): continue
 
 		var enemy_ai = enemy_ai_pool[i]

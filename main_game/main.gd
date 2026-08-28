@@ -2,12 +2,12 @@ extends Node2D
 
 signal ent_changed
 
+var total_ncs_count: int = 0
+var total_oop_count: int = 0
+
 @onready var ncs_ent_count: Label = %NCSEntCount
 @onready var oop_ent_count: Label = %OOPEntCount
 @onready var perf_counter: Label = %PerfCounter
-
-var total_ncs_count: int = 0
-var total_oop_count: int = 0
 
 
 func _ready() -> void:
@@ -21,14 +21,17 @@ func _process(_delta: float) -> void:
 	var physics_time = Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000
 	var object_count = Performance.get_monitor(Performance.OBJECT_COUNT)
 
-	perf_counter.text = "FPS: %d\nProcess: %.2f ms\nPhysics Process: %.2f ms\nObjects: %d" % [fps, process_time, physics_time, object_count]
+	perf_counter.text = (
+			"FPS: %d\nProcess: %.2f ms\nPhysics Process: %.2f ms\nObjects: %d"
+			% [fps, process_time, physics_time, object_count]
+	)
 
 
 # Add/remove System add runtime.
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("NP+"):
 		# Add new system to NCSWorld folder GameplaySystems at index 2
-		NCS.add_system(SysTest, $NCSWorld/GameplaySystems, 2) 
+		NCS.add_system(SysTest, $NCSWorld/GameplaySystems, 2)
 	if event.is_action_pressed("NP-"):
 		# Remove system at runtime.
 		NCS.remove_system(SysTest)
@@ -50,7 +53,7 @@ func _on_ncs_btn_pressed() -> void:
 				func(enemy_node: Enemy):
 					enemy_node.sprite_2d.modulate = Color.WHITE
 			)
-			
+
 			# Using normal instantiate work fine, It will spawn immediatly at current_frame.
 			# And auto-register node with EntityConfig to NCSWorld
 #			var enemy = enemy_scene.instantiate() as Enemy

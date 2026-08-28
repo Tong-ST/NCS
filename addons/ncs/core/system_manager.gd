@@ -69,9 +69,9 @@ func spawn(
 	push_command(func():
 		if not is_instance_valid(parent):
 			return
-			
+
 		var instance = scene.instantiate()
-		
+
 		if position_or_transform != null:
 			if instance is Node2D:
 				if position_or_transform is Vector2: instance.global_position = position_or_transform
@@ -79,9 +79,9 @@ func spawn(
 			elif instance is Node3D:
 				if position_or_transform is Vector3: instance.global_position = position_or_transform
 				elif position_or_transform is Transform3D: instance.global_transform = position_or_transform
-				
+
 		parent.add_child(instance)
-		
+
 		if setup_callback.is_valid():
 			setup_callback.call(instance)
 	)
@@ -94,7 +94,7 @@ func despawn(node_or_config: Variant) -> void:
 
 	var config: EntityConfig = _extract_config(node_or_config)
 	var free_target: Node = _extract_free_target(node_or_config)
-	
+
 	if is_instance_valid(config):
 		config._is_registered = false
 		push_command(func():
@@ -126,7 +126,11 @@ func push_callable(callable: Callable, arg_or_args: Variant = null) -> void:
 
 
 ## Enqueues a component method call without allocating closures.
-func push_method_call(config: Variant, comp_script: Script, method_name: StringName, args: Variant = null) -> void:
+func push_method_call(config: Variant,
+		comp_script: Script,
+		method_name: StringName,
+		args: Variant = null
+) -> void:
 	if not is_instance_valid(config) or not (config is EntityConfig):
 		return
 	var callable = (config as EntityConfig).get_callable(comp_script, method_name)
@@ -170,7 +174,7 @@ func unregister_entity(config: EntityConfig) -> void:
 
 
 ## Immediately unregisters an entity from the NCS.
-## Crucial for native queue_free() safety, as deferred unregistration 
+## Crucial for native queue_free() safety, as deferred unregistration
 func unregister_entity_sync(config: EntityConfig) -> void:
 	if not is_instance_valid(config):
 		return
@@ -189,12 +193,15 @@ func add_system(sys_script: Script, parent: Node = null, target_index: int = -1)
 		return _systems_by_script[sys_script]
 
 	var sys_instance: SystemBase = sys_script.new() as SystemBase
-	var target_parent = parent if is_instance_valid(parent) else (current_world if is_instance_valid(current_world) else self)
-	target_parent.add_child(sys_instance) # Triggers _enter_tree auto-registration
-	
+	var target_parent = (
+			parent if is_instance_valid(parent)
+			else (current_world if is_instance_valid(current_world) else self)
+	)
+	target_parent.add_child(sys_instance)
+
 	if target_index >= 0:
 		target_parent.move_child(sys_instance, target_index)
-	
+
 	return sys_instance
 
 
@@ -245,19 +252,6 @@ func unregister_system(system: SystemBase) -> void:
 ## Returns true if a system instance or system class is already registered in the world.
 func has_system(sys_script: Script) -> bool:
 	return _systems_by_script.has(sys_script)
-
-
-## Helper to resolve standard system names
-func _resolve_system_name(system_instance: Node) -> String:
-	var sys_name = system_instance.get_script().get_global_name()
-	if sys_name.is_empty():
-		sys_name = system_instance.name
-	return sys_name
-
-
-## Returns a live system instance by name, or null.
-func get_system_by_name(system_name: String) -> Node:
-	return _systems.get(system_name, null)
 
 
 # ==============================================================================
@@ -331,7 +325,7 @@ func flush() -> void:
 				else:
 					_apply_entity_registration(config)
 
-	# Finalize Batch vs Incremental updates
+	# Finalize Batch/Incremental updates
 	if is_batch:
 		_process_batch_update(regs, unregs)
 	else:
@@ -388,12 +382,12 @@ func _process_batch_update(
 func _process_incremental_update() -> void:
 	var dirty_snapshot = _dirty_entities
 	_dirty_entities = {}
-	
+
 	for config in dirty_snapshot.keys():
 		if is_instance_valid(config):
 			var changed_scripts: Array = dirty_snapshot[config]
 			var candidates = _get_candidate_systems_for(config, changed_scripts)
-			
+
 			for system in candidates:
 				if system.has_method(&"_evaluate_single_entity"):
 					system._evaluate_single_entity(config)
@@ -437,11 +431,11 @@ func _unregister_from_active(config: EntityConfig) -> void:
 	var idx: int = _active_config_map[config]
 	var last_idx: int = active_config.size() - 1
 	var last_entity: EntityConfig = active_config[last_idx]
-	
+
 	active_config[idx] = last_entity
 	_active_config_map[last_entity] = idx
 	active_config.pop_back()
-	
+
 	_active_config_map.erase(config)
 	_dirty_entities.erase(config)
 
@@ -458,12 +452,12 @@ func _apply_entity_unregistration(config: EntityConfig) -> void:
 func _extract_config(node_or_config: Variant) -> EntityConfig:
 	if not is_instance_valid(node_or_config):
 		return null
-	if node_or_config is EntityConfig:
-		return node_or_config
 	if "entity_config" in node_or_config and node_or_config.entity_config is EntityConfig:
 		return node_or_config.entity_config
 	if "config" in node_or_config and node_or_config.config is EntityConfig:
 		return node_or_config.config
+	if node_or_config is EntityConfig:
+		return node_or_config
 	if node_or_config is Node:
 		for child in (node_or_config as Node).get_children():
 			if child is EntityConfig:
@@ -474,9 +468,11 @@ func _extract_config(node_or_config: Variant) -> EntityConfig:
 func _extract_free_target(node_or_config: Variant) -> Node:
 	if not is_instance_valid(node_or_config):
 		return null
+	if node_or_config is Node:
+		return node_or_config
 	if node_or_config is EntityConfig:
 		return node_or_config.entity_node if node_or_config.entity_node else node_or_config
-	return node_or_config as Node
+	return node_or_config
 
 
 ## Returns systems interested in the entity's components/data or changed scripts.

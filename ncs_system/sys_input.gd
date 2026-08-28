@@ -6,7 +6,7 @@ func setup_query() -> void:
 	with_all([DataInput]) # filter with just data.
 
 
-func ncs_physics_process(entities: Array[Node], _data_pools: Array, _node_pools: Array, _delta: float) -> void:
+func ncs_physics_process(entities: Array[Node], _delta: float) -> void:
 	var deal_damage = Input.is_action_just_pressed("ui_accept")
 	var add_poison = Input.is_action_just_pressed("ui_end")
 	var add_test = Input.is_action_just_pressed("ui_page_up")
@@ -15,11 +15,9 @@ func ncs_physics_process(entities: Array[Node], _data_pools: Array, _node_pools:
 	if not (deal_damage or add_poison or add_test or remove_test):
 			return
 
-	var current_entities = entities as Array[CharacterBody2D]
-
 	# Iterate and prepare data for each entity.
-	for i in current_entities.size():
-		var ent = current_entities[i]
+	for i in entities.size():
+		var ent = entities[i]
 		if not is_instance_valid(ent): continue
 
 		# Call a method inside component

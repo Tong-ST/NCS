@@ -1,37 +1,38 @@
 ## Base class for all NCS systems. Extend this, override setup_query() to declare filters,
 ## then override ncs_process / ncs_physics_process to run per-frame logic on matched entities.
-##
-## Quick Example:
-##   func setup_query() -> void:
-##       with_all([CompMovement]).with_not([CompDead])
-##       iterate_data([DataMovement])
-##
-##   func ncs_physics_process(entities, data_pools, node_pools, delta):
-##       for i in entities.size():
-##           var move = data_pools[0][i] as DataMovement
-##           entities[i].velocity = move.direction * move.speed
-##           entities[i].move_and_slide()
+
+# Quick Example:
+#   func setup_query() -> void:
+#       with_all([CompMovement]).with_not([CompDead])
+#       iterate_data([DataMovement])
+#
+#   func ncs_physics_process(entities, delta):
+#       var move_pool = data_pools[0] as Array[DataMovement]
+#       for i in entities.size():
+#           var move = move_pool[i]
+#           entities[i].velocity = move.direction * move.speed
+#           entities[i].move_and_slide()
 @icon("res://addons/ncs/icons/gears-solid-full.svg")
 class_name SystemBase
 extends NCSBase
 
-## Parallel array of EntityConfig nodes aligned with entities in this system.
+## Array of EntityConfig nodes aligned with entities in this system.
 var config: Array[EntityConfig] = []
+var data_pools: Array[Array] = []
+var node_pools: Array[Array] = []
 
 ## Compiled list of all scripts (components & data) this system queries.
 var interest_scripts: Array[Script] = []
 
 # Internal parallel entity and pool arrays
 var _entities: Array[Node] = []
-var _flat_data_pools: Array[Array] = []
-var _node_targets: Array = []
-var _flat_node_pools: Array[Array] = []
 
 # Internal query filter definitions
 var _all_filters: Array[Script] = []
 var _any_filters: Array[Script] = []
 var _not_filters: Array[Script] = []
 var _data_targets: Array[Script] = []
+var _node_targets: Array = []
 var _required_types: Array[Script] = []
 
 # First query initialized
@@ -64,14 +65,14 @@ func _exit_tree() -> void:
 func _process(delta: float) -> void:
 	if not _entities.is_empty():
 		NCS.set_updating_state(true)
-		ncs_process(_entities, _flat_data_pools, _flat_node_pools, delta)
+		ncs_process(_entities, delta)
 		NCS.set_updating_state(false)
 
 
 func _physics_process(delta: float) -> void:
 	if not _entities.is_empty():
 		NCS.set_updating_state(true)
-		ncs_physics_process(_entities, _flat_data_pools, _flat_node_pools, delta)
+		ncs_physics_process(_entities, delta)
 		NCS.set_updating_state(false)
 
 
@@ -80,14 +81,13 @@ func _physics_process(delta: float) -> void:
 # ==============================================================================
 
 ## Override for render-tick logic (visuals, UI, camera sync).
-## entities[i], data_pools[n][i], and node_pools[n][i] are always index-aligned.
-func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
+func ncs_process(entities: Array[Node], delta: float) -> void:
 	pass
 
 
 ## Override for physics-tick logic (movement, collision, velocity).
 ## Runs at the fixed physics rate, not the render rate.
-func ncs_physics_process(entities: Array[Node], data_pools: Array, node_pools: Array, delta: float) -> void:
+func ncs_physics_process(entities: Array[Node], delta: float) -> void:
 	pass
 
 
@@ -213,15 +213,15 @@ func _compile_interest_scripts() -> void:
 
 ## Guarantees sub-array pools match declared target counts even when empty.
 func _ensure_pools_initialized() -> void:
-	if _flat_data_pools.size() != _data_targets.size():
-		_flat_data_pools.clear()
+	if data_pools.size() != _data_targets.size():
+		data_pools.clear()
 		for i in _data_targets.size():
-			_flat_data_pools.append([])
+			data_pools.append([])
 
-	if _flat_node_pools.size() != _node_targets.size():
-		_flat_node_pools.clear()
+	if node_pools.size() != _node_targets.size():
+		node_pools.clear()
 		for i in _node_targets.size():
-			_flat_node_pools.append([])
+			node_pools.append([])
 
 
 ## Re-evaluates one entity after its components or data changed. Called by NCS deferred remap.
@@ -246,20 +246,20 @@ func _evaluate_single_entity(config_node: EntityConfig, changed_script: Script =
 			_entities.append(parent_body)
 			config.append(config_node as EntityConfig)
 			for pool_idx in _data_targets.size():
-				_flat_data_pools[pool_idx].append(
+				data_pools[pool_idx].append(
 						config_node._data_map.get(_data_targets[pool_idx])
 				)
 			for pool_idx in _node_targets.size():
-				_flat_node_pools[pool_idx].append(
+				node_pools[pool_idx].append(
 						_find_node_in_entity(parent_body, _node_targets[pool_idx])
 				)
 		else:
 			for pool_idx in _data_targets.size():
-				_flat_data_pools[pool_idx][idx] = (
+				data_pools[pool_idx][idx] = (
 						config_node._data_map.get(_data_targets[pool_idx])
 				)
 			for pool_idx in _node_targets.size():
-				_flat_node_pools[pool_idx][idx] = (
+				node_pools[pool_idx][idx] = (
 						_find_node_in_entity(parent_body, _node_targets[pool_idx])
 				)
 	else:
@@ -277,9 +277,9 @@ func _handle_incremental_departure(config_node: EntityConfig) -> void:
 func _remove_entity_at_index(idx: int) -> void:
 	_entities.remove_at(idx)
 	config.remove_at(idx)
-	for pool in _flat_data_pools:
+	for pool in data_pools:
 		pool.remove_at(idx)
-	for pool in _flat_node_pools:
+	for pool in node_pools:
 		pool.remove_at(idx)
 
 
@@ -326,8 +326,8 @@ func _update_query_filter() -> void:
 
 	config = matching_configs
 	_entities = matching_bodies
-	_flat_data_pools = new_data_pools
-	_flat_node_pools = new_node_pools
+	data_pools = new_data_pools
+	node_pools = new_node_pools
 
 
 ## Helper: Locates node instance on parent_body
@@ -359,7 +359,7 @@ func _initialize_query_if_needed() -> void:
 func _clear_system_state() -> void:
 	_entities.clear()
 	config.clear()
-	for pool in _flat_data_pools:
+	for pool in data_pools:
 		pool.clear()
-	for pool in _flat_node_pools:
+	for pool in node_pools:
 		pool.clear()

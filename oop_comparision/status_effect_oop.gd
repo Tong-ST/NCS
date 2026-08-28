@@ -37,7 +37,10 @@ func apply_poison() -> void:
 		current_duration = duration
 		tick_timer = 0.0
 		on_poison_applied.emit()
-		var actor_name = actor.get_script().get_global_name() if is_instance_valid(actor) and actor.get_script() else "EnemyOOP"
+		var actor_name = (actor.get_script().get_global_name()
+				if is_instance_valid(actor) and actor.get_script()
+				else "EnemyOOP"
+		)
 		print(actor_name, " Get poison!")
 	else:
 		# Reset duration if already poisoned
@@ -48,6 +51,9 @@ func remove_poison() -> void:
 	if is_poisoned:
 		is_poisoned = false
 		on_poison_removed.emit()
-		var actor_name = actor.get_script().get_global_name() if is_instance_valid(actor) and actor.get_script() else "EnemyOOP"
+		var actor_name = (actor.get_script().get_global_name()
+				if is_instance_valid(actor) and actor.get_script()
+				else "EnemyOOP"
+		)
 		await get_tree().create_timer(1).timeout
 		print("Poison was removed from ", actor_name)

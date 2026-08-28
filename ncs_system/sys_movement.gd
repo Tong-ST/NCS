@@ -7,14 +7,15 @@ func setup_query() -> void:
 	iterate_data([DataMovement, DataInput])  # caching data & filter all ent. must have these data.
 
 
-func ncs_physics_process(entities: Array[Node], data_pools: Array, _node_pools: Array, delta: float) -> void:
-	var current_entities = entities as Array[CharacterBody2D]
+func ncs_physics_process(entities: Array[Node], delta: float) -> void:
+	# Type-Casting to access e.g. move_and_slide()
+	var frame_entities = entities as Array[CharacterBody2D]
 	var move_pool = data_pools[0] as Array[DataMovement]
 	var input_pool = data_pools[1] as Array[DataInput]
 
 	# Iterate and prepare data for each entity.
-	for i in current_entities.size():
-		var ent = current_entities[i]
+	for i in frame_entities.size():
+		var ent = frame_entities[i]
 		if not is_instance_valid(ent): continue
 
 		var move_data = move_pool[i]

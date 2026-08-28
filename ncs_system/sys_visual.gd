@@ -13,8 +13,9 @@ func setup_query() -> void:
 	fetch_nodes([Sprite2D]) # Optional cache Node into node_pools give null if not exist.
 
 
-func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, _delta: float) -> void:
-	var current_entities = entities
+func ncs_process(entities: Array[Node], _delta: float) -> void:
+	# Type-Casting to access e.g. global_position
+	var frame_entities = entities as Array[Node2D]
 	var move_pool = data_pools[0] as Array[DataMovement]
 	var sprite_pool = node_pools[0] as Array[Sprite2D]
 
@@ -29,8 +30,8 @@ func ncs_process(entities: Array[Node], data_pools: Array, node_pools: Array, _d
 	var screen_rect = Rect2(screen_origin, screen_size).grow(64.0)
 
 	# Synchronize transforms and handle on-screen culling
-	for i in current_entities.size():
-		var ent = current_entities[i]
+	for i in frame_entities.size():
+		var ent = frame_entities[i]
 		if not is_instance_valid(ent): continue
 
 		var move_data = move_pool[i]
