@@ -18,14 +18,12 @@ extends NCSBase
 
 ## Array of EntityConfig nodes aligned with entities in this system.
 var config: Array[EntityConfig] = []
+var entity_pools: Array[Node] = []
 var data_pools: Array[Array] = []
 var node_pools: Array[Array] = []
 
 ## Compiled list of all scripts (components & data) this system queries.
 var interest_scripts: Array[Script] = []
-
-# Internal parallel entity and pool arrays
-var _entities: Array[Node] = []
 
 # Internal query filter definitions
 var _all_filters: Array[Script] = []
@@ -63,16 +61,16 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
-	if not _entities.is_empty():
+	if not entity_pools.is_empty():
 		NCS.set_updating_state(true)
-		ncs_process(_entities, delta)
+		ncs_process(entity_pools, delta)
 		NCS.set_updating_state(false)
 
 
 func _physics_process(delta: float) -> void:
-	if not _entities.is_empty():
+	if not entity_pools.is_empty():
 		NCS.set_updating_state(true)
-		ncs_physics_process(_entities, delta)
+		ncs_physics_process(entity_pools, delta)
 		NCS.set_updating_state(false)
 
 
@@ -243,7 +241,7 @@ func _evaluate_single_entity(config_node: EntityConfig, changed_script: Script =
 
 	if is_match:
 		if idx == -1:
-			_entities.append(parent_body)
+			entity_pools.append(parent_body)
 			config.append(config_node as EntityConfig)
 			for pool_idx in _data_targets.size():
 				data_pools[pool_idx].append(
@@ -275,7 +273,7 @@ func _handle_incremental_departure(config_node: EntityConfig) -> void:
 
 
 func _remove_entity_at_index(idx: int) -> void:
-	_entities.remove_at(idx)
+	entity_pools.remove_at(idx)
 	config.remove_at(idx)
 	for pool in data_pools:
 		pool.remove_at(idx)
@@ -325,7 +323,7 @@ func _update_query_filter() -> void:
 				)
 
 	config = matching_configs
-	_entities = matching_bodies
+	entity_pools = matching_bodies
 	data_pools = new_data_pools
 	node_pools = new_node_pools
 
@@ -357,7 +355,7 @@ func _initialize_query_if_needed() -> void:
 
 ## Resets entity and data pools when unregistered to prevent memory leaks.
 func _clear_system_state() -> void:
-	_entities.clear()
+	entity_pools.clear()
 	config.clear()
 	for pool in data_pools:
 		pool.clear()
