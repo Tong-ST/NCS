@@ -323,6 +323,26 @@ var saved_dict: Dictionary = NCSSerializer.serialize_entity(config)
 NCSSerializer.deserialize_entity(config, saved_dict)
 ```
 
+The framework provides high-level helpers to instantly extract and restore game states, tracking unique IDs, scene paths, and scene-tree hierarchy parents automatically. 
+
+```gdscript
+# 1. Extract a fully formatted Array of Dictionaries for saving (Requires CompSaveable attached to entities)
+var save_records: Array[Dictionary] = NCSSerializer.extract_save_records_from_pool(
+    entity_pools, 
+    config, 
+    true # Include global_transform
+)
+
+# 2. Synchronize a live pool with loaded JSON data. 
+# Automatically despawns orphans, updates existing entities, and spawns missing ones to their original parent node.
+NCSSerializer.sync_pool_with_save_data(
+    entity_pools,
+    config,
+    save_records,
+    func(ent, config, record): print(ent.name, " loaded!") # Optional callback
+)
+```
+
 ---
 #### Add/remove System at runtime/via code.
 ```gdscript

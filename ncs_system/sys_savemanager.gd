@@ -20,24 +20,9 @@ func setup_query() -> void:
 
 ## Example of custom save method with NCSSerializer helper.
 func save_game() -> void:
-	var save_records: Array[Dictionary] = []
-	# Use entity_pools direct access to filtered entity.
-	for i in entity_pools.size():
-		var ent = entity_pools[i]
-		if not is_instance_valid(ent): continue
+	# Helper for saving the whole entity_poosl with CompSaveable attached into save_records.
+	var save_records = NCSSerializer.extract_save_records_from_pool(entity_pools, config, true)
 
-		var save_comp = config[i].get_comp(CompSaveable) as CompSaveable
-		if not save_comp: continue
-
-		# Using NCSSerializer helper to extract EntityConfig for save_records
-		var record: Dictionary = NCSSerializer.serialize_entity(config[i], true)
-		record["save_id"] = save_comp.save_id
-		record["scene_path"] = save_comp.scene_path_to_spawn
-		record["extra_data"] = save_comp.get_extra_data()
-
-		save_records.append(record)
-
-	# Write to file
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(save_records, "\t"))
@@ -48,66 +33,33 @@ func save_game() -> void:
 ## Example of custom load method with NCSSerializer helper.
 func load_game() -> void:
 	if not FileAccess.file_exists(SAVE_PATH): return
-
 	var file = FileAccess.open(SAVE_PATH, FileAccess.READ)
 	var raw_text = file.get_as_text()
 	file.close()
-
 	var save_records: Array = JSON.parse_string(raw_text)
 
-	for record in save_records:
-		var target_id: String = record.get("save_id", "")
-		var scene_path: String = record.get("scene_path", "")
-
-		var ent = _find_entity_by_save_id(target_id)
-		if not ent and not scene_file_path.is_empty():
-			ent = _spawn_missing_entity(scene_path)
-		if not ent:
-			continue
-
-		# Restore NCS DataBlocks, Comp, etc. global_transform if on save track global transform
-		var ent_config = ent.get_node_or_null("EntityConfig") as EntityConfig
-		if ent_config:
-			var save_comp = ent_config.get_comp(CompSaveable) as CompSaveable
-			if save_comp:
-				save_comp.save_id = target_id
-				# Restore Non-NCS Data
-				if record.has("extra_data"):
-					save_comp.apply_extra_data(record["extra_data"])
-
-			NCSSerializer.deserialize_entity(ent_config, record)
-
-			# Custom sync for movement data
-			_sync_custom_movement_data(ent, ent_config)
-
-	print("SysSaveManager: Load complete.")
+	# Helper to sync the whole entity_pools with CompSaveable attached.
+	NCSSerializer.sync_pool_with_save_data(
+		entity_pools,
+		config,
+		save_records,
+		_on_entity_restored # Pass our custom logic as a callback
+	)
+	print("SysSaveManager: Load sequence initiated.")
 
 
-## Helper to match saved ID with live entities in query
-func _find_entity_by_save_id(target_id: String) -> Node:
-	for i in entity_pools.size():
-		var ent = entity_pools[i]
-		if not is_instance_valid(ent):
-			continue
-		var save_comp = config[i].get_comp(CompSaveable) as CompSaveable
-		if save_comp and save_comp.save_id == target_id:
-			return ent
-	return null
+## Custom callback after an entity is loaded/spawned
+## Use for update extra data which non NCS-Data
+func _on_entity_restored(ent: Node, ent_config: EntityConfig, record: Dictionary) -> void:
+	var save_comp = ent_config.get_comp(CompSaveable) as CompSaveable
+	if save_comp and record.has("extra_data"):
+		save_comp.apply_extra_data(record["extra_data"])
+
+	# Custom sync for movement data
+	_sync_custom_movement_data(ent, ent_config)
 
 
-## Helper to instantiate entities that are missing from the scene
-func _spawn_missing_entity(scene_path: String) -> Node:
-	if not ResourceLoader.exists(scene_path):
-		push_error("Cannot spawn missing entity, path invalid: ", scene_path)
-		return null
-
-	var packed_scene = load(scene_path) as PackedScene
-	var new_ent = packed_scene.instantiate()
-
-	get_tree().current_scene.add_child(new_ent)
-	return new_ent
-
-
+## Helper to sync movement data if your Movement system tied to data
 func _sync_custom_movement_data(ent: Node, ent_config: EntityConfig) -> void:
 	if ent_config.has_data(DataMovement):
 		var move_data = ent_config.get_data(DataMovement) as DataMovement

@@ -161,8 +161,14 @@ text = "SPAWN OOP"
 [node name="Enemy" parent="." unique_id=275625331 instance=ExtResource("8_xvufe")]
 position = Vector2(209, 177)
 
+[node name="CompSaveable" parent="Enemy/ComponentsHub" parent_id_path=PackedInt32Array(275625331, 1420797890) index="4" unique_id=1316102592]
+save_id = "enemy_1"
+
 [node name="Enemy2" parent="." unique_id=814834934 instance=ExtResource("8_xvufe")]
 position = Vector2(861, 182)
+
+[node name="CompSaveable" parent="Enemy2/ComponentsHub" parent_id_path=PackedInt32Array(814834934, 1420797890) index="4" unique_id=1316102592]
+save_id = "enemy_2"
 
 [node name="EnemyOOP" parent="." unique_id=303922004 instance=ExtResource("9_7km35")]
 position = Vector2(193, 475)
@@ -172,3 +178,6 @@ position = Vector2(902, 480)
 
 [connection signal="pressed" from="CanvasLayer/Control/NCSBtn" to="." method="_on_ncs_btn_pressed"]
 [connection signal="pressed" from="CanvasLayer/Control/OOPBtn" to="." method="_on_oop_btn_pressed"]
+
+[editable path="Enemy"]
+[editable path="Enemy2"]
