@@ -229,21 +229,44 @@ The `NCSSerializer` static helper allows you to serialize and deserialize an ent
 #### Serializing an Entity Data
 
 ```gdscript
-# Convert all runtime data blocks attached to an EntityConfig into a Dictionary
-var entity_data: Dictionary = NCSSerializer.serialize_entity(entity_config)
+# Example on how you save/load all entity with CompSaveable(Plugin helper node)
+func save_game() -> void:
+    # Helper extracts data blocks, transforms, components from entity_pools into save_records.
+    var save_records = NCSSerializer.extract_save_records_from_pool(entity_pools, config, true)
+    
+    # Write directly to a JSON file
+    var file = FileAccess.open("user://save_data.json", FileAccess.WRITE)
+    file.store_string(JSON.stringify(save_records, "\t"))
 
-# Store along with your game's save dictionary
-var save_record = {
-    "save_id": save_comp.save_id,
-    "scene_path": entity_node.scene_file_path,
-    "ncs_data": entity_data
-}
-
-# Restore data blocks onto an existing entity's EntityConfig
-NCSSerializer.deserialize_entity(entity_config, save_record["ncs_data"])
+func load_game() -> void:
+    # Read JSON file
+    var records: Array = JSON.parse_string(raw_json_text)
+    
+    # Helper automatically spawns missing entities, despawns orphans, and restores data
+    NCSSerializer.sync_pool_with_save_data(entity_pools, config, records, _on_entity_restored)
+    # Optional _on_entity_restored callback can help to load back non-NCS Data.
 ```
 
-- See examples of how to implement save system with helper [SysSaveManager](ncs_system/sys_savemanager.gd) and [CompSaveable](ncs_components/comp_saveable.gd)
+```gdscript
+# Example on save/load non-NCS data e.g. Player.gd
+func _ready():
+    $ComponentsHub/CompSaveable.save_data_requested.connect(_on_saved)
+    $ComponentsHub/CompSaveable.load_data_requested.connect(_on_saved)
+
+func _on_saved(extra_data: Dictionary):
+    extra_data["score"] = self.score
+
+func _on_loaded(extra_data: Dictionary):
+    if extra_data.has("score"): self.score = extra_data["score"]
+```
+
+- See examples of how to implement save system with helper [SysSaveManager](ncs_system/sys_savemanager.gd)
+- `CompSaveable` is plugin built-in node, Should attached to all entity that need save/load.
+- You still have low-level control built your own save/load system utilize function `NCSSerializer`
+  - Serialize all runtime data blocks of an entity
+    `var saved_dict: Dictionary = NCSSerializer.serialize_entity(config)`
+  - Restore saved properties back to matching data blocks on an entity
+    `NCSSerializer.deserialize_entity(config, saved_dict)`
 
 ### The layout on your game world
 

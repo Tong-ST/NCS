@@ -1,7 +1,7 @@
 class_name Player
 extends CharacterBody2D
 
-# Non-NCS variable to save/load with CompSaveable example.
+# Non-NCS variable for save/load example with NCS
 var score: int = 0
 
 var _timer: float = 0.0
@@ -10,10 +10,14 @@ var _timer: float = 0.0
 @onready var entity_config: EntityConfig = $EntityConfig
 @onready var comp_player: CompPlayer = $ComponentsHub/CompPlayer
 @onready var comp_health: CompHealth = $ComponentsHub/CompHealth
+@onready var comp_saveable: CompSaveable = $ComponentsHub/CompSaveable
 
 
 func _ready() -> void:
 	comp_health.on_damaged.connect(_on_damaged)
+	# Example on connect non-NCS Data use with NCS save/load helper
+	comp_saveable.save_data_requested.connect(_on_saved)
+	comp_saveable.load_data_requested.connect(_on_loaded)
 
 	# Example on how to get data from entity_config
 	var movement_data = entity_config.get_data(DataMovement) as DataMovement
@@ -36,3 +40,15 @@ func _on_damaged() -> void:
 	var tween = create_tween()
 	sprite_2d.modulate = Color.RED
 	tween.tween_property(sprite_2d, "modulate", Color.WHITE, 0.05).set_delay(0.1)
+
+
+## Example on store extra non NCS-Data on saved.
+func _on_saved(extra_data: Dictionary) -> void:
+	extra_data["score"] = score
+
+
+## Example on custom method to apply data back once loaded.
+func _on_loaded(extra_data: Dictionary) -> void:
+	if extra_data.has("score"):
+		score = extra_data["score"]
+		print("Player score: ", score)

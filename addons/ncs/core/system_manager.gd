@@ -92,8 +92,8 @@ func despawn(node_or_config: Variant) -> void:
 	if not is_instance_valid(node_or_config):
 		return
 
-	var config: EntityConfig = _extract_config(node_or_config)
-	var free_target: Node = _extract_free_target(node_or_config)
+	var config: EntityConfig = extract_config(node_or_config)
+	var free_target: Node = extract_free_target(node_or_config)
 
 	if is_instance_valid(config):
 		config._is_registered = false
@@ -252,6 +252,33 @@ func unregister_system(system: SystemBase) -> void:
 ## Returns true if a system instance or system class is already registered in the world.
 func has_system(sys_script: Script) -> bool:
 	return _systems_by_script.has(sys_script)
+
+
+## Extracts EntityConfig node from any node hierarchy or property binding.
+func extract_config(node_or_config: Variant) -> EntityConfig:
+	if not is_instance_valid(node_or_config):
+		return null
+	if "entity_config" in node_or_config and node_or_config.entity_config is EntityConfig:
+		return node_or_config.entity_config
+	if "config" in node_or_config and node_or_config.config is EntityConfig:
+		return node_or_config.config
+	if node_or_config is EntityConfig:
+		return node_or_config
+	if node_or_config is Node:
+		for child in (node_or_config as Node).get_children():
+			if child is EntityConfig:
+				return child
+	return null
+
+
+func extract_free_target(node_or_config: Variant) -> Node:
+	if not is_instance_valid(node_or_config):
+		return null
+	if node_or_config is Node:
+		return node_or_config
+	if node_or_config is EntityConfig:
+		return node_or_config.entity_node if node_or_config.entity_node else node_or_config
+	return node_or_config
 
 
 # ==============================================================================
@@ -446,33 +473,6 @@ func _apply_entity_unregistration(config: EntityConfig) -> void:
 	_unregister_from_active(config)
 	for sys in _systems_list:
 		sys._handle_incremental_departure(config)
-
-
-## Extracts EntityConfig node from any node hierarchy or property binding.
-func _extract_config(node_or_config: Variant) -> EntityConfig:
-	if not is_instance_valid(node_or_config):
-		return null
-	if "entity_config" in node_or_config and node_or_config.entity_config is EntityConfig:
-		return node_or_config.entity_config
-	if "config" in node_or_config and node_or_config.config is EntityConfig:
-		return node_or_config.config
-	if node_or_config is EntityConfig:
-		return node_or_config
-	if node_or_config is Node:
-		for child in (node_or_config as Node).get_children():
-			if child is EntityConfig:
-				return child
-	return null
-
-
-func _extract_free_target(node_or_config: Variant) -> Node:
-	if not is_instance_valid(node_or_config):
-		return null
-	if node_or_config is Node:
-		return node_or_config
-	if node_or_config is EntityConfig:
-		return node_or_config.entity_node if node_or_config.entity_node else node_or_config
-	return node_or_config
 
 
 ## Returns systems interested in the entity's components/data or changed scripts.

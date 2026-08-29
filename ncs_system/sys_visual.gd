@@ -10,7 +10,10 @@ extends SystemBase
 func setup_query() -> void:
 	with_all([CompMovement])
 	iterate_data([DataMovement])
-	fetch_nodes([Sprite2D]) # Optional cache Node into node_pools give null if not exist.
+
+	# Optional cache Node into node_pools give null if not exist
+	# Will get the first node found in ent scene
+	fetch_nodes([Sprite2D])
 
 
 func ncs_process(entities: Array[Node], _delta: float) -> void:
@@ -45,10 +48,13 @@ func ncs_process(entities: Array[Node], _delta: float) -> void:
 			ent.global_position = move_data.next_global_pos
 			if not move_data.is_on_screen:
 				move_data.is_on_screen = true
+				# If use fetch_nodes every ent might not have one
+				# So always safety check when do logic with that ent
 				if sprite:
 					sprite.visible = true
 		else:
 			if move_data.is_on_screen:
 				move_data.is_on_screen = false
+				# Always safety check when using fetch_nodes
 				if sprite:
 					sprite.visible = false
