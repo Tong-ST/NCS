@@ -1,4 +1,4 @@
-## Attach to any entity that needs saving.
+## Attach to any entity that needs save/load functionality via NCSSerializer
 class_name CompSaveable
 extends ComponentBase
 

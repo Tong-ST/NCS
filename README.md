@@ -153,11 +153,11 @@ func ncs_physics_process(entities: Array[Node], delta: float) -> void:
 # Example your custom sys_combat.gd system loop...
 
 if target_enemy_health <= 0:
-    config[i].add_comp(CompDead)
-    config[i].remove_comp(CompMovement)
+    configs[i].add_comp(CompDead)
+    configs[i].remove_comp(CompMovement)
 
     # Triggers a visual method in your local components.
-    config[i].call_method_deferred(CompHealth, &"flash_red")
+    configs[i].call_method_deferred(CompHealth, &"flash_red")
 ```
 
 - Naming convention for ease of use and remember `SysSystem` for class_name, sys_system.gd for scripts.
@@ -191,7 +191,7 @@ System queries are configured in `setup_query()` using method chaining. You can 
 
 - `iterate_data([DataMove, DataInput])`: Populates `data_pools[n]` and all data must exist in entity, Act like `with_all()` filter for data.
 - `fetch_nodes([Sprite2D, AnimationPlayer])`: Populates `node_pools[n]` with references to optional internal sub-nodes (returns `null` if not found).
-- `config`: Built-in array providing direct access to each matched entity's `EntityConfig` without setup.
+- `configs`: Built-in array providing direct access to each matched entity's `EntityConfig` without setup.
 
 #### Example
 
@@ -220,7 +220,7 @@ func ncs_process(entities: Array[Node], delta: float) -> void:
             sprite.flip_h = move_data.velocity.x < 0
 ```
 
-- You can still do e.g. `ent.get_node_or_null("Sprite2D")`, `config[i].get_comp(CompMove), config[i].get_data(DataMove)` at process if you don't want pre-fetched, But make sure to safety check inside loop if you do dynamically fetch e.g. `if not move_data: continue`
+- You can still do e.g. `ent.get_node_or_null("Sprite2D")`, `configs[i].get_comp(CompMove), configs[i].get_data(DataMove)` at process if you don't want pre-fetched, But make sure to safety check inside loop if you do dynamically fetch e.g. `if not move_data: continue`
 
 ### Serialization & Save Systems helper (`NCSSerializer`)
 
@@ -232,19 +232,29 @@ The `NCSSerializer` static helper allows you to serialize and deserialize an ent
 # Example on how you save/load all entity with CompSaveable(Plugin helper node)
 func save_game() -> void:
     # Helper extracts data blocks, transforms, components from entity_pools into save_records.
-    var save_records = NCSSerializer.extract_save_records_from_pool(entity_pools, config, true)
     
     # Write directly to a JSON file
     var file = FileAccess.open("user://save_data.json", FileAccess.WRITE)
     file.store_string(JSON.stringify(save_records, "\t"))
+    var save_records = NCSSerializer.extract_save_records_from_pool(entity_pools, configs, true)
 
 func load_game() -> void:
     # Read JSON file
     var records: Array = JSON.parse_string(raw_json_text)
-    
+
     # Helper automatically spawns missing entities, despawns orphans, and restores data
-    NCSSerializer.sync_pool_with_save_data(entity_pools, config, records, _on_entity_restored)
-    # Optional _on_entity_restored callback can help to load back non-NCS Data.
+    NCSSerializer.sync_pool_with_save_data(
+            entity_pools,
+            configs,
+            records, 
+            _on_entity_restored # Optional _on_entity_restored callback call once each ent spawned.
+    )
+
+    # Custom on restored function, 3 args are required ent, ent_config, redcord.
+    func _on_entity_restored(ent: Node, ent_config: EntityConfig, record: Dictionary) -> void:
+        print(ent.name, "spawned")
+        ent_config.call_method("spawn_animation") # Name ent_config to avoid duplication with system, Don't change it.
+        print("current score: ", record["extra_data"].get("score"))
 ```
 
 ```gdscript

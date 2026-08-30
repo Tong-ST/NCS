@@ -64,10 +64,12 @@ func spawn(
 		setup_callback: Callable = Callable()
 ) -> void:
 	if not scene or not is_instance_valid(parent):
+		push_warning("NCS warning: Tried to spawn an invalid scene or parent.")
 		return
 
 	push_command(func():
 		if not is_instance_valid(parent):
+			push_warning("NCS warning: Parent node is no longer valid during spawn command.")
 			return
 
 		var instance = scene.instantiate()
@@ -90,6 +92,7 @@ func spawn(
 ## Queues an entity or node for safe despawn via the command buffer.
 func despawn(node_or_config: Variant) -> void:
 	if not is_instance_valid(node_or_config):
+		push_warning("NCS warning: Tried to despawn an invalid node or config.")
 		return
 
 	var config: EntityConfig = extract_config(node_or_config)
@@ -111,6 +114,7 @@ func despawn(node_or_config: Variant) -> void:
 ## Enqueues a structural command to execute safely during flush.
 func push_command(command: Callable) -> void:
 	if not command.is_valid():
+		push_warning("NCS warning: Tried to push an invalid command to the queue.")
 		return
 	_command_queue.append(command)
 	_schedule_flush()
@@ -119,6 +123,7 @@ func push_command(command: Callable) -> void:
 ## Enqueues a pre-bound Callable for deferred execution without allocating closures.
 func push_callable(callable: Callable, arg_or_args: Variant = null) -> void:
 	if not callable.is_valid():
+		push_warning("NCS warning: Tried to push an invalid callable to the queue.")
 		return
 	_deferred_callables.append(callable)
 	_deferred_args.append(arg_or_args)
@@ -132,6 +137,7 @@ func push_method_call(config: Variant,
 		args: Variant = null
 ) -> void:
 	if not is_instance_valid(config) or not (config is EntityConfig):
+		push_warning("NCS warning: Invalid config provided to push_method_call.")
 		return
 	var callable = (config as EntityConfig).get_callable(comp_script, method_name)
 	if callable.is_valid():
@@ -141,6 +147,7 @@ func push_method_call(config: Variant,
 ## Marks an entity as dirty for re-evaluation during flush.
 func mark_dirty(config: EntityConfig, changed_script: Script = null) -> void:
 	if not is_instance_valid(config):
+		push_warning("NCS warning: Tried to mark an invalid config as dirty.")
 		return
 	if not _dirty_entities.has(config):
 		_dirty_entities[config] = []
@@ -156,6 +163,7 @@ func mark_dirty(config: EntityConfig, changed_script: Script = null) -> void:
 ## Registers an entity for evaluation during flush.
 func register_entity(config: EntityConfig) -> void:
 	if not is_instance_valid(config) or not (config is EntityConfig):
+		push_warning("NCS warning: Tried to register an invalid config.")
 		return
 	if not _pending_registrations_set.has(config):
 		_pending_registrations_set[config] = true
@@ -165,7 +173,8 @@ func register_entity(config: EntityConfig) -> void:
 
 ## Unregisters an entity during flush.
 func unregister_entity(config: EntityConfig) -> void:
-	if not (config is EntityConfig):
+	if not is_instance_valid(config) or not (config is EntityConfig):
+		push_warning("NCS warning: Tried to unregister an invalid config.")
 		return
 	if not _pending_unregistrations_set.has(config):
 		_pending_unregistrations_set[config] = true
@@ -177,6 +186,7 @@ func unregister_entity(config: EntityConfig) -> void:
 ## Crucial for native queue_free() safety, as deferred unregistration
 func unregister_entity_sync(config: EntityConfig) -> void:
 	if not is_instance_valid(config):
+		push_warning("NCS warning: Tried to sync-unregister an invalid config.")
 		return
 
 	if _pending_unregistrations_set.has(config):

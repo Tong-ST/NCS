@@ -3,12 +3,12 @@ extends SystemBase
 
 
 func setup_query() -> void:
+	# press "PageUP" to add_comp(CompTest) to all ent.
+	# press "PageDown" to remove CompTest.
 	with_all([CompTest])
 
 # To test add system at runtime
 # press "+" to this SysTest to NCS world at runtime. "-" to remove.
-# press "PageUP" to add_comp(CompTest) to all ent.
-# press "PageDown" to remove CompTest.
 # see add_system code at main.tscn
 func ncs_physics_process(entities: Array[Node], _delta: float) -> void:
 	print('SysTest running')
