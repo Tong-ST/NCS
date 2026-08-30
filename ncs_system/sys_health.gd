@@ -19,4 +19,4 @@ func ncs_physics_process(entities: Array[Node], _delta: float) -> void:
 
 		if health_data.current_health <= 0:
 			# Change data and send signal to watch_data() in CompHealth.
-			config[i].change_data(DataHealth, &"state", "DEAD")
+			configs[i].change_data(DataHealth, &"state", "DEAD")

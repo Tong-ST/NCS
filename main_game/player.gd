@@ -33,6 +33,7 @@ func _physics_process(delta: float) -> void:
 		score += 100
 		print("Player score: ", score)
 
+
 func _on_damaged() -> void:
 	if not is_instance_valid(sprite_2d):
 		return
@@ -44,11 +45,12 @@ func _on_damaged() -> void:
 
 ## Example on store extra non NCS-Data on saved.
 func _on_saved(extra_data: Dictionary) -> void:
+	# naming "extra_data" is required by NCSSerializer use.
 	extra_data["score"] = score
 
 
 ## Example on custom method to apply data back once loaded.
 func _on_loaded(extra_data: Dictionary) -> void:
 	if extra_data.has("score"):
-		score = extra_data["score"]
+		score = extra_data.get("score", null)
 		print("Player score: ", score)

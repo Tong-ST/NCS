@@ -23,7 +23,7 @@ func ncs_physics_process(entities: Array[Node], delta: float) -> void:
 		poison.tick_timer += delta
 		if poison.tick_timer >= poison.tick_interval:
 			poison.tick_timer -= poison.tick_interval
-			config[i].call_method_deferred(CompHealth, &"take_damage", poison.damage_per_sec)
+			configs[i].call_method_deferred(CompHealth, &"take_damage", poison.damage_per_sec)
 
 		if poison.duration <= 0.0:
-			config[i].remove_data(DataPoisonStatus)
+			configs[i].remove_data(DataPoisonStatus)

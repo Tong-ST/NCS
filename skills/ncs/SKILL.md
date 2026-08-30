@@ -290,13 +290,13 @@ NCS uses a pre-bound `Callable` cache for component method calls, eliminating ru
 
 ```gdscript
 # Immediate call:
-config.call_method(CompHealth, &"take_damage", 20.0)
+configs[i].call_method(CompHealth, &"take_damage", 20.0)
 
 # Multi-argument call (pass as Array):
-config.call_method(CompVFX, &"play_effect", ["slash", 1.5])
+configs[i].call_method(CompVFX, &"play_effect", ["slash", 1.5])
 
 # Deferred call (queued safely to end of frame without closure allocations):
-config.call_method_deferred(CompHealth, &"take_damage", 20.0)
+configs[i].call_method_deferred(CompHealth, &"take_damage", 20.0)
 ```
 
 ---
@@ -305,10 +305,10 @@ config.call_method_deferred(CompHealth, &"take_damage", 20.0)
 
 ```gdscript
 # Dynamically attach a new component:
-config.add_comp(CompDead)
+configs[i].add_comp(CompDead)
 
 # Dynamically remove a component:
-config.remove_comp(CompMovement)
+configs[i].remove_comp(CompMovement)
 ```
 
 ### F. Entity Serialization (`NCSSerializer`)
@@ -329,7 +329,7 @@ The framework provides high-level helpers to instantly extract and restore game 
 # 1. Extract a fully formatted Array of Dictionaries for saving (Requires CompSaveable attached to entities)
 var save_records: Array[Dictionary] = NCSSerializer.extract_save_records_from_pool(
     entity_pools, 
-    config, 
+    configs, 
     true # Include global_transform
 )
 
@@ -337,9 +337,9 @@ var save_records: Array[Dictionary] = NCSSerializer.extract_save_records_from_po
 # Automatically despawns orphans, updates existing entities, and spawns missing ones to their original parent node.
 NCSSerializer.sync_pool_with_save_data(
     entity_pools,
-    config,
+    configs,
     save_records,
-    func(ent, config, record): print(ent.name, " loaded!") # Optional callback
+    func(ent, ent_config, record): print(ent.name, " loaded!") # Optional callback
 )
 ```
 
@@ -369,7 +369,7 @@ NCS.remove_system(SysMovement)
 
 ### Rule 2: Zero-Allocation System Loops
 * Always index directly into `data_pools[n][i]` inside `ncs_process` / `ncs_physics_process`.
-* Never call `config.get_data()` or `config.get_comp()` inside high-frequency system loops, Except for optional data which don't need to be cached.
+* Never call `configs[i].get_data()` or `configs[i].get_comp()` inside high-frequency system loops, Except for optional data which don't need to be cached.
 * Pre-assign class at start process e.g. `var move_pool = data_pools[0] as Array[DataMovement]` will be a bit faster than assign inside hot loop.
 
 ### Rule 3: Separate Simulation from Visual Syncing
@@ -385,7 +385,7 @@ NCS.remove_system(SysMovement)
   at the top of every entity loop.
 
 ### Rule 5: Pass Raw Arguments to `call_method`
-* Write `config.call_method(CompHealth, &"take_damage", 20)` instead of `[20]`. Passing direct variants avoids allocating heap arrays on every call.
+* Write `configs[i].call_method(CompHealth, &"take_damage", 20)` instead of `[20]`. Passing direct variants avoids allocating heap arrays on every call.
 
 ---
 
@@ -417,7 +417,7 @@ NCS.remove_system(SysMovement)
 | `SystemBase` | `with_not(Array[Script])` | Query: Entity must have none of the listed types. |
 | `SystemBase` | `iterate_data(Array[Script])` | Pre-fetches typed data arrays into `data_pools`. |
 | `SystemBase` | `fetch_nodes(Array)` | Pre-fetches child nodes into `node_pools`. |
-| `SystemBase` | `config: Array[EntityConfig]` | Parallel array of EntityConfigs aligned with matched entities. |
+| `SystemBase` | `configs: Array[EntityConfig]` | Parallel array of EntityConfigs aligned with matched entities. |
 | `ComponentBase` | `entity_node: Node` | Auto-wired parent entity body (CharacterBody2D, etc.). |
 | `ComponentBase` | `config: EntityConfig` | Auto-wired sibling EntityConfig node. |
 | `ComponentBase` | `require_data: bool` | Enables editor configuration warnings if Data* is missing. |

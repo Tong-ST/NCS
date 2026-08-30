@@ -17,7 +17,7 @@ class_name SystemBase
 extends NCSBase
 
 ## Array of EntityConfig nodes aligned with entities in this system.
-var config: Array[EntityConfig] = []
+var configs: Array[EntityConfig] = []
 var entity_pools: Array[Node] = []
 var data_pools: Array[Array] = []
 var node_pools: Array[Array] = []
@@ -133,22 +133,6 @@ func fetch_nodes(node_classes: Array) -> SystemBase:
 
 
 # ==============================================================================
-# PUBLIC UTILITIES
-# ==============================================================================
-
-## Helper to push structural mutation commands directly to NCS command buffer.
-func push_command(command: Callable) -> void:
-	NCS.push_command(command)
-
-
-## Triggers a single-entity re-evaluation when internal system state changes.
-func signal_query_changed() -> void:
-	NCS.mark_dirty(
-		NCS.active_config[0] if not NCS.active_config.is_empty() else null
-	)
-
-
-# ==============================================================================
 # PRIVATE QUERY EVALUATION & ARRAY SYNCHRONIZATION
 # ==============================================================================
 
@@ -236,13 +220,13 @@ func _evaluate_single_entity(config_node: EntityConfig, changed_script: Script =
 
 	_ensure_pools_initialized()
 
-	var idx = config.find(config_node)
+	var idx = configs.find(config_node)
 	var is_match = _matches_query(config_node)
 
 	if is_match:
 		if idx == -1:
 			entity_pools.append(parent_body)
-			config.append(config_node as EntityConfig)
+			configs.append(config_node as EntityConfig)
 			for pool_idx in _data_targets.size():
 				data_pools[pool_idx].append(
 						config_node._data_map.get(_data_targets[pool_idx])
@@ -267,14 +251,14 @@ func _evaluate_single_entity(config_node: EntityConfig, changed_script: Script =
 
 ## Removal for a departing entity. Called by NCS.unregister_entity().
 func _handle_incremental_departure(config_node: EntityConfig) -> void:
-	var idx = config.find(config_node)
+	var idx = configs.find(config_node)
 	if idx != -1:
 		_remove_entity_at_index(idx)
 
 
 func _remove_entity_at_index(idx: int) -> void:
 	entity_pools.remove_at(idx)
-	config.remove_at(idx)
+	configs.remove_at(idx)
 	for pool in data_pools:
 		pool.remove_at(idx)
 	for pool in node_pools:
@@ -322,7 +306,7 @@ func _update_query_filter() -> void:
 						_find_node_in_entity(parent_body, _node_targets[pool_idx])
 				)
 
-	config = matching_configs
+	configs = matching_configs
 	entity_pools = matching_bodies
 	data_pools = new_data_pools
 	node_pools = new_node_pools
@@ -356,7 +340,7 @@ func _initialize_query_if_needed() -> void:
 ## Resets entity and data pools when unregistered to prevent memory leaks.
 func _clear_system_state() -> void:
 	entity_pools.clear()
-	config.clear()
+	configs.clear()
 	for pool in data_pools:
 		pool.clear()
 	for pool in node_pools:

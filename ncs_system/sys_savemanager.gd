@@ -1,5 +1,6 @@
 ## Example System to manage save/load pair with NCSSerializer helper
 ## Files related: sys_savemanager.gd, comp_saveable.gd, ncs_serializer.gd
+## and Player.gd for extra_data example.
 class_name SysSaveManager
 extends SystemBase
 
@@ -21,7 +22,7 @@ func setup_query() -> void:
 ## Example of custom save method with NCSSerializer helper.
 func save_game() -> void:
 	# Helper for saving the whole entity_poosl with CompSaveable attached into save_records.
-	var save_records = NCSSerializer.extract_save_records_from_pool(entity_pools, config, true)
+	var save_records = NCSSerializer.extract_save_records_from_pool(entity_pools, configs, true)
 
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
@@ -41,26 +42,17 @@ func load_game() -> void:
 	# Helper to sync the whole entity_pools with CompSaveable attached.
 	NCSSerializer.sync_pool_with_save_data(
 		entity_pools,
-		config,
+		configs,
 		save_records,
-		_on_entity_restored # Pass our custom logic as a callback
+		func(ent, ent_config, _record): # Optional setup callback,
+			# Always write with 3 args, ent, ent_config, record.
+			_sync_custom_movement_data(ent, ent_config)
 	)
-	print("SysSaveManager: Load sequence initiated.")
+	print("SysSaveManager: Load entities finished.")
 
 
-## Custom callback after an entity is loaded/spawned
-## Use for update extra data which non NCS-Data
-func _on_entity_restored(ent: Node, ent_config: EntityConfig, record: Dictionary) -> void:
-	var save_comp = ent_config.get_comp(CompSaveable) as CompSaveable
-	if save_comp and record.has("extra_data"):
-		save_comp.apply_extra_data(record["extra_data"])
-
-	# Custom sync for movement data
-	_sync_custom_movement_data(ent, ent_config)
-
-
-## Helper to sync movement data if your Movement system tied to data
-func _sync_custom_movement_data(ent: Node, ent_config: EntityConfig) -> void:
+func _sync_custom_movement_data(ent: Node2D, ent_config: EntityConfig) -> void:
+	# Args name ent_config avoid duplicate with global variable name "configs" in SystemBase.
 	if ent_config.has_data(DataMovement):
 		var move_data = ent_config.get_data(DataMovement) as DataMovement
 		move_data.next_global_pos = ent.global_position

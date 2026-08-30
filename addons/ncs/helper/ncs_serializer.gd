@@ -31,9 +31,9 @@ static func extract_save_records_from_pool(
 
 
 ## Synchronizes an active pool of entities with an array of save records.
-## ,Despawns entities not present in the save data (Orphan Cleanup).
-## ,Restores data blocks to existing entities.
-## ,Spawns missing entities and applies their data instantly.
+## - Despawns entities not present in the save data (Orphan Cleanup).
+## - Restores data blocks to existing entities.
+## - Spawns missing entities and applies their data instantly.
 static func sync_pool_with_save_data(
 		entity_pools: Array,
 		configs: Array,
@@ -69,13 +69,18 @@ static func sync_pool_with_save_data(
 		var target_id: String = record.get("save_id", "")
 
 		if live_entities.has(target_id):
-			# --- RESTORE EXISTING ---
+			# RESTORE EXISTING
 			var data = live_entities[target_id]
 			deserialize_entity(data["config"], record)
+
+			var save_comp = data["config"].get_comp(CompSaveable)
+			if save_comp and record.has("extra_data"):
+				save_comp.call_deferred("apply_extra_data", record["extra_data"])
+
 			if restore_callback.is_valid():
 				restore_callback.call(data["ent"], data["config"], record)
 		else:
-			# --- SPAWN MISSING ---
+			# SPAWN MISSING
 			var ent_scene_path: String = record.get("ent_scene_path", "")
 			var transform_raw = record.get("global_transform", "")
 			var new_transform = str_to_var(transform_raw) if transform_raw else Transform2D()
@@ -92,6 +97,10 @@ static func sync_pool_with_save_data(
 					if save_comp:
 						save_comp.save_id = target_id
 					deserialize_entity(new_cfg, record)
+
+					if save_comp and record.has("extra_data"):
+						save_comp.call_deferred("apply_extra_data", record["extra_data"])
+
 				if restore_callback.is_valid():
 					restore_callback.call(new_ent, new_cfg, record)
 			)

@@ -67,7 +67,7 @@ func get_data(data_script: Script) -> NCSDataBase:
 	var data_block = _data_map.get(data_script, null) as NCSDataBase
 	if not is_instance_valid(data_block):
 		if not runtime_config:
-			push_warning("EntityConfig on '%s' has no base_config assigned!" % entity_node.name)
+			push_warning("EntityConfig on '%s' has no base_config assigned" % entity_node.name)
 			return null
 
 		_rebuild_data_cache()
@@ -207,8 +207,12 @@ func change_data(data_script: Script, property_name: StringName, new_value: Vari
 			var callbacks = watchers_for_data.get(property_name)
 			if callbacks != null:
 				for callback in callbacks:
-					if (callback as Callable).is_valid():
+					if callback.is_valid():
 						callback.call(new_value)
+					else:
+						push_warning("NCS warning: '%s' data watcher tried to call [%s] but the callback is invalid"
+								% [entity_node.name, callback]
+						)
 	return true
 
 
@@ -252,7 +256,13 @@ func watch_data_lifecycle(data_script: Script, on_added: Callable, on_removed: C
 ## Adds a new component at runtime. No-op if already present. Triggers deferred NCS re-query.
 ## Usage: config.add_comp(CompDead)
 func add_comp(comp_script: Script) -> void:
-	if not comp_script or _component_map.has(comp_script):
+	if not comp_script:
+		return
+
+	if _component_map.has(comp_script):
+		push_warning("NCS warning: '%s' tried to add component [%s] but it was already present"
+				% [entity_node.name, comp_script.get_global_name()]
+		)
 		return
 
 	if not _components_hub_cache:
@@ -263,11 +273,17 @@ func add_comp(comp_script: Script) -> void:
 		return
 
 	var class_str = comp_script.get_global_name()
-	new_node.name = class_str if not class_str.is_empty() else "CompEmpty"
+	new_node.name = class_str if not class_str.is_empty() else "Comp_" + str(_component_map.size())
 	_components_hub_cache.add_child(new_node)
 	if new_node is ComponentBase:
 		new_node.entity_node = entity_node
 		new_node.config = self
+	else:
+		push_warning("NCS warning: '%s' tried to add component [%s] but it does not extend ComponentBase"
+				% [entity_node.name, comp_script.get_global_name()]
+		)
+		_components_hub_cache.remove_child(new_node)
+		return
 
 	_component_map[comp_script] = new_node as ComponentBase
 	if not _active_component_scripts.has(comp_script):
@@ -299,12 +315,22 @@ func remove_comp(comp_script: Script) -> void:
 		target_comp.name = "__DELETED_" + target_comp.name
 		target_comp.queue_free()
 		NCS.mark_dirty(self, comp_script)
+	else:
+		push_warning("NCS warning: '%s' tried to remove component [%s] but it was not present"
+				% [entity_node.name, comp_script.get_global_name()]
+		)
 
 
 ## Adds a new data resource at runtime. No-op if already present. Triggers deferred NCS re-query.
 ## Usage: config.add_data(DataPoisonStatus)
 func add_data(data_script: Script) -> void:
-	if not runtime_config or not data_script or _data_map.has(data_script):
+	if not runtime_config or not data_script:
+		return
+
+	if _data_map.has(data_script):
+		push_warning("NCS warning: '%s' tried to add data [%s] but it was already present"
+				% [entity_node.name, data_script.get_global_name()]
+		)
 		return
 
 	var new_data_instance = data_script.new() as NCSDataBase
@@ -319,6 +345,10 @@ func add_data(data_script: Script) -> void:
 			for callback in _data_added_watchers[data_script]:
 				if callback.is_valid():
 					callback.call(new_data_instance)
+				else:
+					push_warning("NCS warning: '%s' data watcher tried to call [%s] but the callback is invalid"
+							% [entity_node.name, callback]
+					)
 
 		NCS.mark_dirty(self, data_script)
 
@@ -341,25 +371,36 @@ func remove_data(data_script: Script) -> void:
 			for callback in _data_removed_watchers[data_script]:
 				if callback.is_valid():
 					callback.call(res)
+				else:
+					push_warning("NCS warning: '%s' data watcher tried to call [%s] but the callback is invalid"
+							% [entity_node.name, callback]
+					)
 
 		NCS.mark_dirty(self, data_script)
+	else:
+		push_warning("NCS warning: '%s' tried to remove data [%s] but it was not present"
+				% [entity_node.name, data_script.get_global_name()]
+		)
 
 
 ## Calls a method on a component node. Returns true if the call succeeded.
 ## Supports direct argument (e.g. 20.0) or array (e.g. [20.0, "extra"]).
 ## Usage: config.call_method(CompHealth, &"take_damage", 20.0)
-func call_method(comp_script: Script, method_name: StringName, arg_or_args: Variant = null) -> bool:
+func call_method(comp_script: Script, method_name: StringName, arg_or_args: Variant = null) -> void:
+	if not comp_script.has_script_method(method_name):
+		push_warning("NCS warning: Component '%s' does not have method '%s'"
+				% [comp_script.get_global_name(), method_name]
+		)
+		return
 	var callable = get_callable(comp_script, method_name)
 	if not callable.is_valid():
-		return false
-
+		return
 	if arg_or_args == null:
 		callable.call()
 	elif arg_or_args is Array:
 		callable.callv(arg_or_args)
 	else:
 		callable.call(arg_or_args)
-	return true
 
 
 ## Calls a component method safely via typed queue without closure allocations.
@@ -370,6 +411,11 @@ func call_method_deferred(
 		method_name: StringName,
 		arg_or_args: Variant = null
 ) -> void:
+	if not comp_script.has_script_method(method_name):
+		push_warning("NCS warning: Component '%s' does not have method '%s'"
+				% [comp_script.get_global_name(), method_name]
+		)
+		return
 	var callable = get_callable(comp_script, method_name)
 	if callable.is_valid():
 		NCS.push_callable(callable, arg_or_args)
@@ -381,7 +427,6 @@ func call_method_deferred(
 
 ## Rebuilds _data_map and syncs _type_set from runtime_config.data_sets.
 func _rebuild_data_cache() -> void:
-	# Clear previous data cache
 	for old_script in _data_map:
 		_type_set.erase(old_script)
 	_data_map.clear()
@@ -400,7 +445,6 @@ func _rebuild_data_cache() -> void:
 
 ## Rebuilds _component_map and syncs _type_set by scanning the entity tree.
 func _rebuild_component_cache() -> void:
-	# Clear previous cached
 	for old_script in _component_map:
 		_type_set.erase(old_script)
 	_component_map.clear()
@@ -409,7 +453,6 @@ func _rebuild_component_cache() -> void:
 
 	if not entity_node:
 		entity_node = owner
-		return
 
 	if not is_instance_valid(_components_hub_cache):
 		_components_hub_cache = _get_components_hub()
@@ -432,7 +475,7 @@ func _get_components_hub() -> ComponentsHub:
 		return _components_hub_cache
 
 	if not entity_node:
-		return null
+		entity_node = owner
 
 	var children := entity_node.get_children()
 	for i in range(children.size() - 1, -1, -1):
