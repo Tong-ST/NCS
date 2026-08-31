@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://d1joja6hsdxrh"]
 
-[ext_resource type="PackedScene" uid="uid://drd0o3om1q3na" path="res://main_game/player.tscn" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://drd0o3om1q3na" path="res://ncs_entities/player.tscn" id="1_ig7tw"]
 [ext_resource type="Script" uid="uid://bkmd66vdt4ppj" path="res://main_game/main.gd" id="1_xvufe"]
 [ext_resource type="Script" uid="uid://dtcdyejtk5tte" path="res://ncs_system/sys_input.gd" id="2_qofrp"]
 [ext_resource type="Script" uid="uid://bjse0r78t1isb" path="res://ncs_system/sys_enemy_ai.gd" id="3_h2yge"]
@@ -10,7 +10,7 @@
 [ext_resource type="Script" uid="uid://c881o8prnc4sy" path="res://ncs_system/sys_visual.gd" id="6_vis01"]
 [ext_resource type="Script" uid="uid://dujjf8rblw47w" path="res://ncs_system/sys_health.gd" id="8_d214i"]
 [ext_resource type="Script" uid="uid://cc2tpopq1ql8n" path="res://ncs_system/sys_poison.gd" id="8_sayuc"]
-[ext_resource type="PackedScene" uid="uid://cvael67uegn6h" path="res://main_game/enemy.tscn" id="8_xvufe"]
+[ext_resource type="PackedScene" uid="uid://cvael67uegn6h" path="res://ncs_entities/enemy.tscn" id="8_xvufe"]
 [ext_resource type="PackedScene" uid="uid://lvup6a5nx615" path="res://oop_comparision/enemy_oop.tscn" id="9_7km35"]
 [ext_resource type="Script" uid="uid://cxiw86bxsyi8s" path="res://ncs_system/sys_savemanager.gd" id="10_i82q8"]
 

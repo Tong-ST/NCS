@@ -1,15 +1,15 @@
 [gd_scene format=3 uid="uid://cvael67uegn6h"]
 
-[ext_resource type="Script" uid="uid://buxyhxys111b3" path="res://main_game/enemy.gd" id="1_cgx3m"]
-[ext_resource type="Script" uid="uid://fn1jf75ey4vw" path="res://addons/ncs/core/entity_config.gd" id="1_okyv6"]
-[ext_resource type="Resource" uid="uid://d83lrrklk786" path="res://ncs_datasets/enemy_data_sets.tres" id="2_nlenb"]
-[ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="3_80f77"]
-[ext_resource type="Script" uid="uid://bd5qdwgeah7so" path="res://addons/ncs/core/components_hub.gd" id="4_qhlc3"]
-[ext_resource type="Script" uid="uid://5gd7eowt31f7" path="res://ncs_components/comp_movement.gd" id="5_b3gj3"]
-[ext_resource type="Script" uid="uid://fbak7uj16ldf" path="res://ncs_components/comp_enemy_ai.gd" id="7_pa6kk"]
-[ext_resource type="Script" uid="uid://chjaq4g4jwye5" path="res://ncs_components/comp_health.gd" id="9_cgx3m"]
-[ext_resource type="Script" uid="uid://cqaux4eli1g1d" path="res://ncs_components/comp_status_effect.gd" id="9_pa6kk"]
-[ext_resource type="Script" uid="uid://c35r56kiaftpt" path="res://addons/ncs/helper/comp_saveable.gd" id="10_pa6kk"]
+[ext_resource type="Script" uid="uid://buxyhxys111b3" path="res://ncs_entities/enemy.gd" id="1_ytq0c"]
+[ext_resource type="Script" uid="uid://fn1jf75ey4vw" path="res://addons/ncs/core/entity_config.gd" id="2_acwb6"]
+[ext_resource type="Resource" uid="uid://d83lrrklk786" path="res://ncs_datasets/enemy_data_sets.tres" id="3_gvylf"]
+[ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="4_ytq0c"]
+[ext_resource type="Script" uid="uid://bd5qdwgeah7so" path="res://addons/ncs/core/components_hub.gd" id="5_qcn46"]
+[ext_resource type="Script" uid="uid://chjaq4g4jwye5" path="res://ncs_components/comp_health.gd" id="6_ydyuw"]
+[ext_resource type="Script" uid="uid://fbak7uj16ldf" path="res://ncs_components/comp_enemy_ai.gd" id="7_idwvn"]
+[ext_resource type="Script" uid="uid://5gd7eowt31f7" path="res://ncs_components/comp_movement.gd" id="8_pxd35"]
+[ext_resource type="Script" uid="uid://cqaux4eli1g1d" path="res://ncs_components/comp_status_effect.gd" id="9_l5m10"]
+[ext_resource type="Script" uid="uid://c35r56kiaftpt" path="res://addons/ncs/helper/comp_saveable.gd" id="10_2t5rd"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1yc37"]
 radius = 20.0
@@ -17,45 +17,45 @@ radius = 20.0
 [node name="Enemy" type="CharacterBody2D" unique_id=1562561095]
 collision_layer = 2
 platform_floor_layers = 4294901760
-script = ExtResource("1_cgx3m")
+script = ExtResource("1_ytq0c")
 
 [node name="EntityConfig" type="Node" parent="." unique_id=428631012 node_paths=PackedStringArray("entity_node")]
-script = ExtResource("1_okyv6")
-base_config = ExtResource("2_nlenb")
+script = ExtResource("2_acwb6")
+base_config = ExtResource("3_gvylf")
 entity_node = NodePath("..")
 metadata/_custom_type_script = "uid://fn1jf75ey4vw"
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=54292582]
 scale = Vector2(0.25, 0.25)
-texture = ExtResource("3_80f77")
+texture = ExtResource("4_ytq0c")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1469912647]
 shape = SubResource("CircleShape2D_1yc37")
 
 [node name="ComponentsHub" type="Node" parent="." unique_id=1420797890 node_paths=PackedStringArray("entity_node", "config_node")]
-script = ExtResource("4_qhlc3")
+script = ExtResource("5_qcn46")
 entity_node = NodePath("..")
 config_node = NodePath("../EntityConfig")
 metadata/_custom_type_script = "uid://bd5qdwgeah7so"
 
 [node name="CompHealth" type="Node" parent="ComponentsHub" unique_id=1121043216]
-script = ExtResource("9_cgx3m")
+script = ExtResource("6_ydyuw")
 require_data = true
 metadata/_custom_type_script = "uid://chjaq4g4jwye5"
 
 [node name="CompEnemyAI" type="Node" parent="ComponentsHub" unique_id=913011947]
-script = ExtResource("7_pa6kk")
+script = ExtResource("7_idwvn")
 metadata/_custom_type_script = "uid://cv2da7ssbx8dg"
 
 [node name="CompMovement" type="Node" parent="ComponentsHub" unique_id=679268832]
-script = ExtResource("5_b3gj3")
+script = ExtResource("8_pxd35")
 require_data = true
 metadata/_custom_type_script = "uid://5gd7eowt31f7"
 
 [node name="CompStatusEffect" type="Node" parent="ComponentsHub" unique_id=396766770]
-script = ExtResource("9_pa6kk")
+script = ExtResource("9_l5m10")
 metadata/_custom_type_script = "uid://cqaux4eli1g1d"
 
 [node name="CompSaveable" type="Node" parent="ComponentsHub" unique_id=1316102592]
-script = ExtResource("10_pa6kk")
+script = ExtResource("10_2t5rd")
 metadata/_custom_type_script = "uid://c35r56kiaftpt"
