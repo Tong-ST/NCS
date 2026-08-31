@@ -295,6 +295,16 @@ Level_Main
         |-- SysEnemyAI (Your system script)
 ```
 
+### Extra tools
+
+- CSV Helper
+
+    Built-in editor tools to export and import resource data to CSV files, Help with balancing and manage massive resource base project with ease.
+  - Access via Editor Dock (dafault: Right dock near Inspector), One-click export/import data.
+  - Bulk Export: Scans selected folder for resources class you want (default: NCSEntityDataSet) and exports their properties into CSV files.
+  - Open CSV files with other apps e.g. Excel, VScode, Exported folder hidden from Godot file system by default.
+  - Here some sample of exported file: [DataHealth.csv](ncs_csv_exports/DataHealth.csv)
+
 ## Installation
 
 - Clone this git or download zip.

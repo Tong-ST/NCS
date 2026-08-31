@@ -1,0 +1,3 @@
+dataset_name,state,max_health,current_health,dataset_path
+enemy_data_sets,ALIVE,100.0,100.0,res://ncs_datasets/enemy_data_sets.tres
+player_data_sets,ALIVE,200.0,200.0,res://ncs_datasets/player_data_sets.tres

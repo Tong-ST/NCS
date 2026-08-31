@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://lvup6a5nx615"]
 
 [ext_resource type="Script" uid="uid://b7a7esaosnc8r" path="res://oop_comparision/enemy_oop.gd" id="1_3txpn"]
+[ext_resource type="Resource" uid="uid://djoxq7nobdt8a" path="res://oop_comparision/enemy_oop_stats.tres" id="2_gvyky"]
 [ext_resource type="Script" uid="uid://dlcla17vwred6" path="res://oop_comparision/input_oop.gd" id="3_ed0q7"]
 [ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="4_euxac"]
 [ext_resource type="Script" uid="uid://cofmik0omxmq1" path="res://oop_comparision/enemy_ai_oop.gd" id="4_yjegb"]
@@ -16,6 +17,7 @@ radius = 20.0
 collision_layer = 2
 platform_floor_layers = 4294901760
 script = ExtResource("1_3txpn")
+enemy_oop_stats = ExtResource("2_gvyky")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=54292582]
 modulate = Color(0.47441357, 0.83288443, 0.24098289, 1)

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="EnemyOOPStats" format=3 uid="uid://djoxq7nobdt8a"]
+
+[ext_resource type="Script" uid="uid://b3kwrhshmt1xv" path="res://oop_comparision/enemy_oop_stats.gd" id="1_pewbi"]
+
+[resource]
+script = ExtResource("1_pewbi")
+test_array = [50.0, 100.0, "string"]
+test_dict = {
+"dict_1": false
+}
+metadata/_custom_type_script = "uid://b3kwrhshmt1xv"

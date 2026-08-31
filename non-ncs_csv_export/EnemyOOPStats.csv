@@ -1,0 +1,2 @@
+dataset_name,max_speed,acceleration,is_aggressive,vector_test,test_array,test_dict,dataset_path
+enemy_oop_stats,150.0,600.0,true,"(0.0, -1.0)","[50.0, 100.0, ""string""]","{ ""dict_1"": false }",res://oop_comparision/enemy_oop_stats.tres

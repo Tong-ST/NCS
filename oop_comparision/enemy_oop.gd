@@ -1,10 +1,11 @@
 class_name EnemyOOP
 extends CharacterBody2D
 
-@export var max_speed: float = 150.0
-@export var acceleration: float = 600.0
-@export var is_aggressive: bool = true
+@export var enemy_oop_stats: EnemyOOPStats
 
+var max_speed: float
+var acceleration: float
+var is_aggressive: bool
 var current_velocity: Vector2 = Vector2.ZERO
 var is_on_screen: bool = true
 var next_global_pos := Vector2.ZERO
@@ -16,6 +17,9 @@ var is_pos_initialized: bool = false
 
 func _ready() -> void:
 	health_oop.on_damaged.connect(_on_damaged)
+	max_speed = enemy_oop_stats.max_speed
+	acceleration = enemy_oop_stats.acceleration
+	is_aggressive = enemy_oop_stats.is_aggressive
 
 
 func _on_damaged() -> void:
