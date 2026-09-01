@@ -21,11 +21,15 @@ func _ready() -> void:
 	var tab_balancer = VBoxContainer.new()
 	tab_balancer.name = "CSV Helper"
 	tabs.add_child(tab_balancer)
+
 	var settings_box = VBoxContainer.new()
 	settings_box.add_theme_constant_override("separation", 8)
 	tab_balancer.add_child(settings_box)
 
-	settings_box.add_child(_create_label("Target Resource Class (Default: NCSEntityDataSet):"))
+	settings_box.add_child(_create_label(
+			"Target Resource Class
+			(Default: NCSEntityDataSet):")
+	)
 	txt_target_class = LineEdit.new()
 	txt_target_class.text = "NCSEntityDataSet"
 	settings_box.add_child(txt_target_class)
@@ -54,8 +58,47 @@ func _ready() -> void:
 	row2.add_child(btn_browse2)
 	settings_box.add_child(row2)
 
-	settings_box.add_child(_create_label("After export, Open CSV with other apps e.g. excel"))
-	settings_box.add_child(_create_label("Exported folder hidden from Godot by Default"))
+	var spacer = Control.new()
+	spacer.custom_minimum_size.y = 4
+	settings_box.add_child(spacer)
+
+	var panel_container = PanelContainer.new()
+	settings_box.add_child(panel_container)
+
+	var notes_vbox = VBoxContainer.new()
+	notes_vbox.add_theme_constant_override("separation", 4)
+	panel_container.add_child(notes_vbox)
+
+	var lbl_flow_hdr = _create_label(" NOTE:")
+	lbl_flow_hdr.add_theme_color_override("font_color", Color.YELLOW)
+	notes_vbox.add_child(lbl_flow_hdr)
+	notes_vbox.add_child(_create_label("• Exported folders are hidden from Godot"))
+	notes_vbox.add_child(_create_label("• Open .CSV with others apps e.g. Excel"))
+	notes_vbox.add_child(_create_label(
+			"• Support only spreadsheet friendly
+			for complex data better edit in Godot")
+	)
+
+	var spacer2 = Control.new()
+	spacer2.custom_minimum_size.y = 2
+	notes_vbox.add_child(spacer2)
+
+	var lbl_data_hdr = _create_label(" DATA-Types:")
+	lbl_data_hdr.add_theme_color_override("font_color", Color.YELLOW)
+
+	var lbl_safe = _create_label(
+		"Support (Synced): Int, Float, Bool, String, Enums, Vector2/3/4, Rect2, Color and Array/Dict with simple type above"
+	)
+	lbl_safe.autowrap_mode = TextServer.AUTOWRAP_WORD
+	lbl_safe.add_theme_color_override("font_color", Color.GREEN)
+	notes_vbox.add_child(lbl_safe)
+
+	var lbl_unsafe = _create_label(
+		"Unsupport (Ignored): Objects, Textures, PackedScenes, Sub-Resources"
+	)
+	lbl_unsafe.autowrap_mode = TextServer.AUTOWRAP_WORD
+	lbl_unsafe.add_theme_color_override("font_color", Color.LIGHT_CORAL)
+	notes_vbox.add_child(lbl_unsafe)
 
 	var sep = HSeparator.new()
 	tab_balancer.add_child(sep)

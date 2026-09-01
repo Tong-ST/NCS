@@ -1,5 +1,5 @@
 dataset_name,state,max_health,current_health,dataset_path
-enemy_datasets,ALIVE,100,100,res://ncs_datasets/enemy_datasets.tres
-player_datasets,ALIVE,200,200,res://ncs_datasets/player_datasets.tres
-skeleton_datasets,ALIVE,150,150,res://ncs_datasets/skeleton_datasets.tres
-wolf_datasets,ALIVE,90,90,res://ncs_datasets/wolf_datasets.tres
+enemy_datasets,ALIVE,100.0,100.0,res://ncs_datasets/enemy_datasets.tres
+player_datasets,ALIVE,200.0,200.0,res://ncs_datasets/player_datasets.tres
+skeleton_datasets,ALIVE,150.0,150.0,res://ncs_datasets/skeleton_datasets.tres
+wolf_datasets,ALIVE,90.0,90.0,res://ncs_datasets/wolf_datasets.tres
