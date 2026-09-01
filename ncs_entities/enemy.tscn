@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://buxyhxys111b3" path="res://ncs_entities/enemy.gd" id="1_ytq0c"]
 [ext_resource type="Script" uid="uid://fn1jf75ey4vw" path="res://addons/ncs/core/entity_config.gd" id="2_acwb6"]
-[ext_resource type="Resource" uid="uid://d83lrrklk786" path="res://ncs_datasets/enemy_data_sets.tres" id="3_gvylf"]
+[ext_resource type="Resource" uid="uid://d83lrrklk786" path="res://ncs_datasets/enemy_datasets.tres" id="3_gvylf"]
 [ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="4_ytq0c"]
 [ext_resource type="Script" uid="uid://bd5qdwgeah7so" path="res://addons/ncs/core/components_hub.gd" id="5_qcn46"]
 [ext_resource type="Script" uid="uid://chjaq4g4jwye5" path="res://ncs_components/comp_health.gd" id="6_ydyuw"]

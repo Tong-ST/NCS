@@ -1,2 +1,4 @@
 dataset_name,is_aggressive,dataset_path
-enemy_data_sets,true,res://ncs_datasets/enemy_data_sets.tres
+enemy_datasets,true,res://ncs_datasets/enemy_datasets.tres
+skeleton_datasets,true,res://ncs_datasets/skeleton_datasets.tres
+wolf_datasets,true,res://ncs_datasets/wolf_datasets.tres
