@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://wc4knsp52liy" path="res://ncs_entities/player.gd" id="1_slu23"]
 [ext_resource type="Script" uid="uid://fn1jf75ey4vw" path="res://addons/ncs/core/entity_config.gd" id="2_xiktl"]
-[ext_resource type="Resource" uid="uid://d4mnm3blci3ky" path="res://ncs_datasets/player_data_sets.tres" id="3_b5qb4"]
+[ext_resource type="Resource" uid="uid://d4mnm3blci3ky" path="res://ncs_datasets/player_datasets.tres" id="3_b5qb4"]
 [ext_resource type="Texture2D" uid="uid://b5c5h7yag12km" path="res://main_game/icon.svg" id="4_t2egm"]
 [ext_resource type="Script" uid="uid://bd5qdwgeah7so" path="res://addons/ncs/core/components_hub.gd" id="5_daot8"]
 [ext_resource type="Script" uid="uid://de35lmtvkng7k" path="res://ncs_components/comp_player.gd" id="6_3nkva"]

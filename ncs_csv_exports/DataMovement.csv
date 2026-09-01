@@ -1,3 +1,5 @@
 dataset_name,max_speed,acceleration,dataset_path
-enemy_data_sets,220.0,2200.0,res://ncs_datasets/enemy_data_sets.tres
-player_data_sets,400.0,2200.0,res://ncs_datasets/player_data_sets.tres
+enemy_datasets,220,2200,res://ncs_datasets/enemy_datasets.tres
+player_datasets,400,2200,res://ncs_datasets/player_datasets.tres
+skeleton_datasets,280,1800,res://ncs_datasets/skeleton_datasets.tres
+wolf_datasets,400,2500,res://ncs_datasets/wolf_datasets.tres

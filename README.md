@@ -232,11 +232,11 @@ The `NCSSerializer` static helper allows you to serialize and deserialize an ent
 # Example on how you save/load all entity with CompSaveable(Plugin helper node)
 func save_game() -> void:
     # Helper extracts data blocks, transforms, components from entity_pools into save_records.
+    var save_records = NCSSerializer.extract_save_records_from_pool(entity_pools, configs, true)
     
     # Write directly to a JSON file
     var file = FileAccess.open("user://save_data.json", FileAccess.WRITE)
     file.store_string(JSON.stringify(save_records, "\t"))
-    var save_records = NCSSerializer.extract_save_records_from_pool(entity_pools, configs, true)
 
 func load_game() -> void:
     # Read JSON file

@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="NCSEntityDataSet" format=3 uid="uid://0g0i07kiuvk5"]
+
+[ext_resource type="Script" uid="uid://cc42ojsffnknx" path="res://addons/ncs/templates/ncs_data_base.gd" id="1_ptnfg"]
+[ext_resource type="Script" uid="uid://cahdo7ajcu48f" path="res://addons/ncs/templates/ncs_entity_data_set.gd" id="2_0agx7"]
+[ext_resource type="Script" uid="uid://cv42ydpp65ire" path="res://ncs_data/data_enemy_ai.gd" id="2_kvioq"]
+[ext_resource type="Script" uid="uid://x18cyu72de8c" path="res://ncs_data/data_health.gd" id="3_6tfe3"]
+[ext_resource type="Script" uid="uid://bcrp0alk1qht4" path="res://ncs_data/data_input.gd" id="4_t8x3c"]
+[ext_resource type="Script" uid="uid://bdl22fmu0u6e5" path="res://ncs_data/data_movement.gd" id="5_674e1"]
+
+[sub_resource type="Resource" id="Resource_2utac"]
+script = ExtResource("2_kvioq")
+metadata/_custom_type_script = "uid://cv42ydpp65ire"
+
+[sub_resource type="Resource" id="Resource_r6jew"]
+script = ExtResource("3_6tfe3")
+max_health = 90.0
+current_health = 90.0
+metadata/_custom_type_script = "uid://x18cyu72de8c"
+
+[sub_resource type="Resource" id="Resource_va2on"]
+script = ExtResource("4_t8x3c")
+metadata/_custom_type_script = "uid://bcrp0alk1qht4"
+
+[sub_resource type="Resource" id="Resource_vw2gv"]
+script = ExtResource("5_674e1")
+max_speed = 400.0
+acceleration = 2500.0
+metadata/_custom_type_script = "uid://bdl22fmu0u6e5"
+
+[resource]
+script = ExtResource("2_0agx7")
+data_sets = Array[ExtResource("1_ptnfg")]([SubResource("Resource_2utac"), SubResource("Resource_r6jew"), SubResource("Resource_va2on"), SubResource("Resource_vw2gv")])
+metadata/_custom_type_script = "uid://cahdo7ajcu48f"
